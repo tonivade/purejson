@@ -4,9 +4,15 @@
  */
 package com.github.tonivade.json;
 
-import com.github.tonivade.purefun.Tuple2;
-import com.github.tonivade.purefun.data.ImmutableList;
-import org.petitparser.context.Result;
+import static com.github.tonivade.json.JsonElement.NULL;
+import static com.github.tonivade.json.JsonElement.array;
+import static com.github.tonivade.json.JsonElement.emptyObject;
+import static com.github.tonivade.json.JsonElement.object;
+import static com.github.tonivade.json.JsonPrimitive.bool;
+import static com.github.tonivade.json.JsonPrimitive.number;
+import static com.github.tonivade.json.JsonPrimitive.string;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toUnmodifiableMap;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,21 +20,19 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.github.tonivade.json.JsonElement.NULL;
-import static com.github.tonivade.json.JsonElement.array;
-import static com.github.tonivade.json.JsonElement.bool;
-import static com.github.tonivade.json.JsonElement.emptyObject;
-import static com.github.tonivade.json.JsonElement.number;
-import static com.github.tonivade.json.JsonElement.object;
-import static com.github.tonivade.json.JsonElement.string;
-import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toUnmodifiableMap;
+import org.petitparser.context.Result;
+
+import com.github.tonivade.purefun.Tuple2;
+import com.github.tonivade.purefun.data.ImmutableList;
 
 public final class Json {
 
   private final Map<Class<?>, JsonAdapter<?>> adapters = new HashMap<>();
 
   public static String serialize(JsonElement element) {
+    if (element instanceof JsonElement.JsonNull) {
+      return "null";
+    }
     if (element instanceof JsonElement.JsonObject obj) {
       return obj.values().entries().stream()
           .map(entry -> "\"%s\":%s".formatted(entry.get1(), serialize(entry.get2())))
@@ -39,17 +43,14 @@ public final class Json {
           .map(Json::serialize)
           .collect(joining(",", "[", "]"));
     }
-    if (element instanceof JsonElement.JsonPrimitive.JsonString string) {
+    if (element instanceof JsonPrimitive.JsonString string) {
       return "\"%s\"".formatted(string.value());
     }
-    if (element instanceof JsonElement.JsonPrimitive.JsonNumber number) {
+    if (element instanceof JsonPrimitive.JsonNumber number) {
       return String.valueOf(number.value());
     }
-    if (element instanceof JsonElement.JsonPrimitive.JsonBoolean bool) {
+    if (element instanceof JsonPrimitive.JsonBoolean bool) {
       return String.valueOf(bool.value());
-    }
-    if (element instanceof JsonElement.JsonNull) {
-      return "null";
     }
     throw new IllegalArgumentException("this should not happen");
   }

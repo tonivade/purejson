@@ -4,20 +4,20 @@
  */
 package com.github.tonivade.json;
 
-import org.petitparser.grammar.json.JsonGrammarDefinition;
-import org.petitparser.tools.GrammarParser;
-import org.petitparser.utils.Functions;
+import static com.github.tonivade.json.JsonElement.array;
+import static com.github.tonivade.json.JsonElement.emptyArray;
+import static com.github.tonivade.json.JsonElement.emptyObject;
+import static com.github.tonivade.json.JsonElement.object;
+import static com.github.tonivade.json.JsonPrimitive.number;
+import static com.github.tonivade.json.JsonPrimitive.string;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.github.tonivade.json.JsonElement.array;
-import static com.github.tonivade.json.JsonElement.emptyArray;
-import static com.github.tonivade.json.JsonElement.emptyObject;
-import static com.github.tonivade.json.JsonElement.number;
-import static com.github.tonivade.json.JsonElement.object;
-import static com.github.tonivade.json.JsonElement.string;
+import org.petitparser.grammar.json.JsonGrammarDefinition;
+import org.petitparser.tools.GrammarParser;
+import org.petitparser.utils.Functions;
 
 public class JsonParser extends GrammarParser {
 
@@ -37,7 +37,7 @@ public class JsonParser extends GrammarParser {
           Map<String, JsonElement> result = new LinkedHashMap<>();
           for (List<Object> list : input.get(1)) {
             result.put(
-                ((JsonElement.JsonPrimitive.JsonString) list.get(0)).value(),
+                ((JsonPrimitive.JsonString) list.get(0)).value(),
                 (JsonElement) list.get(2));
           }
           return object(result);
@@ -45,8 +45,8 @@ public class JsonParser extends GrammarParser {
         return emptyObject();
       });
 
-      action("trueToken", Functions.constant(JsonElement.TRUE));
-      action("falseToken", Functions.constant(JsonElement.FALSE));
+      action("trueToken", Functions.constant(JsonPrimitive.TRUE));
+      action("falseToken", Functions.constant(JsonPrimitive.FALSE));
       action("nullToken", Functions.constant(JsonElement.NULL));
       redef("stringToken", ref("stringPrimitive").trim());
       action("numberToken", (String input) -> {

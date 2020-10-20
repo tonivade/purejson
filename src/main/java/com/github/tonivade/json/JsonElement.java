@@ -4,22 +4,20 @@
  */
 package com.github.tonivade.json;
 
+import static com.github.tonivade.purefun.Precondition.checkNonNull;
+
+import java.util.List;
+import java.util.Map;
+
 import com.github.tonivade.purefun.Tuple2;
 import com.github.tonivade.purefun.data.ImmutableList;
 import com.github.tonivade.purefun.data.ImmutableMap;
 import com.github.tonivade.purefun.data.Sequence;
 
-import java.util.List;
-import java.util.Map;
-
-import static com.github.tonivade.purefun.Precondition.checkNonNull;
-
 public sealed interface JsonElement permits
-    JsonElement.JsonNull, JsonElement.JsonPrimitive, JsonElement.JsonArray, JsonElement.JsonObject {
+    JsonElement.JsonNull, JsonElement.JsonObject, JsonElement.JsonArray, JsonPrimitive {
 
   JsonElement NULL = new JsonNull();
-  JsonElement TRUE = new JsonPrimitive.JsonBoolean(true);
-  JsonElement FALSE = new JsonPrimitive.JsonBoolean(false);
 
   final class JsonNull implements JsonElement {
 
@@ -43,39 +41,6 @@ public sealed interface JsonElement permits
     }
   }
 
-  sealed interface JsonPrimitive extends JsonElement permits
-      JsonPrimitive.JsonString, JsonPrimitive.JsonNumber, JsonPrimitive.JsonBoolean {
-
-    record JsonString(String value) implements JsonPrimitive {
-      public JsonString {
-        checkNonNull(value);
-      }
-    }
-
-    record JsonNumber(Number value) implements JsonPrimitive {
-      public JsonNumber {
-        checkNonNull(value);
-      }
-    }
-
-    record JsonBoolean(boolean value) implements JsonPrimitive {}
-  }
-
-  static JsonElement string(String string) {
-    return string == null ? NULL : new JsonPrimitive.JsonString(string);
-  }
-
-  static JsonElement number(long value) {
-    return new JsonPrimitive.JsonNumber(value);
-  }
-
-  static JsonElement number(double value) {
-    return new JsonPrimitive.JsonNumber(value);
-  }
-
-  static JsonElement bool(boolean value) {
-    return value ? TRUE : FALSE;
-  }
 
   static JsonElement emptyObject() {
     return new JsonObject(ImmutableMap.empty());

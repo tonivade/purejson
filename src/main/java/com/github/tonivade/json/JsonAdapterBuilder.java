@@ -15,6 +15,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.github.tonivade.json.JsonPrimitive.bool;
+import static com.github.tonivade.json.JsonPrimitive.number;
+import static com.github.tonivade.json.JsonPrimitive.string;
 import static com.github.tonivade.purefun.Precondition.checkNonNull;
 
 public final class JsonAdapterBuilder<T> {
@@ -29,9 +32,9 @@ public final class JsonAdapterBuilder<T> {
   }
 
   public JsonAdapterBuilder<T> addInteger(String name, Function1<T, Integer> accessor) {
-    encoders.put(name, value -> JsonElement.number(accessor.apply(value)));
+    encoders.put(name, value -> number(accessor.apply(value)));
     decoders.put(name, element -> {
-      if (element instanceof JsonElement.JsonPrimitive.JsonNumber n) {
+      if (element instanceof JsonPrimitive.JsonNumber n) {
         return n.value().intValue();
       }
       throw new IllegalArgumentException();
@@ -40,9 +43,9 @@ public final class JsonAdapterBuilder<T> {
   }
 
   public JsonAdapterBuilder<T> addDouble(String name, Function1<T, Double> accessor) {
-    encoders.put(name, value -> JsonElement.number(accessor.apply(value)));
+    encoders.put(name, value -> number(accessor.apply(value)));
     decoders.put(name, element -> {
-      if (element instanceof JsonElement.JsonPrimitive.JsonNumber n) {
+      if (element instanceof JsonPrimitive.JsonNumber n) {
         return n.value().doubleValue();
       }
       throw new IllegalArgumentException();
@@ -51,9 +54,9 @@ public final class JsonAdapterBuilder<T> {
   }
 
   public JsonAdapterBuilder<T> addBoolean(String name, Function1<T, Boolean> accessor) {
-    encoders.put(name, value -> JsonElement.bool(accessor.apply(value)));
+    encoders.put(name, value -> bool(accessor.apply(value)));
     decoders.put(name, element -> {
-      if (element instanceof JsonElement.JsonPrimitive.JsonBoolean bool) {
+      if (element instanceof JsonPrimitive.JsonBoolean bool) {
         return bool.value();
       }
       throw new IllegalArgumentException();
@@ -62,9 +65,9 @@ public final class JsonAdapterBuilder<T> {
   }
 
   public JsonAdapterBuilder<T> addString(String name, Function1<T, String> accessor) {
-    encoders.put(name, value -> JsonElement.string(accessor.apply(value)));
+    encoders.put(name, value -> string(accessor.apply(value)));
     decoders.put(name, element -> {
-      if (element instanceof JsonElement.JsonPrimitive.JsonString s) {
+      if (element instanceof JsonPrimitive.JsonString s) {
         return s.value();
       }
       throw new IllegalArgumentException();

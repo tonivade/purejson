@@ -1,0 +1,99 @@
+apply plugin: 'java'
+apply plugin: 'java-library'
+apply plugin: 'jacoco'
+apply plugin: 'com.bmuschko.nexus'
+
+group = 'com.github.tonivade'
+archivesBaseName = 'purejson'
+version = '0.1.0-SNAPSHOT'
+
+sourceCompatibility = 15
+targetCompatibility = 15
+
+buildscript {
+  repositories {
+    mavenCentral()
+    jcenter()
+  }
+
+  dependencies {
+    classpath 'com.bmuschko:gradle-nexus-plugin:2.3.1'
+  }
+}
+
+jacoco {
+  toolVersion = '0.8.6'
+}
+
+repositories {
+  mavenLocal() 
+  mavenCentral()
+  maven {
+    url = 'https://oss.sonatype.org/content/repositories/snapshots'
+  }
+}
+
+test {
+  useJUnitPlatform()
+  
+  jvmArgs(['--enable-preview'])
+}
+  
+tasks.withType(JavaCompile).each {
+  it.options.compilerArgs.addAll('--enable-preview')
+}
+
+javadoc.options {
+    addBooleanOption('-enable-preview', true)
+    addStringOption('-release', '15')
+}
+
+dependencies {
+  api 'com.github.tonivade:purefun-core:2.2-SNAPSHOT'
+  api 'com.github.petitparser:petitparser-json:2.3.1'
+  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+  testImplementation 'org.junit.platform:junit-platform-runner:1.7.0'
+}
+
+modifyPom {
+  project {
+    name 'PureJson'
+    description 'Pure Functional Json Parser Library'
+    url 'https://github.com/tonivade/purejson'
+    inceptionYear '2020'
+
+    scm {
+      url 'https://github.com/tonivade/purejson'
+      connection 'scm:https://github.com/tonivade/purejson.git'
+      developerConnection 'scm:git://github.com/tonivade/purejson.git'
+    }
+
+    licenses {
+      license {
+        name 'The MIT License (MIT)'
+        url 'https://github.com/tonivade/purejson/blob/master/LICENSE'
+        distribution 'repo'
+      }
+    }
+
+    developers {
+      developer {
+        id 'tonivade'
+        name 'Antonio Muñoz'
+        email 'antoniogmc@gmail.com'
+      }
+    }
+  }
+}
+
+extraArchive {
+  sources = true
+  tests = false
+  javadoc = true
+}
+
+nexus {
+  sign = true
+  repositoryUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
+  snapshotRepositoryUrl = 'https://oss.sonatype.org/content/repositories/snapshots'
+}

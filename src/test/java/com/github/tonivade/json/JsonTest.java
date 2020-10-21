@@ -5,9 +5,11 @@
 package com.github.tonivade.json;
 
 import static com.github.tonivade.json.Json.listAdapter;
+import static com.github.tonivade.json.Json.mapAdapter;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
@@ -53,9 +55,23 @@ class JsonTest {
 
     Reflection<List<User>> listOfUsers = new Reflection<List<User>>() {};
     Json json = new Json().add(listOfUsers, listAdapter(adapter));
-    List<User> user = json.fromJson(string, listOfUsers);
+    List<User> array = json.fromJson(string, listOfUsers);
 
     User expected = new User(1, "toni");
-    assertEquals(List.of(expected), user);
+    assertEquals(List.of(expected), array);
+  }
+
+  @Test
+  void parseMap() {
+    String string = """
+        {"toni":{"name":"toni","id":1}}
+        """.strip();
+
+    Reflection<Map<String, User>> mapOfUsers = new Reflection<Map<String, User>>() {};
+    Json json = new Json().add(mapOfUsers, mapAdapter(adapter));
+    Map<String, User> map = json.fromJson(string, mapOfUsers);
+
+    User expected = new User(1, "toni");
+    assertEquals(Map.of("toni", expected), map);
   }
 }

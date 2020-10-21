@@ -40,7 +40,7 @@ public class JsonParser extends GrammarParser {
                 ((JsonPrimitive.JsonString) list.get(0)).value(),
                 (JsonElement) list.get(2));
           }
-          return object(result);
+          return object(result.entrySet());
         }
         return emptyObject();
       });

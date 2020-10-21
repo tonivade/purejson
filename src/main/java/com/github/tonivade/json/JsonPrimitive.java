@@ -27,15 +27,15 @@ public sealed interface JsonPrimitive extends JsonElement permits
   record JsonBoolean(boolean value) implements JsonPrimitive {}
 
   static JsonElement string(String string) {
-    return string == null ? NULL : new JsonPrimitive.JsonString(string);
+    return string == null ? NULL : new JsonString(string);
   }
 
   static JsonElement number(long value) {
-    return new JsonPrimitive.JsonNumber(value);
+    return new JsonNumber(value);
   }
 
   static JsonElement number(double value) {
-    return new JsonPrimitive.JsonNumber(value);
+    return new JsonNumber(value);
   }
 
   static JsonElement bool(boolean value) {

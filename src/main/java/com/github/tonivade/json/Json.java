@@ -12,30 +12,33 @@ import static com.github.tonivade.json.JsonPrimitive.bool;
 import static com.github.tonivade.json.JsonPrimitive.number;
 import static com.github.tonivade.json.JsonPrimitive.string;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toUnmodifiableList;
 import static java.util.stream.Collectors.toUnmodifiableMap;
 
+import java.lang.reflect.Type;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import org.petitparser.context.Result;
 
-import com.github.tonivade.purefun.Tuple2;
-import com.github.tonivade.purefun.data.ImmutableList;
-
 public final class Json {
 
-  private final Map<Class<?>, JsonAdapter<?>> adapters = new HashMap<>();
+  private final Map<String, JsonAdapter<?>> adapters = new HashMap<>();
 
   public static String serialize(JsonElement element) {
     if (element instanceof JsonElement.JsonNull) {
       return "null";
     }
     if (element instanceof JsonElement.JsonObject obj) {
-      return obj.values().entries().stream()
-          .map(entry -> "\"%s\":%s".formatted(entry.get1(), serialize(entry.get2())))
+      return obj.values().entrySet().stream()
+          .map(entry -> "\"%s\":%s".formatted(entry.getKey(), serialize(entry.getValue())))
           .collect(joining(",", "{", "}"));
     }
     if (element instanceof JsonElement.JsonArray array) {
@@ -65,20 +68,18 @@ public final class Json {
     throw new IllegalArgumentException(result.getMessage());
   }
 
-  public <T> T fromJson(String json, Class<T> type) {
+  public <T> T fromJson(String json, Type type) {
     return fromJson(parse(json), type) ;
   }
 
   @SuppressWarnings("unchecked")
-  public <T> T fromJson(JsonElement element, Class<T> type) {
+  public <T> T fromJson(JsonElement element, Type type) {
     if (element instanceof JsonElement.JsonNull) {
       return null;
     }
-    if (element instanceof JsonElement.JsonObject) {
-      JsonAdapter<T> jsonAdapter = (JsonAdapter<T>) adapters.get(type);
-      if (jsonAdapter != null) {
-        return jsonAdapter.decode(element);
-      }
+    JsonAdapter<T> jsonAdapter = (JsonAdapter<T>) adapters.get(type.getTypeName());
+    if (jsonAdapter != null) {
+      return jsonAdapter.decode(element);
     }
     throw new IllegalArgumentException("this should not happen");
   }
@@ -115,21 +116,21 @@ public final class Json {
       return emptyObject();
     }
     if (object instanceof Map<?, ?> map && map.keySet().stream().allMatch(key -> key instanceof String)) {
-      Map<String, JsonElement> entries = new LinkedHashMap<>();
+      List<Map.Entry<String, JsonElement>> entries = new ArrayList<>();
       for (Map.Entry<?, ?> entry : map.entrySet()) {
-        entries.put((String) entry.getKey(), toJson(entry.getValue()));
+        entries.add(entry((String) entry.getKey(), toJson(entry.getValue())));
       }
       return object(entries);
     }
-    JsonAdapter jsonAdapter = adapters.get(object.getClass());
+    JsonAdapter jsonAdapter = adapters.get(object.getClass().getTypeName());
     if (jsonAdapter != null) {
       return jsonAdapter.encode(object);
     }
     throw new UnsupportedOperationException("not implemented yet");
   }
 
-  public <T> Json add(Class<T> type, JsonAdapter<T> adapter) {
-    adapters.put(type, adapter);
+  public <T> Json add(Type type, JsonAdapter<T> adapter) {
+    adapters.put(type.getTypeName(), adapter);
     return this;
   }
 
@@ -142,14 +143,14 @@ public final class Json {
       @Override
       public Iterable<E> decode(JsonElement json) {
         if (json instanceof JsonElement.JsonArray array) {
-          return array.elements().map(itemAdapter::decode);
+          return array.elements().stream().map(itemAdapter::decode).collect(toUnmodifiableList());
         }
         throw new IllegalArgumentException();
       }
 
       @Override
       public JsonElement encode(Iterable<E> value) {
-        return array(ImmutableList.from(value).map(itemAdapter::encode).toList());
+        return array(StreamSupport.stream(value.spliterator(),  false).map(itemAdapter::encode).collect(toUnmodifiableList()));
       }
     };
   }
@@ -159,9 +160,9 @@ public final class Json {
       @Override
       public Map<String, V> decode(JsonElement json) {
         if (json instanceof JsonElement.JsonObject object) {
-          return object.values().entries().stream()
-              .map(entry -> entry(entry.get1(), valueAdapter.decode(entry.get2())))
-              .collect(toUnmodifiableMap(Tuple2::get1, Tuple2::get2));
+          return object.values().entrySet().stream()
+              .map(entry -> entry(entry.getKey(), valueAdapter.decode(entry.getValue())))
+              .collect(toUnmodifiableMap(Map.Entry::getKey, Map.Entry::getValue));
         }
         throw new IllegalArgumentException();
       }
@@ -171,13 +172,13 @@ public final class Json {
         return object(
             value.entrySet().stream()
                 .map(entry -> entry(entry.getKey(), valueAdapter.encode(entry.getValue())))
-                .collect(toUnmodifiableMap(Tuple2::get1, Tuple2::get2))
+                .collect(toList())
         );
       }
     };
   }
 
-  public static <V> Tuple2<String, V> entry(String key, V value) {
-    return Tuple2.of(key, value);
+  public static <V> Map.Entry<String, V> entry(String key, V value) {
+    return new AbstractMap.SimpleImmutableEntry<>(key, value);
   }
 }

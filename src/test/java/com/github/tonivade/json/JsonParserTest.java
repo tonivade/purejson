@@ -20,28 +20,27 @@ public class JsonParserTest {
   @Test
   void parseObject() {
     String json = """
-        {"name":"toni","id":1,"active":true} 
+        {"id":1,"name":"toni","active":true} 
         """.strip();
 
     JsonElement element = Json.parse(json);
 
-    assertEquals(object(entry("name", string("toni")), entry("id", number(1L)), entry("active", bool(true))), element);
+    assertEquals(object(entry("id", number(1L)), entry("name", string("toni")), entry("active", bool(true))), element);
   }
 
   @Test
   void parseArray() {
     String json = """
-        ["toni","olivia"]
+        ["toni","olivia","vanessa"]
         """.strip();
 
     JsonElement element = Json.parse(json);
 
-    assertEquals(array(string("toni"), string("olivia")), element);
+    assertEquals(array(string("toni"), string("olivia"), string("vanessa")), element);
   }
 
   @Test
   void parseError() {
     assertThrows(IllegalArgumentException.class, () -> Json.parse(""));
   }
-
 }

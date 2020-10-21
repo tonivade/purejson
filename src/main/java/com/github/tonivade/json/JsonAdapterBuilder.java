@@ -4,21 +4,20 @@
  */
 package com.github.tonivade.json;
 
-import com.github.tonivade.purefun.Function1;
+import static com.github.tonivade.json.JsonPrimitive.bool;
+import static com.github.tonivade.json.JsonPrimitive.number;
+import static com.github.tonivade.json.JsonPrimitive.string;
+import static com.github.tonivade.purefun.Precondition.checkNonNull;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.github.tonivade.json.JsonPrimitive.bool;
-import static com.github.tonivade.json.JsonPrimitive.number;
-import static com.github.tonivade.json.JsonPrimitive.string;
-import static com.github.tonivade.purefun.Precondition.checkNonNull;
+import com.github.tonivade.purefun.Function1;
 
 public final class JsonAdapterBuilder<T> {
 
@@ -99,7 +98,7 @@ public final class JsonAdapterBuilder<T> {
         if (json instanceof JsonElement.JsonObject o) {
           List params = new ArrayList<>();
           for (Map.Entry<String, Function1<JsonElement, ?>> entry : decoders.entrySet()) {
-            JsonElement element = o.values().get(entry.getKey()).getOrElseNull();
+            JsonElement element = o.values().get(entry.getKey());
             params.add(entry.getValue().apply(element));
           }
 
@@ -115,11 +114,11 @@ public final class JsonAdapterBuilder<T> {
 
       @Override
       public JsonElement encode(T value) {
-        Map<String, JsonElement> entries = new HashMap<>();
+        Map<String, JsonElement> entries = new LinkedHashMap<>();
         for (Map.Entry<String, Function1<T, JsonElement>> entry : encoders.entrySet()) {
           entries.put(entry.getKey(), entry.getValue().apply(value));
         }
-        return JsonElement.object(entries);
+        return JsonElement.object(entries.entrySet());
       }
     };
   }

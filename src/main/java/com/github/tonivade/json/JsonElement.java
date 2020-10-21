@@ -5,14 +5,19 @@
 package com.github.tonivade.json;
 
 import static com.github.tonivade.purefun.Precondition.checkNonNull;
+import static java.util.Arrays.stream;
+import static java.util.stream.Collectors.toCollection;
+import static java.util.stream.Collectors.toMap;
 
-import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.Map;
-
-import com.github.tonivade.purefun.Tuple2;
-import com.github.tonivade.purefun.data.ImmutableList;
-import com.github.tonivade.purefun.data.ImmutableMap;
-import com.github.tonivade.purefun.data.Sequence;
+import java.util.Map.Entry;
+import java.util.function.BinaryOperator;
+import java.util.stream.Collector;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 public sealed interface JsonElement permits
     JsonElement.JsonNull, JsonElement.JsonObject, JsonElement.JsonArray, JsonPrimitive {
@@ -29,13 +34,13 @@ public sealed interface JsonElement permits
     }
   }
 
-  record JsonArray(Sequence<? extends JsonElement> elements) implements JsonElement {
+  record JsonArray(ArrayList<? extends JsonElement> elements) implements JsonElement {
     public JsonArray {
       checkNonNull(elements);
     }
   }
 
-  record JsonObject(ImmutableMap<String, ? extends JsonElement> values) implements JsonElement {
+  record JsonObject(LinkedHashMap<String, ? extends JsonElement> values) implements JsonElement {
     public JsonObject {
       checkNonNull(values);
     }
@@ -43,28 +48,44 @@ public sealed interface JsonElement permits
 
 
   static JsonElement emptyObject() {
-    return new JsonObject(ImmutableMap.empty());
+    return new JsonObject(new LinkedHashMap<>());
   }
 
-  static JsonElement object(Map<String, JsonElement> elements) {
-    return elements == null ? NULL : new JsonObject(ImmutableMap.from(elements));
+  static JsonElement object(Iterable<Map.Entry<String, JsonElement>> elements) {
+    return elements == null ? NULL : new JsonObject(streamFrom(elements).collect(toLinkedHashMap()));
   }
 
   @SafeVarargs
-  static JsonElement object(Tuple2<String, JsonElement>... elements) {
-    return elements == null ? NULL : new JsonObject(ImmutableMap.of(elements));
+  static JsonElement object(Map.Entry<String, JsonElement>... elements) {
+    return elements == null ? NULL : new JsonObject(Arrays.stream(elements).collect(toLinkedHashMap()));
   }
 
   static JsonElement emptyArray() {
-    return new JsonArray(ImmutableList.empty());
+    return new JsonArray(new ArrayList<>());
   }
 
-  static JsonElement array(List<JsonElement> elements) {
-    return elements == null ? NULL : new JsonArray(ImmutableList.from(elements));
+  static JsonElement array(Iterable<JsonElement> elements) {
+    return elements == null ? NULL : new JsonArray(streamFrom(elements).collect(toArrayList()));
   }
 
   static JsonElement array(JsonElement... elements) {
-    return elements == null ? NULL : new JsonArray(ImmutableList.of(elements));
+    return elements == null ? NULL : new JsonArray(stream(elements).collect(toArrayList()));
+  }
+
+  private static Collector<JsonElement, ?, ArrayList<JsonElement>> toArrayList() {
+    return toCollection(ArrayList::new);
+  }
+
+  private static <K, V> Collector<Entry<K, V>, ?, LinkedHashMap<K, V>> toLinkedHashMap() {
+    return toMap(Map.Entry::getKey, Map.Entry::getValue, mergeConflict(), LinkedHashMap::new);
+  }
+
+  private static <T> Stream<T> streamFrom(Iterable<T> elements) {
+    return StreamSupport.stream(elements.spliterator(), false);
+  }
+
+  private static <T> BinaryOperator<T> mergeConflict() {
+    return (a, b) -> { throw new RuntimeException(); };
   }
 }
 

@@ -4,8 +4,8 @@
  */
 package com.github.tonivade.json;
 
-import static com.github.tonivade.json.Json.entry;
 import static com.github.tonivade.json.JsonElement.array;
+import static com.github.tonivade.json.JsonElement.entry;
 import static com.github.tonivade.json.JsonElement.object;
 import static com.github.tonivade.json.JsonPrimitive.bool;
 import static com.github.tonivade.json.JsonPrimitive.number;

@@ -7,6 +7,7 @@ package com.github.tonivade.json;
 import static com.github.tonivade.json.JsonPrimitive.bool;
 import static com.github.tonivade.json.JsonPrimitive.number;
 import static com.github.tonivade.json.JsonPrimitive.string;
+import static com.github.tonivade.purefun.Precondition.checkNonEmpty;
 import static com.github.tonivade.purefun.Precondition.checkNonNull;
 
 import java.lang.reflect.Constructor;
@@ -31,6 +32,8 @@ public final class JsonAdapterBuilder<T> {
   }
 
   public JsonAdapterBuilder<T> addInteger(String name, Function1<T, Integer> accessor) {
+    checkNonEmpty(name);
+    checkNonNull(accessor);
     encoders.put(name, value -> number(accessor.apply(value)));
     decoders.put(name, element -> {
       if (element instanceof JsonPrimitive.JsonNumber n) {
@@ -42,6 +45,8 @@ public final class JsonAdapterBuilder<T> {
   }
 
   public JsonAdapterBuilder<T> addDouble(String name, Function1<T, Double> accessor) {
+    checkNonEmpty(name);
+    checkNonNull(accessor);
     encoders.put(name, value -> number(accessor.apply(value)));
     decoders.put(name, element -> {
       if (element instanceof JsonPrimitive.JsonNumber n) {
@@ -53,6 +58,8 @@ public final class JsonAdapterBuilder<T> {
   }
 
   public JsonAdapterBuilder<T> addBoolean(String name, Function1<T, Boolean> accessor) {
+    checkNonEmpty(name);
+    checkNonNull(accessor);
     encoders.put(name, value -> bool(accessor.apply(value)));
     decoders.put(name, element -> {
       if (element instanceof JsonPrimitive.JsonBoolean bool) {
@@ -64,6 +71,8 @@ public final class JsonAdapterBuilder<T> {
   }
 
   public JsonAdapterBuilder<T> addString(String name, Function1<T, String> accessor) {
+    checkNonEmpty(name);
+    checkNonNull(accessor);
     encoders.put(name, value -> string(accessor.apply(value)));
     decoders.put(name, element -> {
       if (element instanceof JsonPrimitive.JsonString s) {
@@ -75,51 +84,55 @@ public final class JsonAdapterBuilder<T> {
   }
 
   public <R> JsonAdapterBuilder<T> addObject(String name, Function1<T, R> accessor, JsonAdapter<R> other) {
+    checkNonEmpty(name);
+    checkNonNull(accessor);
+    checkNonNull(other);
     encoders.put(name, value -> other.encode(accessor.apply(value)));
     decoders.put(name, other::decode);
     return this;
   }
 
   public <R> JsonAdapterBuilder<T> addIterable(String name, Function1<T, Iterable<R>> accessor, JsonAdapter<R> other) {
-    encoders.put(name, value -> Json.listAdapter(other).encode(accessor.apply(value)));
-    decoders.put(name, element -> Json.listAdapter(other).decode(element));
+    checkNonEmpty(name);
+    checkNonNull(accessor);
+    checkNonNull(other);
+    encoders.put(name, value -> JsonAdapter.listAdapter(other).encode(accessor.apply(value)));
+    decoders.put(name, element -> JsonAdapter.listAdapter(other).decode(element));
     return this;
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
   public JsonAdapter<T> build() {
-    return new JsonAdapter<>() {
-      @Override
-      public T decode(JsonElement json) {
-        Constructor<?> constructor1 = Arrays.stream(type.getDeclaredConstructors())
-            .filter(constructor -> constructor.getParameterCount() == decoders.size()).findFirst()
-            .orElseThrow();
+    return JsonAdapter.of(
 
-        if (json instanceof JsonElement.JsonObject o) {
-          List params = new ArrayList<>();
-          for (Map.Entry<String, Function1<JsonElement, ?>> entry : decoders.entrySet()) {
-            JsonElement element = o.values().get(entry.getKey());
-            params.add(entry.getValue().apply(element));
+        value -> {
+          Map<String, JsonElement> entries = new LinkedHashMap<>();
+          for (Map.Entry<String, Function1<T, JsonElement>> entry : encoders.entrySet()) {
+            entries.put(entry.getKey(), entry.getValue().apply(value));
+          }
+          return JsonElement.object(entries.entrySet());
+        },
+
+        json -> {
+          Constructor<?> constructor1 = Arrays.stream(type.getDeclaredConstructors())
+              .filter(constructor -> constructor.getParameterCount() == decoders.size()).findFirst()
+              .orElseThrow();
+
+          if (json instanceof JsonElement.JsonObject o) {
+            List params = new ArrayList<>();
+            for (Map.Entry<String, Function1<JsonElement, ?>> entry : decoders.entrySet()) {
+              JsonElement element = o.values().get(entry.getKey());
+              params.add(entry.getValue().apply(element));
+            }
+
+            try {
+              return (T) constructor1.newInstance(params.toArray(Object[]::new));
+            } catch (InstantiationException | InvocationTargetException | IllegalAccessException e) {
+              throw new IllegalStateException();
+            }
           }
 
-          try {
-            return (T) constructor1.newInstance(params.toArray(Object[]::new));
-          } catch (InstantiationException | InvocationTargetException | IllegalAccessException e) {
-            throw new IllegalStateException();
-          }
-        }
-
-        throw new IllegalArgumentException();
-      }
-
-      @Override
-      public JsonElement encode(T value) {
-        Map<String, JsonElement> entries = new LinkedHashMap<>();
-        for (Map.Entry<String, Function1<T, JsonElement>> entry : encoders.entrySet()) {
-          entries.put(entry.getKey(), entry.getValue().apply(value));
-        }
-        return JsonElement.object(entries.entrySet());
-      }
-    };
+          throw new IllegalArgumentException();
+        });
   }
 }

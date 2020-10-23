@@ -8,7 +8,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 @SuppressWarnings("unused")
-public abstract class Reflection<T> implements Type {
+public abstract class Reflection<T> {
   
   private final Type param;
   
@@ -17,8 +17,11 @@ public abstract class Reflection<T> implements Type {
         ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
   }
   
-  @Override
   public String getTypeName() {
     return param.getTypeName();
+  }
+  
+  public Type getType() {
+    return param;
   }
 }

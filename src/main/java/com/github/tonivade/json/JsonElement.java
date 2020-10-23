@@ -9,6 +9,7 @@ import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toMap;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -70,6 +71,10 @@ public sealed interface JsonElement permits
 
   static JsonElement array(JsonElement... elements) {
     return elements == null ? NULL : new JsonArray(stream(elements).collect(toArrayList()));
+  }
+
+  static <V> Map.Entry<String, V> entry(String key, V value) {
+    return new AbstractMap.SimpleImmutableEntry<>(key, value);
   }
 
   private static Collector<JsonElement, ?, ArrayList<JsonElement>> toArrayList() {

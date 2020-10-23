@@ -119,7 +119,7 @@ class JsonTest {
   }
   
   @Test
-  void testPrimitives() {
+  void serializePrimitives() {
     Json json = new Json();
     
     assertEquals("1", json.toString((byte)1));
@@ -132,5 +132,21 @@ class JsonTest {
     assertEquals("1.0", json.toString(BigDecimal.ONE));
     assertEquals("\"asdfg\"", json.toString("asdfg"));
     assertEquals("\"VAL1\"", json.toString(EnumTest.VAL1));
+  }
+  
+  @Test
+  void parsePrimitives() {
+    Json json = new Json();
+    
+    assertEquals(Byte.valueOf((byte)1), json.<Byte>fromJson("1", byte.class));
+    assertEquals(Short.valueOf((short)1), json.<Short>fromJson("1", short.class));
+    assertEquals(Integer.valueOf(1), json.<Integer>fromJson("1", int.class));
+    assertEquals(Long.valueOf(1L), json.<Long>fromJson("1", long.class));
+    assertEquals(Float.valueOf(1L), json.<Float>fromJson("1.0", float.class));
+    assertEquals(Double.valueOf(1L), json.<Double>fromJson("1.0", double.class));
+    assertEquals(BigInteger.ONE, json.fromJson("1", BigInteger.class));
+    assertEquals(BigDecimal.valueOf(1.0), json.fromJson("1.0", BigDecimal.class));
+    assertEquals("asdfg", json.fromJson("\"asdfg\"", String.class));
+    assertEquals(EnumTest.VAL1, json.fromJson("\"VAL1\"", EnumTest.class));
   }
 }

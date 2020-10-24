@@ -74,6 +74,7 @@ public final class Json {
     }
     JsonAdapter<T> defaultAdapter = JsonAdapter.create(type);
     if (defaultAdapter != null) {
+      add(type, defaultAdapter);
       return defaultAdapter.decode(element);
     }
     throw new IllegalArgumentException("this should not happen");
@@ -111,6 +112,7 @@ public final class Json {
     }
     JsonAdapter defaultAdapter = JsonAdapter.create(object.getClass());
     if (defaultAdapter != null) {
+      add(object.getClass(), defaultAdapter);
       return defaultAdapter.encode(object);
     }
     throw new UnsupportedOperationException("not implemented yet");

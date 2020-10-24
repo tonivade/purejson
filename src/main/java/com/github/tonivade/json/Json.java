@@ -63,19 +63,13 @@ public final class Json {
     return fromJson(parse(json), type) ;
   }
 
-  @SuppressWarnings("unchecked")
   public <T> T fromJson(JsonElement element, Type type) {
     if (element instanceof JsonElement.JsonNull) {
       return null;
     }
-    JsonAdapter<T> jsonAdapter = (JsonAdapter<T>) adapters.get(type.getTypeName());
+    JsonAdapter<T> jsonAdapter = getAdapter(type);
     if (jsonAdapter != null) {
       return jsonAdapter.decode(element);
-    }
-    JsonAdapter<T> defaultAdapter = JsonAdapter.create(type);
-    if (defaultAdapter != null) {
-      add(type, defaultAdapter);
-      return defaultAdapter.decode(element);
     }
     throw new IllegalArgumentException("this should not happen");
   }
@@ -106,16 +100,21 @@ public final class Json {
       }
       return object(entries);
     }
-    JsonAdapter jsonAdapter = adapters.get(object.getClass().getTypeName());
+    JsonAdapter jsonAdapter = getAdapter(object.getClass());
     if (jsonAdapter != null) {
       return jsonAdapter.encode(object);
     }
-    JsonAdapter defaultAdapter = JsonAdapter.create(object.getClass());
-    if (defaultAdapter != null) {
-      add(object.getClass(), defaultAdapter);
-      return defaultAdapter.encode(object);
-    }
     throw new UnsupportedOperationException("not implemented yet");
+  }
+
+  @SuppressWarnings("unchecked")
+  private <T> JsonAdapter<T> getAdapter(Type type) {
+    JsonAdapter<T> jsonAdapter = (JsonAdapter<T>) adapters.get(type.getTypeName());
+    if (jsonAdapter == null) {
+      jsonAdapter = JsonAdapter.create(type);
+      add(type, jsonAdapter);
+    }
+    return jsonAdapter;
   }
 
   public <T> Json add(Type type, JsonAdapter<T> adapter) {

@@ -4,9 +4,8 @@
  */
 package com.github.tonivade.json;
 
-import static com.github.tonivade.json.JsonDecoder.listDecoder;
+import static com.github.tonivade.json.JsonAdapter.listAdapter;
 import static com.github.tonivade.json.JsonElement.object;
-import static com.github.tonivade.json.JsonEncoder.listEncoder;
 import static com.github.tonivade.purefun.Precondition.checkNonEmpty;
 import static com.github.tonivade.purefun.Precondition.checkNonNull;
 
@@ -32,69 +31,35 @@ public final class JsonAdapterBuilder<T> {
   }
 
   public JsonAdapterBuilder<T> addInteger(String name, Function1<T, Integer> accessor) {
-    checkNonEmpty(name);
-    checkNonNull(accessor);
-    encoders.put(name, JsonEncoder.INTEGER.compose(accessor));
-    decoders.put(name, JsonDecoder.INTEGER);
-    return this;
+    return add(name, accessor, JsonAdapter.INTEGER);
   }
 
   public JsonAdapterBuilder<T> addLong(String name, Function1<T, Long> accessor) {
-    checkNonEmpty(name);
-    checkNonNull(accessor);
-    encoders.put(name, JsonEncoder.LONG.compose(accessor));
-    decoders.put(name, JsonDecoder.LONG);
-    return this;
+    return add(name, accessor, JsonAdapter.LONG);
   }
 
   public JsonAdapterBuilder<T> addFloat(String name, Function1<T, Float> accessor) {
-    checkNonEmpty(name);
-    checkNonNull(accessor);
-    encoders.put(name, JsonEncoder.FLOAT.compose(accessor));
-    decoders.put(name, JsonDecoder.FLOAT);
-    return this;
+    return add(name, accessor, JsonAdapter.FLOAT);
   }
 
   public JsonAdapterBuilder<T> addDouble(String name, Function1<T, Double> accessor) {
-    checkNonEmpty(name);
-    checkNonNull(accessor);
-    encoders.put(name, JsonEncoder.DOUBLE.compose(accessor));
-    decoders.put(name, JsonDecoder.DOUBLE);
-    return this;
+    return add(name, accessor, JsonAdapter.DOUBLE);
   }
 
   public JsonAdapterBuilder<T> addBoolean(String name, Function1<T, Boolean> accessor) {
-    checkNonEmpty(name);
-    checkNonNull(accessor);
-    encoders.put(name, JsonEncoder.BOOLEAN.compose(accessor));
-    decoders.put(name, JsonDecoder.BOOLEAN);
-    return this;
+    return add(name, accessor, JsonAdapter.BOOLEAN);
   }
 
   public JsonAdapterBuilder<T> addString(String name, Function1<T, String> accessor) {
-    checkNonEmpty(name);
-    checkNonNull(accessor);
-    encoders.put(name, JsonEncoder.STRING.compose(accessor));
-    decoders.put(name, JsonDecoder.STRING);
-    return this;
+    return add(name, accessor, JsonAdapter.STRING);
   }
 
   public <R> JsonAdapterBuilder<T> addObject(String name, Function1<T, R> accessor, JsonAdapter<R> other) {
-    checkNonEmpty(name);
-    checkNonNull(accessor);
-    checkNonNull(other);
-    encoders.put(name, other.compose(accessor));
-    decoders.put(name, other::decode);
-    return this;
+    return add(name, accessor, other);
   }
 
   public <R> JsonAdapterBuilder<T> addIterable(String name, Function1<T, Iterable<R>> accessor, JsonAdapter<R> other) {
-    checkNonEmpty(name);
-    checkNonNull(accessor);
-    checkNonNull(other);
-    encoders.put(name, listEncoder(other).compose(accessor));
-    decoders.put(name, listDecoder(other));
-    return this;
+    return add(name, accessor, listAdapter(other));
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
@@ -129,5 +94,15 @@ public final class JsonAdapterBuilder<T> {
 
           throw new IllegalArgumentException();
         });
+  }
+
+  private <R> JsonAdapterBuilder<T> add(
+      String name, Function1<T, R> accessor, JsonAdapter<R> adapter) {
+    checkNonEmpty(name);
+    checkNonNull(accessor);
+    checkNonNull(adapter);
+    encoders.put(name, adapter.compose(accessor));
+    decoders.put(name, adapter);
+    return this;
   }
 }

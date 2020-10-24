@@ -27,24 +27,24 @@ public final class Json {
     if (element instanceof JsonElement.JsonNull) {
       return "null";
     }
-    if (element instanceof JsonElement.JsonObject obj) {
-      return obj.values().entrySet().stream()
+    if (element instanceof JsonElement.JsonObject o) {
+      return o.values().entrySet().stream()
           .map(entry -> "\"%s\":%s".formatted(entry.getKey(), serialize(entry.getValue())))
           .collect(joining(",", "{", "}"));
     }
-    if (element instanceof JsonElement.JsonArray array) {
-      return array.elements().stream()
+    if (element instanceof JsonElement.JsonArray a) {
+      return a.elements().stream()
           .map(Json::serialize)
           .collect(joining(",", "[", "]"));
     }
-    if (element instanceof JsonPrimitive.JsonString string) {
-      return "\"%s\"".formatted(string.value());
+    if (element instanceof JsonPrimitive.JsonString s) {
+      return "\"%s\"".formatted(s.value());
     }
-    if (element instanceof JsonPrimitive.JsonNumber number) {
-      return String.valueOf(number.value());
+    if (element instanceof JsonPrimitive.JsonNumber n) {
+      return String.valueOf(n.value());
     }
-    if (element instanceof JsonPrimitive.JsonBoolean bool) {
-      return String.valueOf(bool.value());
+    if (element instanceof JsonPrimitive.JsonBoolean b) {
+      return String.valueOf(b.value());
     }
     throw new IllegalArgumentException("this should not happen");
   }

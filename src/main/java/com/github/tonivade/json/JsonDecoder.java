@@ -27,6 +27,7 @@ import com.github.tonivade.json.JsonElement.JsonObject;
 import com.github.tonivade.json.JsonPrimitive.JsonBoolean;
 import com.github.tonivade.json.JsonPrimitive.JsonNumber;
 import com.github.tonivade.json.JsonPrimitive.JsonString;
+import com.github.tonivade.purefun.Function1;
 
 @FunctionalInterface
 public interface JsonDecoder<T> {

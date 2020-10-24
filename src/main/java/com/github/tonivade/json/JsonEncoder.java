@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.StreamSupport;
 
+import com.github.tonivade.purefun.Function1;
+
 @FunctionalInterface
 public interface JsonEncoder<T> {
   
@@ -43,6 +45,10 @@ public interface JsonEncoder<T> {
   JsonEncoder<Enum<?>> ENUM = value -> string(value.name());
   
   JsonElement encode(T value);
+  
+  default <R> JsonEncoder<R> compose(Function1<R, T> accesor) {
+    return value -> encode(accesor.apply(value));
+  }
   
   @SuppressWarnings("unchecked")
   static <T> JsonEncoder<T> create(Type type) {

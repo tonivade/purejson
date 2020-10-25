@@ -4,15 +4,12 @@
  */
 package com.github.tonivade.json;
 
+import static com.github.tonivade.json.JsonElement.EMPTY_ARRAY;
 import static com.github.tonivade.json.JsonElement.EMPTY_OBJECT;
 import static com.github.tonivade.json.JsonElement.NULL;
-import static com.github.tonivade.json.JsonElement.array;
-import static com.github.tonivade.json.JsonElement.entry;
-import static com.github.tonivade.json.JsonElement.object;
 import static java.util.stream.Collectors.joining;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -77,34 +74,24 @@ public final class Json {
   }
 
   public String toString(Object object) {
-    return serialize(toJson(object));
+    return toString(object, object.getClass());
   }
 
-  public JsonElement toJson(Object object) {
+  public String toString(Object object, Type type) {
+    return serialize(toJson(object, type));
+  }
+
+  public JsonElement toJson(Object object, Type type) {
     if (object == null) {
       return NULL;
     }
-    // TODO: move to adapters
     if (object instanceof Collection<?> collection && collection.isEmpty()) {
-      return JsonElement.EMPTY_ARRAY;
-    } if (object instanceof Iterable<?> iterable) {
-      var items = new ArrayList<JsonElement>();
-      for (Object item : iterable) {
-        items.add(toJson(item));
-      }
-      return array(items);
+      return EMPTY_ARRAY;
     }
     if (object instanceof Map<?, ?> map && map.isEmpty()) {
       return EMPTY_OBJECT;
     }
-    if (object instanceof Map<?, ?> map && map.keySet().stream().allMatch(key -> key instanceof String)) {
-      var entries = new ArrayList<Map.Entry<String, JsonElement>>();
-      for (Map.Entry<?, ?> entry : map.entrySet()) {
-        entries.add(entry((String) entry.getKey(), toJson(entry.getValue())));
-      }
-      return object(entries);
-    }
-    var jsonAdapter = getAdapter(object.getClass());
+    var jsonAdapter = getAdapter(type);
     if (jsonAdapter != null) {
       return jsonAdapter.encode(object);
     }

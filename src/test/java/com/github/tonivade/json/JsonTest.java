@@ -127,7 +127,7 @@ class JsonTest {
   @Test
   void serializeList() {
     var json = new Json();
-    var result = json.toString(List.of(new User(1, "toni")));
+    var result = json.toString(List.of(new User(1, "toni")), new Reflection<List<User>>() {}.getType());
 
     var expected = """
         [{"id":1,"name":"toni"}]

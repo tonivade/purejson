@@ -4,11 +4,16 @@
  */
 package com.github.tonivade.json;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonMap;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
+import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -71,6 +76,18 @@ class JsonTest {
   }
 
   @Test
+  void serializeRecordNull() {
+    var json = new Json();
+    var result = json.toString(new User(1, null));
+
+    var expected = """
+        {"id":1,"name":null} 
+        """.strip();
+
+    assertEquals(expected, result);
+  }
+
+  @Test
   void serializePojo() {
     var json = new Json();
     var result = json.toString(new Pojo(1, "toni"));
@@ -81,19 +98,41 @@ class JsonTest {
 
     assertEquals(expected, result);
   }
+
+  @Test
+  void serializePojoNull() {
+    var json = new Json();
+    var result = json.toString(new Pojo(1, null));
+
+    var expected = """
+        {"id":1,"name":null} 
+        """.strip();
+
+    assertEquals(expected, result);
+  }
   
   @Test
   void serializeInnerArray() {
 
     record Test(String[] values) {}
     
-    var result = new Json().toString(new Test(List.of("hola", "adios").toArray(String[]::new)));
+    var result1 = new Json().toString(new Test(List.of("hola", "adios").toArray(String[]::new)));
+    var result2 = new Json().toString(new Test(asList(null, "adios").toArray(String[]::new)));
+    var result3 = new Json().toString(new Test(null));
 
-    var expected = """
+    var expected1 = """
         {"values":["hola","adios"]} 
         """.strip();
+    var expected2 = """
+        {"values":[null,"adios"]} 
+        """.strip();
+    var expected3 = """
+        {"values":null} 
+        """.strip();
     
-    assertEquals(expected, result);
+    assertEquals(expected1, result1);
+    assertEquals(expected2, result2);
+    assertEquals(expected3, result3);
   }
   
   @Test
@@ -101,13 +140,23 @@ class JsonTest {
 
     record Test(List<String> values) {}
     
-    var result = new Json().toString(new Test(List.of("hola", "adios")));
+    var result1 = new Json().toString(new Test(List.of("hola", "adios")));
+    var result2 = new Json().toString(new Test(asList(null, "adios")));
+    var result3 = new Json().toString(new Test(null));
 
-    var expected = """
+    var expected1 = """
         {"values":["hola","adios"]} 
         """.strip();
+    var expected2 = """
+        {"values":[null,"adios"]} 
+        """.strip();
+    var expected3 = """
+        {"values":null} 
+        """.strip();
     
-    assertEquals(expected, result);
+    assertEquals(expected1, result1);
+    assertEquals(expected2, result2);
+    assertEquals(expected3, result3);
   }
 
   @Test
@@ -115,37 +164,94 @@ class JsonTest {
 
     record Test(Map<String, String> values) {}
     
-    var result = new Json().toString(new Test(Map.of("hola", "adios")));
+    var result1 = new Json().toString(new Test(Map.of("hola", "adios")));
+    var result2 = new Json().toString(new Test(singletonMap("hola", null)));
+    var result3 = new Json().toString(new Test(null));
 
-    var expected = """
+    var expected1 = """
         {"values":{"hola":"adios"}} 
         """.strip();
+    var expected2 = """
+        {"values":{"hola":null}} 
+        """.strip();
+    var expected3 = """
+        {"values":null} 
+        """.strip();
     
-    assertEquals(expected, result);
+    assertEquals(expected1, result1);
+    assertEquals(expected2, result2);
+    assertEquals(expected3, result3);
   }
 
   @Test
   void serializeList() {
     var json = new Json();
-    var result = json.toString(List.of(new User(1, "toni")), new Reflection<List<User>>() {}.getType());
+    Type listOfUsers = new Reflection<List<User>>() {}.getType();
+    var result1 = json.toString(List.of(new User(1, "toni")), listOfUsers);
+    var result2 = json.toString(List.of(new User(1, null)), listOfUsers);
+    var list = new ArrayList<User>();
+    list.add(null);
+    var result3 = json.toString(list, listOfUsers);
 
-    var expected = """
+    var expected1 = """
         [{"id":1,"name":"toni"}]
         """.strip();
+    var expected2 = """
+        [{"id":1,"name":null}]
+        """.strip();
+    var expected3 = """
+        [null]
+        """.strip();
 
-    assertEquals(expected, result);
+    assertEquals(expected1, result1);
+    assertEquals(expected2, result2);
+    assertEquals(expected3, result3);
   }
 
   @Test
   void serializeArray() {
     var json = new Json();
-    var result = json.toString(new User[] { new User(1, "toni") });
+    var result1 = json.toString(new User[] { new User(1, "toni") });
+    var result2 = json.toString(new User[] { new User(1, null) });
+    var result3 = json.toString(new User[] { null });
 
-    var expected = """
+    var expected1 = """
         [{"id":1,"name":"toni"}]
         """.strip();
+    var expected2 = """
+        [{"id":1,"name":null}]
+        """.strip();
+    var expected3 = """
+        [null]
+        """.strip();
 
-    assertEquals(expected, result);
+    assertEquals(expected1, result1);
+    assertEquals(expected2, result2);
+    assertEquals(expected3, result3);
+  }
+  
+  @Test
+  void serializeMap() {
+    var json = new Json();
+    Type mapOfUsers = new Reflection<Map<String, User>>(){}.getType();
+    var result1 = json.toString(Map.of("toni", new User(1, "toni")), mapOfUsers);
+    var result2 = json.toString(Map.of("toni", new User(1, null)), mapOfUsers);
+    var result3 = json.toString(singletonMap("toni", null), mapOfUsers);
+
+    var expected1 = """
+        {"toni":{"id":1,"name":"toni"}}
+        """.strip();
+    var expected2 = """
+        {"toni":{"id":1,"name":null}}
+        """.strip();
+    var expected3 = """
+        {"toni":null}
+        """.strip();
+
+    assertEquals(expected1, result1);
+    assertEquals(expected2, result2);
+    assertEquals(expected3, result3);
+    
   }
 
   @Test
@@ -222,6 +328,7 @@ class JsonTest {
   void serializePrimitives() {
     var json = new Json();
     
+    assertEquals("null", json.toString(null));
     assertEquals("65", json.toString('A'));
     assertEquals("193", json.toString('Á'));
     assertEquals("1", json.toString((byte)1));
@@ -240,10 +347,11 @@ class JsonTest {
   void parsePrimitives() {
     var json = new Json();
     
+    assertNull(json.fromJson("null", String.class));
     assertEquals(Byte.valueOf((byte)1), json.<Byte>fromJson("1", byte.class));
     assertEquals(Short.valueOf((short)1), json.<Short>fromJson("1", short.class));
-    assertEquals(Character.valueOf('A'), json.<Short>fromJson("65", char.class));
-    assertEquals(Character.valueOf('Á'), json.<Short>fromJson("193", char.class));
+    assertEquals(Character.valueOf('A'), json.<Character>fromJson("65", char.class));
+    assertEquals(Character.valueOf('Á'), json.<Character>fromJson("193", char.class));
     assertEquals(Integer.valueOf(1), json.<Integer>fromJson("1", int.class));
     assertEquals(Long.valueOf(1L), json.<Long>fromJson("1", long.class));
     assertEquals(Float.valueOf(1L), json.<Float>fromJson("1.0", float.class));

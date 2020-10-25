@@ -74,7 +74,7 @@ public final class Json {
   }
 
   public String toString(Object object) {
-    return toString(object, object.getClass());
+    return toString(object, object != null ? object.getClass() : null);
   }
 
   public String toString(Object object, Type type) {

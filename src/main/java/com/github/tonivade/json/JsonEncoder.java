@@ -4,6 +4,7 @@
  */
 package com.github.tonivade.json;
 
+import static com.github.tonivade.json.JsonElement.NULL;
 import static com.github.tonivade.json.JsonElement.array;
 import static com.github.tonivade.json.JsonElement.entry;
 import static com.github.tonivade.json.JsonElement.object;
@@ -124,6 +125,9 @@ public interface JsonEncoder<T> {
   @SuppressWarnings({ "rawtypes", "unchecked" })
   static <T> JsonEncoder<T> arrayEncoder(Class<T> type) {
     return value -> {
+      if (value == null) {
+        return NULL;
+      }
       JsonEncoder arrayEncoder = create(type.getComponentType());
       List<JsonElement> items = new LinkedList<>();
       for (Object object : (Object[]) value) {
@@ -136,6 +140,9 @@ public interface JsonEncoder<T> {
   @SuppressWarnings({ "rawtypes", "unchecked" })
   static <T> JsonEncoder<T> pojoEncoder(Class<T> type) {
     return value -> {
+      if (value == null) {
+        return NULL;
+      }
       List<Map.Entry<String, JsonElement>> entries = new ArrayList<>();
       for (Field field : type.getDeclaredFields()) {
         if (!field.isSynthetic()) {
@@ -154,11 +161,15 @@ public interface JsonEncoder<T> {
 
   static <T> JsonEncoder<T> recordEncoder(Class<T> type) {
     return value -> {
+      if (value == null) {
+        return NULL;
+      }
       var entries = new ArrayList<Map.Entry<String, JsonElement>>();
       for (RecordComponent recordComponent : type.getRecordComponents()) {
         var fieldEncoder = create(recordComponent.getGenericType());
         try {
-          entries.add(entry(recordComponent.getName(), fieldEncoder.encode(recordComponent.getAccessor().invoke(value))));
+          var field = recordComponent.getAccessor().invoke(value);
+          entries.add(entry(recordComponent.getName(), fieldEncoder.encode(field)));
         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
           throw new IllegalStateException(e);
         }
@@ -168,15 +179,25 @@ public interface JsonEncoder<T> {
   }
 
   static <E> JsonEncoder<Iterable<E>> listEncoder(JsonEncoder<E> itemEncoder) {
-    return value -> array(StreamSupport.stream(value.spliterator(), false)
-        .map(itemEncoder::encode).collect(toUnmodifiableList()));
+    return value -> {
+      if (value == null) {
+        return NULL;
+      }
+      return array(StreamSupport.stream(value.spliterator(), false)
+          .map(itemEncoder::encode).collect(toUnmodifiableList()));
+    };
   }
 
   static <V> JsonEncoder<Map<String, V>> mapEncoder(JsonEncoder<V> valueEncoder) {
-      return value -> object(
+    return value -> {
+      if (value == null) {
+        return NULL;
+      }
+      return object(
           value.entrySet().stream()
-              .map(entry -> entry(entry.getKey(), valueEncoder.encode(entry.getValue())))
-              .collect(toList()));
+          .map(entry -> entry(entry.getKey(), valueEncoder.encode(entry.getValue())))
+          .collect(toList()));
+    };
   }
 
   @SuppressWarnings("unchecked")

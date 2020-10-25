@@ -12,6 +12,7 @@ import java.util.Map;
 public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
 
   JsonAdapter<String> STRING = of(JsonEncoder.STRING, JsonDecoder.STRING);
+  JsonAdapter<Character> CHAR = of(JsonEncoder.CHAR, JsonDecoder.CHAR);
   JsonAdapter<Byte> BYTE = of(JsonEncoder.BYTE, JsonDecoder.BYTE);
   JsonAdapter<Short> SHORT = of(JsonEncoder.SHORT, JsonDecoder.SHORT);
   JsonAdapter<Integer> INTEGER = of(JsonEncoder.INTEGER, JsonDecoder.INTEGER);

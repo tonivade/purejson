@@ -4,21 +4,22 @@
  */
 package com.github.tonivade.json;
 
+import static com.github.tonivade.json.JsonElement.EMPTY_OBJECT;
 import static com.github.tonivade.json.JsonElement.NULL;
 import static com.github.tonivade.json.JsonElement.array;
-import static com.github.tonivade.json.JsonElement.emptyObject;
 import static com.github.tonivade.json.JsonElement.entry;
 import static com.github.tonivade.json.JsonElement.object;
 import static java.util.stream.Collectors.joining;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.petitparser.context.Result;
 
+@SuppressWarnings("preview")
 public final class Json {
 
   private final Map<String, JsonAdapter<?>> adapters = new HashMap<>();
@@ -63,13 +64,14 @@ public final class Json {
     return fromJson(parse(json), type) ;
   }
 
+  @SuppressWarnings("unchecked")
   public <T> T fromJson(JsonElement element, Type type) {
     if (element instanceof JsonElement.JsonNull) {
       return null;
     }
-    JsonAdapter<T> jsonAdapter = getAdapter(type);
+    var jsonAdapter = getAdapter(type);
     if (jsonAdapter != null) {
-      return jsonAdapter.decode(element);
+      return (T) jsonAdapter.decode(element);
     }
     throw new IllegalArgumentException("this should not happen");
   }
@@ -78,29 +80,31 @@ public final class Json {
     return serialize(toJson(object));
   }
 
-  @SuppressWarnings({"unchecked", "rawtypes"})
   public JsonElement toJson(Object object) {
     if (object == null) {
       return NULL;
     }
-    if (object instanceof Iterable<?> iterable) {
-      List<JsonElement> items = new ArrayList<>();
+    // TODO: move to adapters
+    if (object instanceof Collection<?> collection && collection.isEmpty()) {
+      return JsonElement.EMPTY_ARRAY;
+    } if (object instanceof Iterable<?> iterable) {
+      var items = new ArrayList<JsonElement>();
       for (Object item : iterable) {
         items.add(toJson(item));
       }
       return array(items);
     }
     if (object instanceof Map<?, ?> map && map.isEmpty()) {
-      return emptyObject();
+      return EMPTY_OBJECT;
     }
     if (object instanceof Map<?, ?> map && map.keySet().stream().allMatch(key -> key instanceof String)) {
-      List<Map.Entry<String, JsonElement>> entries = new ArrayList<>();
+      var entries = new ArrayList<Map.Entry<String, JsonElement>>();
       for (Map.Entry<?, ?> entry : map.entrySet()) {
         entries.add(entry((String) entry.getKey(), toJson(entry.getValue())));
       }
       return object(entries);
     }
-    JsonAdapter jsonAdapter = getAdapter(object.getClass());
+    var jsonAdapter = getAdapter(object.getClass());
     if (jsonAdapter != null) {
       return jsonAdapter.encode(object);
     }
@@ -109,12 +113,12 @@ public final class Json {
 
   @SuppressWarnings("unchecked")
   private <T> JsonAdapter<T> getAdapter(Type type) {
-    JsonAdapter<T> jsonAdapter = (JsonAdapter<T>) adapters.get(type.getTypeName());
+    var jsonAdapter = adapters.get(type.getTypeName());
     if (jsonAdapter == null) {
       jsonAdapter = JsonAdapter.create(type);
       add(type, jsonAdapter);
     }
-    return jsonAdapter;
+    return (JsonAdapter<T>) jsonAdapter;
   }
 
   public <T> Json add(Type type, JsonAdapter<T> adapter) {

@@ -14,11 +14,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 import com.github.tonivade.purefun.Function1;
 
+@SuppressWarnings("preview")
 public final class JsonAdapterBuilder<T> {
 
   private final Map<String, JsonEncoder<T>> encoders = new LinkedHashMap<>();
@@ -62,7 +62,7 @@ public final class JsonAdapterBuilder<T> {
     return add(name, accessor, listAdapter(other));
   }
 
-  @SuppressWarnings({"unchecked", "rawtypes"})
+  @SuppressWarnings("unchecked")
   public JsonAdapter<T> build() {
     Constructor<?> constructor1 = Arrays.stream(type.getDeclaredConstructors())
         .filter(constructor -> constructor.getParameterCount() == decoders.size()).findFirst()
@@ -70,7 +70,7 @@ public final class JsonAdapterBuilder<T> {
     return JsonAdapter.of(
 
         value -> {
-          Map<String, JsonElement> entries = new LinkedHashMap<>();
+          var entries = new LinkedHashMap<String, JsonElement>();
           for (Map.Entry<String, JsonEncoder<T>> entry : encoders.entrySet()) {
             entries.put(entry.getKey(), entry.getValue().encode(value));
           }
@@ -79,9 +79,10 @@ public final class JsonAdapterBuilder<T> {
 
         json -> {
           if (json instanceof JsonElement.JsonObject o) {
-            List params = new ArrayList<>();
+            var params = new ArrayList<>();
             for (Map.Entry<String, JsonDecoder<?>> entry : decoders.entrySet()) {
               JsonElement element = o.values().get(entry.getKey());
+              
               params.add(entry.getValue().decode(element));
             }
 

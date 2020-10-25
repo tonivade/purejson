@@ -9,7 +9,6 @@ import static java.util.stream.Collectors.toUnmodifiableList;
 import static java.util.stream.Collectors.toUnmodifiableMap;
 
 import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
@@ -19,7 +18,6 @@ import java.lang.reflect.WildcardType;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import com.github.tonivade.json.JsonElement.JsonArray;
@@ -27,14 +25,20 @@ import com.github.tonivade.json.JsonElement.JsonObject;
 import com.github.tonivade.json.JsonPrimitive.JsonBoolean;
 import com.github.tonivade.json.JsonPrimitive.JsonNumber;
 import com.github.tonivade.json.JsonPrimitive.JsonString;
-import com.github.tonivade.purefun.Function1;
 
 @FunctionalInterface
+@SuppressWarnings("preview")
 public interface JsonDecoder<T> {
   
   JsonDecoder<String> STRING = json -> {
     if (json instanceof JsonString s) {
       return s.value();
+    }
+    throw new IllegalArgumentException();
+  };
+  JsonDecoder<Character> CHAR = json -> {
+    if (json instanceof JsonNumber n) {
+      return (char) n.value().intValue();
     }
     throw new IllegalArgumentException();
   };
@@ -95,7 +99,7 @@ public interface JsonDecoder<T> {
 
   T decode(JsonElement json);
   
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   static <T> JsonDecoder<T> create(Type type) {
     if (type instanceof Class clazz) {
       return create(clazz);
@@ -115,6 +119,8 @@ public interface JsonDecoder<T> {
       return primitiveDecoder(type);
     } else if (type.equals(String.class)) {
       return (JsonDecoder<T>) STRING;
+    } else if (type.equals(Character.class)) {
+      return (JsonDecoder<T>) CHAR;
     } else if (type.equals(Byte.class)) {
       return (JsonDecoder<T>) BYTE;
     } else if (type.equals(Short.class)) {
@@ -150,8 +156,8 @@ public interface JsonDecoder<T> {
   static <T> JsonDecoder<T[]> arrayDecoder(Class<T> type) {
     return json -> {
       if (json instanceof JsonArray a) {
-        Object array = Array.newInstance(type, a.elements().size());
-        JsonDecoder<T> itemDecoder = create(type);
+        var array = Array.newInstance(type, a.elements().size());
+        var itemDecoder = create(type);
         for (int i = 0; i < a.elements().size(); i++) {
           JsonElement element = a.elements().get(i);
           Array.set(array, i, itemDecoder.decode(element));
@@ -171,11 +177,12 @@ public interface JsonDecoder<T> {
     };
   }
 
+  @SuppressWarnings("rawtypes")
   static <T> JsonDecoder<T> recordDecoder(Class<T> type) {
     return json -> {
       if (json instanceof JsonObject o) {
-        List<Class<?>> types = new ArrayList<>();
-        List<Object> values = new ArrayList<>();
+        var types = new ArrayList<Class<?>>();
+        var values = new ArrayList<>();
         for (RecordComponent recordComponent : type.getRecordComponents()) {
           types.add(recordComponent.getType());
           JsonElement jsonElement = o.values().get(recordComponent.getName());
@@ -184,7 +191,7 @@ public interface JsonDecoder<T> {
           values.add(fieldDecoder.decode(jsonElement));
         }
         try {
-          Constructor<T> constructor = type.getDeclaredConstructor(types.toArray(Class[]::new));
+          var constructor = type.getDeclaredConstructor(types.toArray(Class[]::new));
           return constructor.newInstance(values.toArray(Object[]::new));
         } catch (InstantiationException | IllegalAccessException | IllegalArgumentException 
             | InvocationTargetException | NoSuchMethodException | SecurityException e) {
@@ -195,6 +202,7 @@ public interface JsonDecoder<T> {
     };
   }
 
+  @SuppressWarnings("rawtypes")
   static <T> JsonDecoder<T> pojoDecoder(Class<T> type) {
     return json -> {
       if (json instanceof JsonObject o) {
@@ -202,9 +210,8 @@ public interface JsonDecoder<T> {
           T value = type.getConstructor().newInstance();
           for (Field field : type.getDeclaredFields()) {
             field.setAccessible(true);
-            Class<?> fieldType = field.getType();
             JsonElement jsonElement = o.values().get(field.getName());
-            JsonDecoder fieldDecoder = create(fieldType);
+            JsonDecoder fieldDecoder = create((Class<?>) field.getType());
             field.set(value, fieldDecoder.decode(jsonElement));
           }
           return value;
@@ -237,7 +244,11 @@ public interface JsonDecoder<T> {
     };
   }
   
+  @SuppressWarnings("unchecked")
   private static <T> JsonDecoder<T> primitiveDecoder(Class<T> type) {
+    if (type.equals(char.class)) {
+      return (JsonDecoder<T>) CHAR;
+    }
     if (type.equals(byte.class)) {
       return (JsonDecoder<T>) BYTE;
     }

@@ -30,9 +30,11 @@ import java.util.stream.StreamSupport;
 import com.github.tonivade.purefun.Function1;
 
 @FunctionalInterface
+@SuppressWarnings("preview")
 public interface JsonEncoder<T> {
   
   JsonEncoder<String> STRING = JsonPrimitive::string;
+  JsonEncoder<Character> CHAR = JsonPrimitive::number;
   JsonEncoder<Byte> BYTE = JsonPrimitive::number;
   JsonEncoder<Short> SHORT = JsonPrimitive::number;
   JsonEncoder<Integer> INTEGER = JsonPrimitive::number;
@@ -50,7 +52,7 @@ public interface JsonEncoder<T> {
     return value -> encode(accesor.apply(value));
   }
   
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   static <T> JsonEncoder<T> create(Type type) {
     if (type instanceof Class clazz) {
       return create(clazz);
@@ -78,6 +80,8 @@ public interface JsonEncoder<T> {
       return primitiveEncoder(type);
     } else if (type.equals(String.class)) {
       return (JsonEncoder<T>) STRING;
+    } else if (type.equals(Character.class)) {
+      return (JsonEncoder<T>) CHAR;
     } else if (type.equals(Byte.class)) {
       return (JsonEncoder<T>) BYTE;
     } else if (type.equals(Short.class)) {
@@ -169,6 +173,9 @@ public interface JsonEncoder<T> {
 
   @SuppressWarnings("unchecked")
   private static <T> JsonEncoder<T> primitiveEncoder(Class<T> type) {
+    if (type.equals(char.class)) {
+      return (JsonEncoder<T>) CHAR;
+    }
     if (type.equals(byte.class)) {
       return (JsonEncoder<T>) BYTE;
     }

@@ -13,14 +13,52 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.junit.jupiter.api.Test;
 
+import com.github.tonivade.purefun.Equal;
+
+@SuppressWarnings("preview")
 class JsonTest {
 
   record User(Integer id, String name) {}
+
+  final class Pojo {
+    
+    private Integer id;
+    private String name;
+
+    Pojo(Integer id, String name) {
+      this.id = id;
+      this.name = name;
+    }
+    
+    public Integer getId() {
+      return id;
+    }
+    
+    public String getName() {
+      return name;
+    }
+    
+    @Override
+    public int hashCode() {
+      return Objects.hash(id, name);
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+      return Equal.<Pojo>of().comparing(Pojo::getId).comparing(Pojo::getName).applyTo(this, obj);
+    }
+    
+    @Override
+    public String toString() {
+      return "Pojo(id:%s,name:%s)".formatted(id, name);
+    }
+  }
   
-  enum EnumTest { VAL1, VAL2 };
+  enum EnumTest { VAL1, VAL2 }
 
   private final JsonAdapter<User> adapter =
       JsonAdapter.builder(User.class)
@@ -29,10 +67,10 @@ class JsonTest {
 
   @Test
   void serialize() {
-    Json json = new Json().add(User.class, adapter);
-    String result = json.toString(new User(1, "toni"));
+    var json = new Json().add(User.class, adapter);
+    var result = json.toString(new User(1, "toni"));
 
-    String expected = """
+    var expected = """
         {"id":1,"name":"toni"} 
         """.strip();
 
@@ -41,10 +79,10 @@ class JsonTest {
 
   @Test
   void serializeList() {
-    Json json = new Json().add(User.class, adapter);
-    String result = json.toString(List.of(new User(1, "toni")));
+    var json = new Json().add(User.class, adapter);
+    var result = json.toString(List.of(new User(1, "toni")));
 
-    String expected = """
+    var expected = """
         [{"id":1,"name":"toni"}]
         """.strip();
 
@@ -53,10 +91,10 @@ class JsonTest {
 
   @Test
   void serializeArray() {
-    Json json = new Json().add(User.class, adapter);
-    String result = json.toString(new User[] { new User(1, "toni") });
+    var json = new Json().add(User.class, adapter);
+    var result = json.toString(new User[] { new User(1, "toni") });
 
-    String expected = """
+    var expected = """
         [{"id":1,"name":"toni"}]
         """.strip();
 
@@ -65,42 +103,42 @@ class JsonTest {
 
   @Test
   void parse() {
-    String string = """
+    var string = """
         {"id":1,"name":"toni"} 
         """.strip();
 
-    Json json = new Json().add(User.class, adapter);
+    var json = new Json().add(User.class, adapter);
     User user = json.fromJson(string, User.class);
 
-    User expected = new User(1, "toni");
+    var expected = new User(1, "toni");
     assertEquals(expected, user);
   }
 
   @Test
   void parseList() {
-    String string = """
+    var string = """
         [{"id":1,"name":"toni"}]
         """.strip();
 
-    Reflection<List<User>> listOfUsers = new Reflection<List<User>>() {};
-    Json json = new Json().add(listOfUsers.getType(), listAdapter(adapter));
+    var listOfUsers = new Reflection<List<User>>() {};
+    var json = new Json().add(listOfUsers.getType(), listAdapter(adapter));
     List<User> array = json.fromJson(string, listOfUsers.getType());
 
-    User expected = new User(1, "toni");
+    var expected = new User(1, "toni");
     assertEquals(List.of(expected), array);
   }
 
   @Test
   void parseArray() {
-    String string = """
+    var string = """
         [{"id":1,"name":"toni"}]
         """.strip();
 
-    Reflection<User[]> listOfUsers = new Reflection<User[]>() {};
-    Json json = new Json();
+    var listOfUsers = new Reflection<User[]>() {};
+    var json = new Json();
     User[] array = json.fromJson(string, listOfUsers.getType());
 
-    User expected = new User(1, "toni");
+    var expected = new User(1, "toni");
     assertArrayEquals(new User[] { expected }, array);
   }
 
@@ -110,18 +148,20 @@ class JsonTest {
         {"toni":{"id":1,"name":"toni"}}
         """.strip();
 
-    Reflection<Map<String, User>> mapOfUsers = new Reflection<Map<String, User>>() {};
-    Json json = new Json().add(mapOfUsers.getType(), mapAdapter(adapter));
+    var mapOfUsers = new Reflection<Map<String, User>>() {};
+    var json = new Json().add(mapOfUsers.getType(), mapAdapter(adapter));
     Map<String, User> map = json.fromJson(string, mapOfUsers.getType());
 
-    User expected = new User(1, "toni");
+    var expected = new User(1, "toni");
     assertEquals(Map.of("toni", expected), map);
   }
   
   @Test
   void serializePrimitives() {
-    Json json = new Json();
+    var json = new Json();
     
+    assertEquals("65", json.toString('A'));
+    assertEquals("193", json.toString('Á'));
     assertEquals("1", json.toString((byte)1));
     assertEquals("1", json.toString((short)1));
     assertEquals("1", json.toString(1));
@@ -136,10 +176,12 @@ class JsonTest {
   
   @Test
   void parsePrimitives() {
-    Json json = new Json();
+    var json = new Json();
     
     assertEquals(Byte.valueOf((byte)1), json.<Byte>fromJson("1", byte.class));
     assertEquals(Short.valueOf((short)1), json.<Short>fromJson("1", short.class));
+    assertEquals(Character.valueOf('A'), json.<Short>fromJson("65", char.class));
+    assertEquals(Character.valueOf('Á'), json.<Short>fromJson("193", char.class));
     assertEquals(Integer.valueOf(1), json.<Integer>fromJson("1", int.class));
     assertEquals(Long.valueOf(1L), json.<Long>fromJson("1", long.class));
     assertEquals(Float.valueOf(1L), json.<Float>fromJson("1.0", float.class));

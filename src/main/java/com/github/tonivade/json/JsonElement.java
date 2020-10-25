@@ -20,10 +20,13 @@ import java.util.stream.Collector;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+@SuppressWarnings("preview")
 public sealed interface JsonElement permits
     JsonElement.JsonNull, JsonElement.JsonObject, JsonElement.JsonArray, JsonPrimitive {
 
   JsonElement NULL = new JsonNull();
+  JsonElement EMPTY_OBJECT = new JsonObject();
+  JsonElement EMPTY_ARRAY = new JsonArray();
 
   final class JsonNull implements JsonElement {
 
@@ -36,20 +39,21 @@ public sealed interface JsonElement permits
   }
 
   record JsonArray(ArrayList<? extends JsonElement> elements) implements JsonElement {
+    public JsonArray() {
+      this(new ArrayList<>());
+    }
     public JsonArray {
       checkNonNull(elements);
     }
   }
 
   record JsonObject(LinkedHashMap<String, ? extends JsonElement> values) implements JsonElement {
+    public JsonObject() {
+      this(new LinkedHashMap<>());
+    }
     public JsonObject {
       checkNonNull(values);
     }
-  }
-
-
-  static JsonElement emptyObject() {
-    return new JsonObject(new LinkedHashMap<>());
   }
 
   static JsonElement object(Iterable<Map.Entry<String, JsonElement>> elements) {
@@ -59,10 +63,6 @@ public sealed interface JsonElement permits
   @SafeVarargs
   static JsonElement object(Map.Entry<String, JsonElement>... elements) {
     return elements == null ? NULL : new JsonObject(Arrays.stream(elements).collect(toLinkedHashMap()));
-  }
-
-  static JsonElement emptyArray() {
-    return new JsonArray(new ArrayList<>());
   }
 
   static JsonElement array(Iterable<JsonElement> elements) {

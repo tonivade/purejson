@@ -6,6 +6,7 @@ package com.github.tonivade.json;
 
 import static com.github.tonivade.purefun.Precondition.checkNonNull;
 
+@SuppressWarnings("preview")
 public sealed interface JsonPrimitive extends JsonElement permits
     JsonPrimitive.JsonString, JsonPrimitive.JsonNumber, JsonPrimitive.JsonBoolean {
 

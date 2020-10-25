@@ -4,16 +4,15 @@
  */
 package com.github.tonivade.json;
 
+import static com.github.tonivade.json.JsonElement.EMPTY_ARRAY;
+import static com.github.tonivade.json.JsonElement.EMPTY_OBJECT;
 import static com.github.tonivade.json.JsonElement.array;
-import static com.github.tonivade.json.JsonElement.emptyArray;
-import static com.github.tonivade.json.JsonElement.emptyObject;
 import static com.github.tonivade.json.JsonElement.object;
 import static com.github.tonivade.json.JsonPrimitive.number;
 import static com.github.tonivade.json.JsonPrimitive.string;
 
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.petitparser.grammar.json.JsonGrammarDefinition;
 import org.petitparser.tools.GrammarParser;
@@ -31,10 +30,10 @@ public class JsonParser extends GrammarParser {
       action("elements", Functions.withoutSeparators());
       action("members", Functions.withoutSeparators());
       action("array", (List<List<JsonElement>> input) ->
-        input.get(1) != null ? array(input.get(1)) : emptyArray());
+        input.get(1) != null ? array(input.get(1)) : EMPTY_ARRAY);
       action("object", (List<List<List<Object>>> input) -> {
         if (input.get(1) != null) {
-          Map<String, JsonElement> result = new LinkedHashMap<>();
+          var result = new LinkedHashMap<String, JsonElement>();
           for (List<Object> list : input.get(1)) {
             result.put(
                 ((JsonPrimitive.JsonString) list.get(0)).value(),
@@ -42,7 +41,7 @@ public class JsonParser extends GrammarParser {
           }
           return object(result.entrySet());
         }
-        return emptyObject();
+        return EMPTY_OBJECT;
       });
 
       action("trueToken", Functions.constant(JsonPrimitive.TRUE));

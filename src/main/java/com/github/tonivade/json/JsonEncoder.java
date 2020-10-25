@@ -14,7 +14,6 @@ import static java.util.stream.Collectors.toUnmodifiableList;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
@@ -63,15 +62,26 @@ public interface JsonEncoder<T> {
     if (type instanceof WildcardType wildcardType) {
       return create(wildcardType);
     }
-    throw new UnsupportedOperationException(type.getClass().getName());
+    throw new UnsupportedOperationException(type.getTypeName());
   }
 
+  @SuppressWarnings("unchecked")
   static <T> JsonEncoder<T> create(ParameterizedType type) {
-    throw new UnsupportedOperationException();
+    if (type.getRawType() instanceof Class<?> c && Iterable.class.isAssignableFrom(c)) {
+      var create = create(type.getActualTypeArguments()[0]);
+      return (JsonEncoder<T>) listEncoder(create);
+    }
+    if (type.getRawType() instanceof Class<?> c 
+        && Map.class.isAssignableFrom(c)
+        && type.getActualTypeArguments()[0].equals(String.class)) {
+      var create = create(type.getActualTypeArguments()[1]);
+      return (JsonEncoder<T>) mapEncoder(create);
+    }
+    throw new UnsupportedOperationException(type.getTypeName());
   }
 
   static <T> JsonEncoder<T> create(WildcardType type) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException(type.getTypeName());
   }
 
   @SuppressWarnings("unchecked")
@@ -128,29 +138,27 @@ public interface JsonEncoder<T> {
     return value -> {
       List<Map.Entry<String, JsonElement>> entries = new ArrayList<>();
       for (Field field : type.getDeclaredFields()) {
-        field.setAccessible(true);
-        Class<?> fieldType = field.getType();
-        JsonEncoder fieldEncoder = create(fieldType);
-        try {
-          entries.add(entry(field.getName(), fieldEncoder.encode(field.get(value))));
-        } catch (IllegalArgumentException | IllegalAccessException e) {
-          throw new IllegalStateException(e);
+        if (!field.isSynthetic()) {
+          field.setAccessible(true);
+          JsonEncoder fieldEncoder = create(field.getGenericType());
+          try {
+            entries.add(entry(field.getName(), fieldEncoder.encode(field.get(value))));
+          } catch (IllegalArgumentException | IllegalAccessException e) {
+            throw new IllegalStateException(e);
+          }
         }
       }
       return object(entries);
     };
   }
 
-  @SuppressWarnings({ "rawtypes", "unchecked" })
   static <T> JsonEncoder<T> recordEncoder(Class<T> type) {
     return value -> {
-      List<Map.Entry<String, JsonElement>> entries = new ArrayList<>();
+      var entries = new ArrayList<Map.Entry<String, JsonElement>>();
       for (RecordComponent recordComponent : type.getRecordComponents()) {
-        Method accessor = recordComponent.getAccessor();
-        Class<?> fieldType = recordComponent.getType();
-        JsonEncoder fieldEncoder = create(fieldType);
+        var fieldEncoder = create(recordComponent.getGenericType());
         try {
-          entries.add(entry(recordComponent.getName(), fieldEncoder.encode(accessor.invoke(value))));
+          entries.add(entry(recordComponent.getName(), fieldEncoder.encode(recordComponent.getAccessor().invoke(value))));
         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
           throw new IllegalStateException(e);
         }

@@ -4,8 +4,6 @@
  */
 package com.github.tonivade.json;
 
-import static com.github.tonivade.json.JsonAdapter.listAdapter;
-import static com.github.tonivade.json.JsonAdapter.mapAdapter;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -60,14 +58,9 @@ class JsonTest {
   
   enum EnumTest { VAL1, VAL2 }
 
-  private final JsonAdapter<User> adapter =
-      JsonAdapter.builder(User.class)
-          .addInteger("id", User::id)
-          .addString("name", User::name).build();
-
   @Test
-  void serialize() {
-    var json = new Json().add(User.class, adapter);
+  void serializeRecord() {
+    var json = new Json();
     var result = json.toString(new User(1, "toni"));
 
     var expected = """
@@ -78,8 +71,62 @@ class JsonTest {
   }
 
   @Test
+  void serializePojo() {
+    var json = new Json();
+    var result = json.toString(new Pojo(1, "toni"));
+
+    var expected = """
+        {"id":1,"name":"toni"} 
+        """.strip();
+
+    assertEquals(expected, result);
+  }
+  
+  @Test
+  void serializeInnerArray() {
+
+    record Test(String[] values) {}
+    
+    var result = new Json().toString(new Test(List.of("hola", "adios").toArray(String[]::new)));
+
+    var expected = """
+        {"values":["hola","adios"]} 
+        """.strip();
+    
+    assertEquals(expected, result);
+  }
+  
+  @Test
+  void serializeInnerList() {
+
+    record Test(List<String> values) {}
+    
+    var result = new Json().toString(new Test(List.of("hola", "adios")));
+
+    var expected = """
+        {"values":["hola","adios"]} 
+        """.strip();
+    
+    assertEquals(expected, result);
+  }
+
+  @Test
+  void serializeInnerMap() {
+
+    record Test(Map<String, String> values) {}
+    
+    var result = new Json().toString(new Test(Map.of("hola", "adios")));
+
+    var expected = """
+        {"values":{"hola":"adios"}} 
+        """.strip();
+    
+    assertEquals(expected, result);
+  }
+
+  @Test
   void serializeList() {
-    var json = new Json().add(User.class, adapter);
+    var json = new Json();
     var result = json.toString(List.of(new User(1, "toni")));
 
     var expected = """
@@ -91,7 +138,7 @@ class JsonTest {
 
   @Test
   void serializeArray() {
-    var json = new Json().add(User.class, adapter);
+    var json = new Json();
     var result = json.toString(new User[] { new User(1, "toni") });
 
     var expected = """
@@ -107,7 +154,7 @@ class JsonTest {
         {"id":1,"name":"toni"} 
         """.strip();
 
-    var json = new Json().add(User.class, adapter);
+    var json = new Json();
     User user = json.fromJson(string, User.class);
 
     var expected = new User(1, "toni");
@@ -121,11 +168,26 @@ class JsonTest {
         """.strip();
 
     var listOfUsers = new Reflection<List<User>>() {};
-    var json = new Json().add(listOfUsers.getType(), listAdapter(adapter));
+    var json = new Json();
     List<User> array = json.fromJson(string, listOfUsers.getType());
 
     var expected = new User(1, "toni");
     assertEquals(List.of(expected), array);
+  }
+
+  @Test
+  void parseInnerList() {
+    record Test(List<String> values) {}
+    
+    var string = """
+        {"values":["one","two","three"]}
+        """.strip();
+
+    var json = new Json();
+    Test result = json.fromJson(string, Test.class);
+
+    var expected = new Test(List.of("one", "two", "three"));
+    assertEquals(expected, result);
   }
 
   @Test
@@ -149,7 +211,7 @@ class JsonTest {
         """.strip();
 
     var mapOfUsers = new Reflection<Map<String, User>>() {};
-    var json = new Json().add(mapOfUsers.getType(), mapAdapter(adapter));
+    var json = new Json();
     Map<String, User> map = json.fromJson(string, mapOfUsers.getType());
 
     var expected = new User(1, "toni");

@@ -110,7 +110,26 @@ public interface JsonDecoder<T> {
     if (type instanceof WildcardType wildcardType) {
       return create(wildcardType);
     }
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException(type.getTypeName());
+  }
+
+  @SuppressWarnings("unchecked")
+  static <T> JsonDecoder<T> create(ParameterizedType type) {
+    if (type.getRawType() instanceof Class<?> c && Iterable.class.isAssignableFrom(c)) {
+      var create = create(type.getActualTypeArguments()[0]);
+      return (JsonDecoder<T>) listDecoder(create);
+    }
+    if (type.getRawType() instanceof Class<?> c 
+        && Map.class.isAssignableFrom(c)
+        && type.getActualTypeArguments()[0].equals(String.class)) {
+      var create = create(type.getActualTypeArguments()[1]);
+      return (JsonDecoder<T>) mapDecoder(create);
+    }
+    throw new UnsupportedOperationException(type.getTypeName());
+  }
+
+  static <T> JsonDecoder<T> create(WildcardType type) {
+    throw new UnsupportedOperationException(type.getTypeName());
   }
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -177,7 +196,6 @@ public interface JsonDecoder<T> {
     };
   }
 
-  @SuppressWarnings("rawtypes")
   static <T> JsonDecoder<T> recordDecoder(Class<T> type) {
     return json -> {
       if (json instanceof JsonObject o) {
@@ -186,8 +204,7 @@ public interface JsonDecoder<T> {
         for (RecordComponent recordComponent : type.getRecordComponents()) {
           types.add(recordComponent.getType());
           JsonElement jsonElement = o.values().get(recordComponent.getName());
-          Class<?> fieldType = recordComponent.getType();
-          JsonDecoder fieldDecoder = create(fieldType);
+          var fieldDecoder = create(recordComponent.getGenericType());
           values.add(fieldDecoder.decode(jsonElement));
         }
         try {
@@ -202,7 +219,6 @@ public interface JsonDecoder<T> {
     };
   }
 
-  @SuppressWarnings("rawtypes")
   static <T> JsonDecoder<T> pojoDecoder(Class<T> type) {
     return json -> {
       if (json instanceof JsonObject o) {
@@ -211,7 +227,7 @@ public interface JsonDecoder<T> {
           for (Field field : type.getDeclaredFields()) {
             field.setAccessible(true);
             JsonElement jsonElement = o.values().get(field.getName());
-            JsonDecoder fieldDecoder = create((Class<?>) field.getType());
+            var fieldDecoder = create(field.getGenericType());
             field.set(value, fieldDecoder.decode(jsonElement));
           }
           return value;

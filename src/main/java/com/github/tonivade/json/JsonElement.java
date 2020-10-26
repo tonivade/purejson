@@ -38,7 +38,7 @@ public sealed interface JsonElement permits
     }
   }
 
-  record JsonArray(ArrayList<? extends JsonElement> elements) implements JsonElement {
+  record JsonArray(ArrayList<JsonElement> elements) implements JsonElement {
     public JsonArray() {
       this(new ArrayList<>());
     }
@@ -47,7 +47,7 @@ public sealed interface JsonElement permits
     }
   }
 
-  record JsonObject(LinkedHashMap<String, ? extends JsonElement> values) implements JsonElement {
+  record JsonObject(LinkedHashMap<String, JsonElement> values) implements JsonElement {
     public JsonObject() {
       this(new LinkedHashMap<>());
     }

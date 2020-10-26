@@ -29,6 +29,8 @@ class JsonTest {
 
   final class Pojo {
     
+    private static final int x = 1;
+    
     private Integer id;
     private String name;
 
@@ -189,8 +191,7 @@ class JsonTest {
     Type listOfUsers = new Reflection<List<User>>() {}.getType();
     var result1 = json.toString(List.of(new User(1, "toni")), listOfUsers);
     var result2 = json.toString(List.of(new User(1, null)), listOfUsers);
-    var list = new ArrayList<User>();
-    list.add(null);
+    var list = listWithNull();
     var result3 = json.toString(list, listOfUsers);
 
     var expected1 = """
@@ -269,16 +270,25 @@ class JsonTest {
 
   @Test
   void parseList() {
-    var string = """
+    var string1 = """
         [{"id":1,"name":"toni"}]
+        """.strip();
+    var string2 = """
+        [{"id":1,"name":null}]
+        """.strip();
+    var string3 = """
+        [null]
         """.strip();
 
     var listOfUsers = new Reflection<List<User>>() {};
     var json = new Json();
-    List<User> array = json.fromJson(string, listOfUsers.getType());
+    List<User> array1 = json.fromJson(string1, listOfUsers.getType());
+    List<User> array2 = json.fromJson(string2, listOfUsers.getType());
+    List<User> array3 = json.fromJson(string3, listOfUsers.getType());
 
-    var expected = new User(1, "toni");
-    assertEquals(List.of(expected), array);
+    assertEquals(List.of(new User(1, "toni")), array1);
+    assertEquals(List.of(new User(1, null)), array2);
+    assertEquals(listWithNull(), array3);
   }
 
   @Test
@@ -298,30 +308,48 @@ class JsonTest {
 
   @Test
   void parseArray() {
-    var string = """
+    var string1 = """
         [{"id":1,"name":"toni"}]
+        """.strip();
+    var string2 = """
+        [{"id":1,"name":null}]
+        """.strip();
+    var string3 = """
+        [null]
         """.strip();
 
     var listOfUsers = new Reflection<User[]>() {};
     var json = new Json();
-    User[] array = json.fromJson(string, listOfUsers.getType());
+    User[] array1 = json.fromJson(string1, listOfUsers.getType());
+    User[] array2 = json.fromJson(string2, listOfUsers.getType());
+    User[] array3 = json.fromJson(string3, listOfUsers.getType());
 
-    var expected = new User(1, "toni");
-    assertArrayEquals(new User[] { expected }, array);
+    assertArrayEquals(new User[] { new User(1, "toni") }, array1);
+    assertArrayEquals(new User[] { new User(1, null) }, array2);
+    assertArrayEquals(new User[] { null }, array3);
   }
 
   @Test
   void parseMap() {
-    String string = """
+    String string1 = """
         {"toni":{"id":1,"name":"toni"}}
+        """.strip();
+    String string2 = """
+        {"toni":{"id":1,"name":null}}
+        """.strip();
+    String string3 = """
+        {"toni":null}
         """.strip();
 
     var mapOfUsers = new Reflection<Map<String, User>>() {};
     var json = new Json();
-    Map<String, User> map = json.fromJson(string, mapOfUsers.getType());
+    Map<String, User> map1 = json.fromJson(string1, mapOfUsers.getType());
+    Map<String, User> map2 = json.fromJson(string2, mapOfUsers.getType());
+    Map<String, User> map3 = json.fromJson(string3, mapOfUsers.getType());
 
-    var expected = new User(1, "toni");
-    assertEquals(Map.of("toni", expected), map);
+    assertEquals(Map.of("toni", new User(1, "toni")), map1);
+    assertEquals(Map.of("toni", new User(1, null)), map2);
+    assertEquals(singletonMap("toni", null), map3);
   }
   
   @Test
@@ -360,5 +388,11 @@ class JsonTest {
     assertEquals(BigDecimal.valueOf(1.0), json.fromJson("1.0", BigDecimal.class));
     assertEquals("asdfg", json.fromJson("\"asdfg\"", String.class));
     assertEquals(EnumTest.VAL1, json.fromJson("\"VAL1\"", EnumTest.class));
+  }
+
+  private <T> ArrayList<T> listWithNull() {
+    var list = new ArrayList<T>();
+    list.add(null);
+    return list;
   }
 }

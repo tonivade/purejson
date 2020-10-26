@@ -4,12 +4,12 @@
  */
 package com.github.tonivade.json;
 
-import static com.github.tonivade.json.JsonElement.NULL;
 import static com.github.tonivade.json.JsonElement.array;
 import static com.github.tonivade.json.JsonElement.entry;
 import static com.github.tonivade.json.JsonElement.object;
 import static com.github.tonivade.json.JsonPrimitive.number;
 import static com.github.tonivade.json.JsonPrimitive.string;
+import static java.lang.reflect.Modifier.isStatic;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toUnmodifiableList;
 
@@ -55,13 +55,13 @@ public interface JsonEncoder<T> {
   @SuppressWarnings({ "unchecked", "rawtypes" })
   static <T> JsonEncoder<T> create(Type type) {
     if (type instanceof Class clazz) {
-      return create(clazz);
+      return nullSafe(create(clazz));
     }
     if (type instanceof ParameterizedType paramType) {
-      return create(paramType);
+      return nullSafe(create(paramType));
     }
     if (type instanceof WildcardType wildcardType) {
-      return create(wildcardType);
+      return nullSafe(create(wildcardType));
     }
     throw new UnsupportedOperationException(type.getTypeName());
   }
@@ -125,10 +125,7 @@ public interface JsonEncoder<T> {
   @SuppressWarnings({ "rawtypes", "unchecked" })
   static <T> JsonEncoder<T> arrayEncoder(Class<T> type) {
     return value -> {
-      if (value == null) {
-        return NULL;
-      }
-      JsonEncoder arrayEncoder = create(type.getComponentType());
+      JsonEncoder arrayEncoder = create((Type) type.getComponentType());
       List<JsonElement> items = new LinkedList<>();
       for (Object object : (Object[]) value) {
         items.add(arrayEncoder.encode(object));
@@ -140,13 +137,9 @@ public interface JsonEncoder<T> {
   @SuppressWarnings({ "rawtypes", "unchecked" })
   static <T> JsonEncoder<T> pojoEncoder(Class<T> type) {
     return value -> {
-      if (value == null) {
-        return NULL;
-      }
       List<Map.Entry<String, JsonElement>> entries = new ArrayList<>();
       for (Field field : type.getDeclaredFields()) {
-        if (!field.isSynthetic()) {
-          field.setAccessible(true);
+        if (!isStatic(field.getModifiers()) && !field.isSynthetic() && field.trySetAccessible()) {
           JsonEncoder fieldEncoder = create(field.getGenericType());
           try {
             entries.add(entry(field.getName(), fieldEncoder.encode(field.get(value))));
@@ -162,7 +155,7 @@ public interface JsonEncoder<T> {
   static <T> JsonEncoder<T> recordEncoder(Class<T> type) {
     return value -> {
       if (value == null) {
-        return NULL;
+        new Exception().printStackTrace();
       }
       var entries = new ArrayList<Map.Entry<String, JsonElement>>();
       for (RecordComponent recordComponent : type.getRecordComponents()) {
@@ -180,9 +173,6 @@ public interface JsonEncoder<T> {
 
   static <E> JsonEncoder<Iterable<E>> listEncoder(JsonEncoder<E> itemEncoder) {
     return value -> {
-      if (value == null) {
-        return NULL;
-      }
       return array(StreamSupport.stream(value.spliterator(), false)
           .map(itemEncoder::encode).collect(toUnmodifiableList()));
     };
@@ -190,9 +180,6 @@ public interface JsonEncoder<T> {
 
   static <V> JsonEncoder<Map<String, V>> mapEncoder(JsonEncoder<V> valueEncoder) {
     return value -> {
-      if (value == null) {
-        return NULL;
-      }
       return object(
           value.entrySet().stream()
           .map(entry -> entry(entry.getKey(), valueEncoder.encode(entry.getValue())))
@@ -227,5 +214,14 @@ public interface JsonEncoder<T> {
       return (JsonEncoder<T>) BOOLEAN;
     }
     throw new IllegalArgumentException();
+  }
+  
+  private static <T> JsonEncoder<T> nullSafe(JsonEncoder<T> encoder) {
+    return value -> {
+      if (value == null) {
+        return JsonElement.NULL;
+      }
+      return encoder.encode(value);
+    };
   }
 }

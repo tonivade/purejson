@@ -95,7 +95,7 @@ public final class Json {
     if (jsonAdapter != null) {
       return jsonAdapter.encode(object);
     }
-    throw new UnsupportedOperationException("not implemented yet");
+    throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
   }
 
   @SuppressWarnings("unchecked")
@@ -103,7 +103,6 @@ public final class Json {
     var jsonAdapter = adapters.get(type.getTypeName());
     if (jsonAdapter == null) {
       jsonAdapter = JsonAdapter.create(type);
-      add(type, jsonAdapter);
     }
     return (JsonAdapter<T>) jsonAdapter;
   }

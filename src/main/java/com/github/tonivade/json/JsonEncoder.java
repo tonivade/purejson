@@ -4,6 +4,7 @@
  */
 package com.github.tonivade.json;
 
+import static com.github.tonivade.json.JsonElement.NULL;
 import static com.github.tonivade.json.JsonElement.array;
 import static com.github.tonivade.json.JsonElement.entry;
 import static com.github.tonivade.json.JsonElement.object;
@@ -63,7 +64,7 @@ public interface JsonEncoder<T> {
     if (type instanceof WildcardType wildcardType) {
       return nullSafe(create(wildcardType));
     }
-    throw new UnsupportedOperationException(type.getTypeName());
+    throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
   }
 
   @SuppressWarnings("unchecked")
@@ -78,11 +79,11 @@ public interface JsonEncoder<T> {
       var create = create(type.getActualTypeArguments()[1]);
       return (JsonEncoder<T>) mapEncoder(create);
     }
-    throw new UnsupportedOperationException(type.getTypeName());
+    throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
   }
 
   static <T> JsonEncoder<T> create(WildcardType type) {
-    throw new UnsupportedOperationException(type.getTypeName());
+    throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
   }
 
   @SuppressWarnings("unchecked")
@@ -154,9 +155,6 @@ public interface JsonEncoder<T> {
 
   static <T> JsonEncoder<T> recordEncoder(Class<T> type) {
     return value -> {
-      if (value == null) {
-        new Exception().printStackTrace();
-      }
       var entries = new ArrayList<Map.Entry<String, JsonElement>>();
       for (RecordComponent recordComponent : type.getRecordComponents()) {
         var fieldEncoder = create(recordComponent.getGenericType());
@@ -172,19 +170,15 @@ public interface JsonEncoder<T> {
   }
 
   static <E> JsonEncoder<Iterable<E>> listEncoder(JsonEncoder<E> itemEncoder) {
-    return value -> {
-      return array(StreamSupport.stream(value.spliterator(), false)
-          .map(itemEncoder::encode).collect(toUnmodifiableList()));
-    };
+    return value -> array(StreamSupport.stream(value.spliterator(), false)
+        .map(itemEncoder::encode).collect(toUnmodifiableList()));
   }
 
   static <V> JsonEncoder<Map<String, V>> mapEncoder(JsonEncoder<V> valueEncoder) {
-    return value -> {
-      return object(
-          value.entrySet().stream()
-          .map(entry -> entry(entry.getKey(), valueEncoder.encode(entry.getValue())))
-          .collect(toList()));
-    };
+    return value -> object(
+        value.entrySet().stream()
+        .map(entry -> entry(entry.getKey(), valueEncoder.encode(entry.getValue())))
+        .collect(toList()));
   }
 
   @SuppressWarnings("unchecked")
@@ -213,15 +207,10 @@ public interface JsonEncoder<T> {
     if (type.equals(boolean.class)) {
       return (JsonEncoder<T>) BOOLEAN;
     }
-    throw new IllegalArgumentException();
+    throw new IllegalArgumentException("a new primitive? " + type.getTypeName());
   }
   
   private static <T> JsonEncoder<T> nullSafe(JsonEncoder<T> encoder) {
-    return value -> {
-      if (value == null) {
-        return JsonElement.NULL;
-      }
-      return encoder.encode(value);
-    };
+    return value -> value == null ? NULL : encoder.encode(value);
   }
 }

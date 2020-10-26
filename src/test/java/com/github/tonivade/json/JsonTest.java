@@ -29,6 +29,7 @@ class JsonTest {
 
   final class Pojo {
     
+    @SuppressWarnings("unused")
     private static final int x = 1;
     
     private Integer id;
@@ -277,6 +278,9 @@ class JsonTest {
         [{"id":1,"name":null}]
         """.strip();
     var string3 = """
+        [{"id":1}]
+        """.strip();
+    var string4 = """
         [null]
         """.strip();
 
@@ -285,10 +289,12 @@ class JsonTest {
     List<User> array1 = json.fromJson(string1, listOfUsers.getType());
     List<User> array2 = json.fromJson(string2, listOfUsers.getType());
     List<User> array3 = json.fromJson(string3, listOfUsers.getType());
+    List<User> array4 = json.fromJson(string4, listOfUsers.getType());
 
     assertEquals(List.of(new User(1, "toni")), array1);
     assertEquals(List.of(new User(1, null)), array2);
-    assertEquals(listWithNull(), array3);
+    assertEquals(List.of(new User(1, null)), array3);
+    assertEquals(listWithNull(), array4);
   }
 
   @Test
@@ -315,6 +321,9 @@ class JsonTest {
         [{"id":1,"name":null}]
         """.strip();
     var string3 = """
+        [{"id":1}]
+        """.strip();
+    var string4 = """
         [null]
         """.strip();
 
@@ -323,10 +332,12 @@ class JsonTest {
     User[] array1 = json.fromJson(string1, listOfUsers.getType());
     User[] array2 = json.fromJson(string2, listOfUsers.getType());
     User[] array3 = json.fromJson(string3, listOfUsers.getType());
+    User[] array4 = json.fromJson(string4, listOfUsers.getType());
 
     assertArrayEquals(new User[] { new User(1, "toni") }, array1);
     assertArrayEquals(new User[] { new User(1, null) }, array2);
-    assertArrayEquals(new User[] { null }, array3);
+    assertArrayEquals(new User[] { new User(1, null) }, array3);
+    assertArrayEquals(new User[] { null }, array4);
   }
 
   @Test
@@ -338,6 +349,9 @@ class JsonTest {
         {"toni":{"id":1,"name":null}}
         """.strip();
     String string3 = """
+        {"toni":{"id":1}}
+        """.strip();
+    String string4 = """
         {"toni":null}
         """.strip();
 
@@ -346,10 +360,12 @@ class JsonTest {
     Map<String, User> map1 = json.fromJson(string1, mapOfUsers.getType());
     Map<String, User> map2 = json.fromJson(string2, mapOfUsers.getType());
     Map<String, User> map3 = json.fromJson(string3, mapOfUsers.getType());
+    Map<String, User> map4 = json.fromJson(string4, mapOfUsers.getType());
 
     assertEquals(Map.of("toni", new User(1, "toni")), map1);
     assertEquals(Map.of("toni", new User(1, null)), map2);
-    assertEquals(singletonMap("toni", null), map3);
+    assertEquals(Map.of("toni", new User(1, null)), map3);
+    assertEquals(singletonMap("toni", null), map4);
   }
   
   @Test

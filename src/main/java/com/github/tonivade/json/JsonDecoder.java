@@ -113,7 +113,7 @@ public interface JsonDecoder<T> {
     if (type instanceof WildcardType wildcardType) {
       return nullSafe(create(wildcardType));
     }
-    throw new UnsupportedOperationException(type.getTypeName());
+    throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
   }
 
   @SuppressWarnings("unchecked")
@@ -128,11 +128,11 @@ public interface JsonDecoder<T> {
       var create = create(type.getActualTypeArguments()[1]);
       return (JsonDecoder<T>) mapDecoder(create);
     }
-    throw new UnsupportedOperationException(type.getTypeName());
+    throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
   }
 
   static <T> JsonDecoder<T> create(WildcardType type) {
-    throw new UnsupportedOperationException(type.getTypeName());
+    throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
   }
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -296,15 +296,10 @@ public interface JsonDecoder<T> {
     if (type.equals(boolean.class)) {
       return (JsonDecoder<T>) BOOLEAN;
     }
-    throw new IllegalArgumentException(type.getTypeName());
+    throw new IllegalArgumentException("a new primitive type?" + type.getTypeName());
   }
   
   private static <T> JsonDecoder<T> nullSafe(JsonDecoder<T> decoder) {
-    return json -> {
-      if (json instanceof JsonNull) {
-        return null;
-      }
-      return decoder.decode(json);
-    };
+    return json -> json instanceof JsonNull ? null : decoder.decode(json);
   }
 }

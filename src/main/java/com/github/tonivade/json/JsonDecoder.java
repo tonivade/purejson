@@ -120,7 +120,7 @@ public interface JsonDecoder<T> {
   static <T> JsonDecoder<T> create(ParameterizedType type) {
     if (type.getRawType() instanceof Class<?> c && Iterable.class.isAssignableFrom(c)) {
       var create = create(type.getActualTypeArguments()[0]);
-      return (JsonDecoder<T>) listDecoder(create);
+      return (JsonDecoder<T>) iterableDecoder(create);
     }
     if (type.getRawType() instanceof Class<?> c 
         && Map.class.isAssignableFrom(c)
@@ -243,7 +243,7 @@ public interface JsonDecoder<T> {
     };
   }
 
-  static <E> JsonDecoder<Iterable<E>> listDecoder(JsonDecoder<E> itemDecoder) {
+  static <E> JsonDecoder<Iterable<E>> iterableDecoder(JsonDecoder<E> itemDecoder) {
     return json -> {
       if (json instanceof JsonElement.JsonArray array) {
         var list = new ArrayList<E>();

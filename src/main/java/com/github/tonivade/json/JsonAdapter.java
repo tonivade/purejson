@@ -46,8 +46,8 @@ public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
     };
   }
 
-  static <E> JsonAdapter<Iterable<E>> listAdapter(JsonAdapter<E> itemAdapter) {
-    return of(JsonEncoder.listEncoder(itemAdapter), JsonDecoder.listDecoder(itemAdapter));
+  static <E> JsonAdapter<Iterable<E>> iterableAdapter(JsonAdapter<E> itemAdapter) {
+    return of(JsonEncoder.iterableEncoder(itemAdapter), JsonDecoder.iterableDecoder(itemAdapter));
   }
 
   static <V> JsonAdapter<Map<String, V>> mapAdapter(JsonAdapter<V> valueAdapter) {

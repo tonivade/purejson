@@ -104,8 +104,7 @@ class JsonTest {
 
   @Test
   void serializePojoNull() {
-    var json = new Json();
-    var result = json.toString(new Pojo(1, null));
+    var result = new Json().toString(new Pojo(1, null));
 
     var expected = """
         {"id":1,"name":null} 
@@ -262,11 +261,9 @@ class JsonTest {
         {"id":1,"name":"toni"} 
         """.strip();
 
-    var json = new Json();
-    User user = json.fromJson(string, User.class);
+    User user = new Json().fromJson(string, User.class);
 
-    var expected = new User(1, "toni");
-    assertEquals(expected, user);
+    assertEquals(new User(1, "toni"), user);
   }
 
   @Test
@@ -299,17 +296,16 @@ class JsonTest {
 
   @Test
   void parseInnerList() {
+
     record Test(List<String> values) {}
     
     var string = """
         {"values":["one","two","three"]}
         """.strip();
 
-    var json = new Json();
-    Test result = json.fromJson(string, Test.class);
+    Test result = new Json().fromJson(string, Test.class);
 
-    var expected = new Test(List.of("one", "two", "three"));
-    assertEquals(expected, result);
+    assertEquals(new Test(List.of("one", "two", "three")), result);
   }
 
   @Test

@@ -4,7 +4,7 @@
  */
 package com.github.tonivade.json;
 
-import static com.github.tonivade.json.JsonAdapter.listAdapter;
+import static com.github.tonivade.json.JsonAdapter.iterableAdapter;
 import static com.github.tonivade.json.JsonElement.object;
 import static com.github.tonivade.purefun.Precondition.checkNonEmpty;
 import static com.github.tonivade.purefun.Precondition.checkNonNull;
@@ -59,7 +59,7 @@ public final class JsonAdapterBuilder<T> {
   }
 
   public <R> JsonAdapterBuilder<T> addIterable(String name, Function1<T, Iterable<R>> accessor, JsonAdapter<R> other) {
-    return add(name, accessor, listAdapter(other));
+    return add(name, accessor, iterableAdapter(other));
   }
 
   @SuppressWarnings("unchecked")

@@ -16,6 +16,9 @@ import java.util.Map;
 
 import org.petitparser.context.Result;
 
+import com.github.tonivade.purefun.data.ImmutableMap;
+import com.github.tonivade.purefun.data.Sequence;
+
 @SuppressWarnings("preview")
 public final class Json {
 
@@ -88,7 +91,13 @@ public final class Json {
     if (object instanceof Collection<?> collection && collection.isEmpty()) {
       return EMPTY_ARRAY;
     }
+    if (object instanceof Sequence<?> sequence && sequence.isEmpty()) {
+      return EMPTY_ARRAY;
+    }
     if (object instanceof Map<?, ?> map && map.isEmpty()) {
+      return EMPTY_OBJECT;
+    }
+    if (object instanceof ImmutableMap<?, ?> map && map.isEmpty()) {
       return EMPTY_OBJECT;
     }
     var jsonAdapter = getAdapter(type);

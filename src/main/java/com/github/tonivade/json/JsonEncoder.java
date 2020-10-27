@@ -71,7 +71,7 @@ public interface JsonEncoder<T> {
   static <T> JsonEncoder<T> create(ParameterizedType type) {
     if (type.getRawType() instanceof Class<?> c && Iterable.class.isAssignableFrom(c)) {
       var create = create(type.getActualTypeArguments()[0]);
-      return (JsonEncoder<T>) listEncoder(create);
+      return (JsonEncoder<T>) iterableEncoder(create);
     }
     if (type.getRawType() instanceof Class<?> c 
         && Map.class.isAssignableFrom(c)
@@ -169,7 +169,7 @@ public interface JsonEncoder<T> {
     };
   }
 
-  static <E> JsonEncoder<Iterable<E>> listEncoder(JsonEncoder<E> itemEncoder) {
+  static <E> JsonEncoder<Iterable<E>> iterableEncoder(JsonEncoder<E> itemEncoder) {
     return value -> array(StreamSupport.stream(value.spliterator(), false)
         .map(itemEncoder::encode).collect(toUnmodifiableList()));
   }

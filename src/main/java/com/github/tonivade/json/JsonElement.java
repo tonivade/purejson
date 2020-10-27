@@ -12,6 +12,7 @@ import static java.util.stream.Collectors.toMap;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -38,21 +39,37 @@ public sealed interface JsonElement permits
     }
   }
 
-  record JsonArray(ArrayList<JsonElement> elements) implements JsonElement {
+  record JsonArray(ArrayList<JsonElement> elements) 
+      implements JsonElement, Iterable<JsonElement> {
+
     public JsonArray() {
       this(new ArrayList<>());
     }
+
     public JsonArray {
       checkNonNull(elements);
     }
+    
+    @Override
+    public Iterator<JsonElement> iterator() {
+      return elements.iterator();
+    }
   }
 
-  record JsonObject(LinkedHashMap<String, JsonElement> values) implements JsonElement {
+  record JsonObject(LinkedHashMap<String, JsonElement> values) 
+      implements JsonElement, Iterable<Map.Entry<String, JsonElement>> {
+
     public JsonObject() {
       this(new LinkedHashMap<>());
     }
+
     public JsonObject {
       checkNonNull(values);
+    }
+    
+    @Override
+    public Iterator<Entry<String, JsonElement>> iterator() {
+      return values.entrySet().iterator();
     }
   }
 

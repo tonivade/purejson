@@ -4,6 +4,10 @@
  */
 package com.github.tonivade.json;
 
+import static com.github.tonivade.purefun.data.Sequence.arrayOf;
+import static com.github.tonivade.purefun.data.Sequence.listOf;
+import static com.github.tonivade.purefun.data.Sequence.setOf;
+import static com.github.tonivade.purefun.data.Sequence.treeOf;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -14,13 +18,20 @@ import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
 import com.github.tonivade.purefun.Equal;
+import com.github.tonivade.purefun.data.ImmutableArray;
+import com.github.tonivade.purefun.data.ImmutableList;
+import com.github.tonivade.purefun.data.ImmutableSet;
+import com.github.tonivade.purefun.data.ImmutableTree;
+import com.github.tonivade.purefun.data.Sequence;
 
 @SuppressWarnings("preview")
 class JsonTest {
@@ -295,6 +306,90 @@ class JsonTest {
   }
 
   @Test
+  void parseInnerSequence() {
+
+    record Test(Sequence<String> values) {}
+    
+    var string = """
+        {"values":["one","two","three"]}
+        """.strip();
+
+    Test result = new Json().fromJson(string, Test.class);
+
+    assertEquals(new Test(listOf("one", "two", "three")), result);
+  }
+
+  @Test
+  void parseInnerImmutableArray() {
+
+    record Test(ImmutableArray<String> values) {}
+    
+    var string = """
+        {"values":["one","two","three"]}
+        """.strip();
+
+    Test result = new Json().fromJson(string, Test.class);
+
+    assertEquals(new Test(arrayOf("one", "two", "three")), result);
+  }
+
+  @Test
+  void parseInnerImmutableList() {
+
+    record Test(ImmutableList<String> values) {}
+    
+    var string = """
+        {"values":["one","two","three"]}
+        """.strip();
+
+    Test result = new Json().fromJson(string, Test.class);
+
+    assertEquals(new Test(listOf("one", "two", "three")), result);
+  }
+
+  @Test
+  void parseInnerImmutableSet() {
+
+    record Test(ImmutableSet<String> values) {}
+    
+    var string = """
+        {"values":["one","two","three"]}
+        """.strip();
+
+    Test result = new Json().fromJson(string, Test.class);
+
+    assertEquals(new Test(setOf("one", "two", "three")), result);
+  }
+
+  @Test
+  void parseInnerImmutableTree() {
+
+    record Test(ImmutableTree<String> values) {}
+    
+    var string = """
+        {"values":["one","two","three"]}
+        """.strip();
+
+    Test result = new Json().fromJson(string, Test.class);
+
+    assertEquals(new Test(treeOf("one", "two", "three")), result);
+  }
+
+  @Test
+  void parseInnerCollection() {
+
+    record Test(Collection<String> values) {}
+    
+    var string = """
+        {"values":["one","two","three"]}
+        """.strip();
+
+    Test result = new Json().fromJson(string, Test.class);
+
+    assertEquals(new Test(List.of("one", "two", "three")), result);
+  }
+
+  @Test
   void parseInnerList() {
 
     record Test(List<String> values) {}
@@ -306,6 +401,34 @@ class JsonTest {
     Test result = new Json().fromJson(string, Test.class);
 
     assertEquals(new Test(List.of("one", "two", "three")), result);
+  }
+
+  @Test
+  void parseInnerSet() {
+
+    record Test(Set<String> values) {}
+    
+    var string = """
+        {"values":["one","two","three"]}
+        """.strip();
+
+    Test result = new Json().fromJson(string, Test.class);
+
+    assertEquals(new Test(Set.of("one", "two", "three")), result);
+  }
+
+  @Test
+  void parseInnerMap() {
+
+    record Test(Map<String, String> values) {}
+    
+    var string = """
+        {"values":{"one":"1","two":"2","three":"3"}}
+        """.strip();
+
+    Test result = new Json().fromJson(string, Test.class);
+
+    assertEquals(new Test(Map.of("one", "1", "two", "2", "three", "3")), result);
   }
 
   @Test

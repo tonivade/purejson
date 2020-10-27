@@ -18,8 +18,13 @@ import java.lang.reflect.WildcardType;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Deque;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.NavigableSet;
+import java.util.Queue;
 import java.util.Set;
 
 import com.github.tonivade.json.JsonElement.JsonArray;
@@ -28,6 +33,14 @@ import com.github.tonivade.json.JsonElement.JsonObject;
 import com.github.tonivade.json.JsonPrimitive.JsonBoolean;
 import com.github.tonivade.json.JsonPrimitive.JsonNumber;
 import com.github.tonivade.json.JsonPrimitive.JsonString;
+import com.github.tonivade.purefun.Function1;
+import com.github.tonivade.purefun.data.ImmutableArray;
+import com.github.tonivade.purefun.data.ImmutableList;
+import com.github.tonivade.purefun.data.ImmutableMap;
+import com.github.tonivade.purefun.data.ImmutableSet;
+import com.github.tonivade.purefun.data.ImmutableTree;
+import com.github.tonivade.purefun.data.ImmutableTreeMap;
+import com.github.tonivade.purefun.data.Sequence;
 
 @FunctionalInterface
 @SuppressWarnings("preview")
@@ -102,6 +115,10 @@ public interface JsonDecoder<T> {
 
   T decode(JsonElement json);
   
+  default <R> JsonDecoder<R> andThen(Function1<T, R> next) {
+    return json -> next.apply(decode(json));
+  }
+  
   @SuppressWarnings({ "unchecked", "rawtypes" })
   static <T> JsonDecoder<T> create(Type type) {
     if (type instanceof Class clazz) {
@@ -118,15 +135,25 @@ public interface JsonDecoder<T> {
 
   @SuppressWarnings("unchecked")
   static <T> JsonDecoder<T> create(ParameterizedType type) {
-    if (type.getRawType() instanceof Class<?> c && Iterable.class.isAssignableFrom(c)) {
+    if (type.getRawType() instanceof Class<?> c && Collection.class.isAssignableFrom(c)) {
       var create = create(type.getActualTypeArguments()[0]);
-      return (JsonDecoder<T>) iterableDecoder(create);
+      return (JsonDecoder<T>) iterableDecoder(create).andThen(toCollection(c));
+    }
+    if (type.getRawType() instanceof Class<?> c && Sequence.class.isAssignableFrom(c)) {
+      var create = create(type.getActualTypeArguments()[0]);
+      return (JsonDecoder<T>) iterableDecoder(create).andThen(toSequence(c));
     }
     if (type.getRawType() instanceof Class<?> c 
         && Map.class.isAssignableFrom(c)
         && type.getActualTypeArguments()[0].equals(String.class)) {
       var create = create(type.getActualTypeArguments()[1]);
       return (JsonDecoder<T>) mapDecoder(create);
+    }
+    if (type.getRawType() instanceof Class<?> c 
+        && ImmutableMap.class.isAssignableFrom(c)
+        && type.getActualTypeArguments()[0].equals(String.class)) {
+      var create = create(type.getActualTypeArguments()[1]);
+      return (JsonDecoder<T>) mapDecoder(create).andThen(toImmutableMap(c));
     }
     throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
   }
@@ -247,7 +274,7 @@ public interface JsonDecoder<T> {
     return json -> {
       if (json instanceof JsonElement.JsonArray array) {
         var list = new ArrayList<E>();
-        for (JsonElement object : array.elements()) {
+        for (JsonElement object : array) {
           list.add(itemDecoder.decode(object));
         }
         return unmodifiableList(list);
@@ -259,9 +286,8 @@ public interface JsonDecoder<T> {
   static <V> JsonDecoder<Map<String, V>> mapDecoder(JsonDecoder<V> itemEncoder) {
     return json -> {
       if (json instanceof JsonElement.JsonObject object) {
-        Set<? extends Map.Entry<String, ? extends JsonElement>> entrySet = object.values().entrySet();
         Map<String, V> map = new LinkedHashMap<>();
-        for (Map.Entry<String, ? extends JsonElement> entry : entrySet) {
+        for (Map.Entry<String, ? extends JsonElement> entry : object) {
           map.put(entry.getKey(), itemEncoder.decode(entry.getValue()));
         }
         return unmodifiableMap(map);
@@ -297,6 +323,48 @@ public interface JsonDecoder<T> {
       return (JsonDecoder<T>) BOOLEAN;
     }
     throw new IllegalArgumentException("a new primitive type?" + type.getTypeName());
+  }
+
+  private static <T> Function1<Iterable<T>, Collection<T>> toCollection(Class<?> type) {
+    if (Deque.class.isAssignableFrom(type)) {
+      return iterable -> ImmutableList.from(iterable).toList();
+    }
+    if (Queue.class.isAssignableFrom(type)) {
+      return iterable -> ImmutableList.from(iterable).toList();
+    }
+    if (List.class.isAssignableFrom(type)) {
+      return iterable -> ImmutableArray.from(iterable).toList();
+    }
+    if (NavigableSet.class.isAssignableFrom(type)) {
+      return iterable -> ImmutableTree.from(iterable).toNavigableSet();
+    }
+    if (Set.class.isAssignableFrom(type)) {
+      return iterable -> ImmutableSet.from(iterable).toSet();
+    }
+    return iterable -> ImmutableArray.from(iterable).toList();
+  }
+
+  private static <T> Function1<Iterable<T>, Sequence<T>> toSequence(Class<?> type) {
+    if (ImmutableList.class.isAssignableFrom(type)) {
+      return ImmutableList::from;
+    }
+    if (ImmutableArray.class.isAssignableFrom(type)) {
+      return ImmutableArray::from;
+    }
+    if (ImmutableSet.class.isAssignableFrom(type)) {
+      return ImmutableSet::from;
+    }
+    if (ImmutableTree.class.isAssignableFrom(type)) {
+      return ImmutableTree::from;
+    }
+    return ImmutableList::from;
+  }
+
+  private static <T> Function1<Map<String, T>, ImmutableMap<String, T>> toImmutableMap(Class<?> type) {
+    if (ImmutableTreeMap.class.isAssignableFrom(type)) {
+      return ImmutableTreeMap::from;
+    }
+    return ImmutableMap::from;
   }
   
   private static <T> JsonDecoder<T> nullSafe(JsonDecoder<T> decoder) {

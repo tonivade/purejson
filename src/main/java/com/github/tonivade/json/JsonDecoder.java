@@ -272,7 +272,7 @@ public interface JsonDecoder<T> {
 
   static <E> JsonDecoder<Iterable<E>> iterableDecoder(JsonDecoder<E> itemDecoder) {
     return json -> {
-      if (json instanceof JsonElement.JsonArray array) {
+      if (json instanceof JsonArray array) {
         var list = new ArrayList<E>();
         for (JsonElement object : array) {
           list.add(itemDecoder.decode(object));
@@ -285,7 +285,7 @@ public interface JsonDecoder<T> {
 
   static <V> JsonDecoder<Map<String, V>> mapDecoder(JsonDecoder<V> itemEncoder) {
     return json -> {
-      if (json instanceof JsonElement.JsonObject object) {
+      if (json instanceof JsonObject object) {
         var map = new LinkedHashMap<String, V>();
         for (Map.Entry<String, ? extends JsonElement> entry : object) {
           map.put(entry.getKey(), itemEncoder.decode(entry.getValue()));

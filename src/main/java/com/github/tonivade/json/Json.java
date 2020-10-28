@@ -16,6 +16,12 @@ import java.util.Map;
 
 import org.petitparser.context.Result;
 
+import com.github.tonivade.json.JsonElement.JsonArray;
+import com.github.tonivade.json.JsonElement.JsonNull;
+import com.github.tonivade.json.JsonElement.JsonObject;
+import com.github.tonivade.json.JsonPrimitive.JsonBoolean;
+import com.github.tonivade.json.JsonPrimitive.JsonNumber;
+import com.github.tonivade.json.JsonPrimitive.JsonString;
 import com.github.tonivade.purefun.data.ImmutableMap;
 import com.github.tonivade.purefun.data.Sequence;
 
@@ -25,26 +31,26 @@ public final class Json {
   private final Map<String, JsonAdapter<?>> adapters = new HashMap<>();
   
   public static String serialize(JsonElement element) {
-    if (element instanceof JsonElement.JsonNull) {
+    if (element instanceof JsonNull) {
       return "null";
     }
-    if (element instanceof JsonElement.JsonObject o) {
+    if (element instanceof JsonObject o) {
       return o.values().entrySet().stream()
           .map(entry -> "\"%s\":%s".formatted(entry.getKey(), serialize(entry.getValue())))
           .collect(joining(",", "{", "}"));
     }
-    if (element instanceof JsonElement.JsonArray a) {
+    if (element instanceof JsonArray a) {
       return a.elements().stream()
           .map(Json::serialize)
           .collect(joining(",", "[", "]"));
     }
-    if (element instanceof JsonPrimitive.JsonString s) {
+    if (element instanceof JsonString s) {
       return "\"%s\"".formatted(s.value());
     }
-    if (element instanceof JsonPrimitive.JsonNumber n) {
+    if (element instanceof JsonNumber n) {
       return String.valueOf(n.value());
     }
-    if (element instanceof JsonPrimitive.JsonBoolean b) {
+    if (element instanceof JsonBoolean b) {
       return String.valueOf(b.value());
     }
     throw new IllegalArgumentException("this should not happen");
@@ -66,7 +72,7 @@ public final class Json {
 
   @SuppressWarnings("unchecked")
   public <T> T fromJson(JsonElement element, Type type) {
-    if (element instanceof JsonElement.JsonNull) {
+    if (element instanceof JsonNull) {
       return null;
     }
     var jsonAdapter = getAdapter(type);

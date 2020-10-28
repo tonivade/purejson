@@ -16,6 +16,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.github.tonivade.json.JsonElement.JsonObject;
 import com.github.tonivade.purefun.Function1;
 
 @SuppressWarnings("preview")
@@ -71,16 +72,16 @@ public final class JsonAdapterBuilder<T> {
 
         value -> {
           var entries = new LinkedHashMap<String, JsonElement>();
-          for (Map.Entry<String, JsonEncoder<T>> entry : encoders.entrySet()) {
+          for (var entry : encoders.entrySet()) {
             entries.put(entry.getKey(), entry.getValue().encode(value));
           }
           return object(entries.entrySet());
         },
 
         json -> {
-          if (json instanceof JsonElement.JsonObject o) {
+          if (json instanceof JsonObject o) {
             var params = new ArrayList<>();
-            for (Map.Entry<String, JsonDecoder<?>> entry : decoders.entrySet()) {
+            for (var entry : decoders.entrySet()) {
               JsonElement element = o.values().get(entry.getKey());
               
               params.add(entry.getValue().decode(element));

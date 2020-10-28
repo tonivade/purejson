@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.stream.StreamSupport;
 
 import com.github.tonivade.purefun.Function1;
+import com.github.tonivade.purefun.data.ImmutableMap;
 
 @FunctionalInterface
 @SuppressWarnings("preview")
@@ -69,15 +70,21 @@ public interface JsonEncoder<T> {
 
   @SuppressWarnings("unchecked")
   static <T> JsonEncoder<T> create(ParameterizedType type) {
-    if (type.getRawType() instanceof Class<?> c && Iterable.class.isAssignableFrom(c)) {
-      var create = create(type.getActualTypeArguments()[0]);
-      return (JsonEncoder<T>) iterableEncoder(create);
+    if (type.getRawType() instanceof Class<?> c 
+        && ImmutableMap.class.isAssignableFrom(c)
+        && type.getActualTypeArguments()[0].equals(String.class)) {
+      var create = create(type.getActualTypeArguments()[1]);
+      return (JsonEncoder<T>) immutableMapEncoder(create);
     }
     if (type.getRawType() instanceof Class<?> c 
         && Map.class.isAssignableFrom(c)
         && type.getActualTypeArguments()[0].equals(String.class)) {
       var create = create(type.getActualTypeArguments()[1]);
       return (JsonEncoder<T>) mapEncoder(create);
+    }
+    if (type.getRawType() instanceof Class<?> c && Iterable.class.isAssignableFrom(c)) {
+      var create = create(type.getActualTypeArguments()[0]);
+      return (JsonEncoder<T>) iterableEncoder(create);
     }
     throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
   }
@@ -179,6 +186,10 @@ public interface JsonEncoder<T> {
         value.entrySet().stream()
         .map(entry -> entry(entry.getKey(), valueEncoder.encode(entry.getValue())))
         .collect(toList()));
+  }
+
+  static <V> JsonEncoder<ImmutableMap<String, V>> immutableMapEncoder(JsonEncoder<V> valueEncoder) {
+    return mapEncoder(valueEncoder).compose(ImmutableMap::toMap);
   }
 
   @SuppressWarnings("unchecked")

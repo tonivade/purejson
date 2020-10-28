@@ -4,66 +4,24 @@
  */
 package com.github.tonivade.json;
 
-import static com.github.tonivade.json.JsonElement.EMPTY_ARRAY;
-import static com.github.tonivade.json.JsonElement.EMPTY_OBJECT;
-import static com.github.tonivade.json.JsonElement.NULL;
-import static java.util.stream.Collectors.joining;
-
 import java.lang.reflect.Type;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.petitparser.context.Result;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
+import com.google.gson.JsonParser;
 
-import com.github.tonivade.json.JsonElement.JsonArray;
-import com.github.tonivade.json.JsonElement.JsonNull;
-import com.github.tonivade.json.JsonElement.JsonObject;
-import com.github.tonivade.json.JsonPrimitive.JsonBoolean;
-import com.github.tonivade.json.JsonPrimitive.JsonNumber;
-import com.github.tonivade.json.JsonPrimitive.JsonString;
-import com.github.tonivade.purefun.data.ImmutableMap;
-import com.github.tonivade.purefun.data.Sequence;
-
-@SuppressWarnings("preview")
 public final class Json {
 
   private final Map<String, JsonAdapter<?>> adapters = new HashMap<>();
   
   public static String serialize(JsonElement element) {
-    if (element instanceof JsonNull) {
-      return "null";
-    }
-    if (element instanceof JsonObject o) {
-      return o.values().entrySet().stream()
-          .map(entry -> "\"%s\":%s".formatted(entry.getKey(), serialize(entry.getValue())))
-          .collect(joining(",", "{", "}"));
-    }
-    if (element instanceof JsonArray a) {
-      return a.elements().stream()
-          .map(Json::serialize)
-          .collect(joining(",", "[", "]"));
-    }
-    if (element instanceof JsonString s) {
-      return "\"%s\"".formatted(s.value());
-    }
-    if (element instanceof JsonNumber n) {
-      return String.valueOf(n.value());
-    }
-    if (element instanceof JsonBoolean b) {
-      return String.valueOf(b.value());
-    }
-    throw new IllegalArgumentException("this should not happen");
+    return element.toString();
   }
 
   public static JsonElement parse(String json) {
-    Result result = new JsonParser().parse(json);
-
-    if (result.isSuccess()) {
-      return result.get();
-    }
-
-    throw new IllegalArgumentException(result.getMessage());
+    return JsonParser.parseString(json);
   }
 
   public <T> T fromJson(String json, Type type) {
@@ -83,7 +41,7 @@ public final class Json {
   }
 
   public String toString(Object object) {
-    return toString(object, object != null ? object.getClass() : null);
+    return toString(object, object != null ? object.getClass() : Void.class);
   }
 
   public String toString(Object object, Type type) {
@@ -92,19 +50,7 @@ public final class Json {
 
   public JsonElement toJson(Object object, Type type) {
     if (object == null) {
-      return NULL;
-    }
-    if (object instanceof Collection<?> collection && collection.isEmpty()) {
-      return EMPTY_ARRAY;
-    }
-    if (object instanceof Sequence<?> sequence && sequence.isEmpty()) {
-      return EMPTY_ARRAY;
-    }
-    if (object instanceof Map<?, ?> map && map.isEmpty()) {
-      return EMPTY_OBJECT;
-    }
-    if (object instanceof ImmutableMap<?, ?> map && map.isEmpty()) {
-      return EMPTY_OBJECT;
+      return JsonNull.INSTANCE;
     }
     var jsonAdapter = getAdapter(type);
     if (jsonAdapter != null) {

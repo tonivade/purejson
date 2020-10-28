@@ -4,17 +4,11 @@
  */
 package com.github.tonivade.json;
 
-import static com.github.tonivade.json.JsonElement.NULL;
-import static com.github.tonivade.json.JsonElement.array;
-import static com.github.tonivade.json.JsonElement.entry;
-import static com.github.tonivade.json.JsonElement.object;
-import static com.github.tonivade.json.JsonPrimitive.number;
-import static com.github.tonivade.json.JsonPrimitive.string;
+import static com.github.tonivade.json.JsonDSL.NULL;
 import static java.lang.reflect.Modifier.isStatic;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toUnmodifiableList;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.RecordComponent;
@@ -22,30 +16,31 @@ import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.Map;
-import java.util.stream.StreamSupport;
 
 import com.github.tonivade.purefun.Function1;
 import com.github.tonivade.purefun.data.ImmutableMap;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 
 @FunctionalInterface
 @SuppressWarnings("preview")
 public interface JsonEncoder<T> {
   
-  JsonEncoder<String> STRING = JsonPrimitive::string;
-  JsonEncoder<Character> CHAR = JsonPrimitive::number;
-  JsonEncoder<Byte> BYTE = JsonPrimitive::number;
-  JsonEncoder<Short> SHORT = JsonPrimitive::number;
-  JsonEncoder<Integer> INTEGER = JsonPrimitive::number;
-  JsonEncoder<Long> LONG = JsonPrimitive::number;
-  JsonEncoder<BigDecimal> BIG_DECIMAL = value -> number(value.doubleValue());
-  JsonEncoder<BigInteger> BIG_INTEGER = value -> number(value.longValue());
-  JsonEncoder<Float> FLOAT = JsonPrimitive::number;
-  JsonEncoder<Double> DOUBLE = JsonPrimitive::number;
-  JsonEncoder<Boolean> BOOLEAN = JsonPrimitive::bool;
-  JsonEncoder<Enum<?>> ENUM = value -> string(value.name());
+  JsonEncoder<String> STRING = JsonPrimitive::new;
+  JsonEncoder<Character> CHAR = JsonPrimitive::new;
+  JsonEncoder<Byte> BYTE = JsonPrimitive::new;
+  JsonEncoder<Short> SHORT = JsonPrimitive::new;
+  JsonEncoder<Integer> INTEGER = JsonPrimitive::new;
+  JsonEncoder<Long> LONG = JsonPrimitive::new;
+  JsonEncoder<BigDecimal> BIG_DECIMAL = JsonPrimitive::new;
+  JsonEncoder<BigInteger> BIG_INTEGER = JsonPrimitive::new;
+  JsonEncoder<Float> FLOAT = JsonPrimitive::new;
+  JsonEncoder<Double> DOUBLE = JsonPrimitive::new;
+  JsonEncoder<Boolean> BOOLEAN = JsonPrimitive::new;
+  JsonEncoder<Enum<?>> ENUM = STRING.compose(Enum::name);
   
   JsonElement encode(T value);
   
@@ -60,6 +55,9 @@ public interface JsonEncoder<T> {
     }
     if (type instanceof ParameterizedType paramType) {
       return nullSafe(create(paramType));
+    }
+    if (type instanceof GenericArrayType arrayType) {
+      return nullSafe(create(arrayType));
     }
     if (type instanceof WildcardType wildcardType) {
       return nullSafe(create(wildcardType));
@@ -89,6 +87,15 @@ public interface JsonEncoder<T> {
   }
 
   static <T> JsonEncoder<T> create(WildcardType type) {
+    throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
+  }
+
+  @SuppressWarnings("unchecked")
+  static <T> JsonEncoder<T> create(GenericArrayType type) {
+    Type genericComponentType = type.getGenericComponentType();
+    if (genericComponentType instanceof Class<?> c) {
+      return (JsonEncoder<T>) arrayEncoder(c);
+    }
     throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
   }
 
@@ -132,57 +139,65 @@ public interface JsonEncoder<T> {
   static <T> JsonEncoder<T> arrayEncoder(Class<T> type) {
     return value -> {
       var arrayEncoder = create((Type) type.getComponentType());
-      var items = new LinkedList<JsonElement>();
-      for (Object object : (Object[]) value) {
-        items.add(arrayEncoder.encode(object));
+      JsonArray array = new JsonArray();
+      for (Object item : (Object[]) value) {
+        array.add(arrayEncoder.encode(item));
       }
-      return array(items);
+      return array;
     };
   }
 
   static <T> JsonEncoder<T> pojoEncoder(Class<T> type) {
     return value -> {
-      var entries = new ArrayList<Map.Entry<String, JsonElement>>();
+      JsonObject object = new JsonObject();
       for (Field field : type.getDeclaredFields()) {
         if (!isStatic(field.getModifiers()) && !field.isSynthetic() && field.trySetAccessible()) {
           var fieldEncoder = create(field.getGenericType());
           try {
-            entries.add(entry(field.getName(), fieldEncoder.encode(field.get(value))));
+            object.add(field.getName(), fieldEncoder.encode(field.get(value)));
           } catch (IllegalArgumentException | IllegalAccessException e) {
             throw new IllegalStateException(e);
           }
         }
       }
-      return object(entries);
+      return object;
     };
   }
 
   static <T> JsonEncoder<T> recordEncoder(Class<T> type) {
     return value -> {
-      var entries = new ArrayList<Map.Entry<String, JsonElement>>();
+      JsonObject object = new JsonObject();
       for (RecordComponent recordComponent : type.getRecordComponents()) {
         var fieldEncoder = create(recordComponent.getGenericType());
         try {
           var field = recordComponent.getAccessor().invoke(value);
-          entries.add(entry(recordComponent.getName(), fieldEncoder.encode(field)));
+          object.add(recordComponent.getName(), fieldEncoder.encode(field));
         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
           throw new IllegalStateException(e);
         }
       }
-      return object(entries);
+      return object;
     };
   }
 
   static <E> JsonEncoder<Iterable<E>> iterableEncoder(JsonEncoder<E> itemEncoder) {
-    return value -> array(StreamSupport.stream(value.spliterator(), false)
-        .map(itemEncoder::encode).collect(toUnmodifiableList()));
+    return value -> {
+      JsonArray array = new JsonArray();
+      for (E item : value) {
+        array.add(itemEncoder.encode(item));
+      }
+      return array;
+    };
   }
 
   static <V> JsonEncoder<Map<String, V>> mapEncoder(JsonEncoder<V> valueEncoder) {
-    return value -> object(
-        value.entrySet().stream()
-        .map(entry -> entry(entry.getKey(), valueEncoder.encode(entry.getValue())))
-        .collect(toList()));
+    return value -> {
+      JsonObject object = new JsonObject();
+      for (Map.Entry<String, V> entry : value.entrySet()) {
+        object.add(entry.getKey(), valueEncoder.encode(entry.getValue()));
+      }
+      return object;
+    };
   }
 
   static <V> JsonEncoder<ImmutableMap<String, V>> immutableMapEncoder(JsonEncoder<V> valueEncoder) {

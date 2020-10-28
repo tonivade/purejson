@@ -4,13 +4,12 @@
  */
 package com.github.tonivade.json;
 
-import static com.github.tonivade.json.JsonElement.NULL;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
 
 import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
@@ -29,12 +28,6 @@ import java.util.NavigableSet;
 import java.util.Queue;
 import java.util.Set;
 
-import com.github.tonivade.json.JsonElement.JsonArray;
-import com.github.tonivade.json.JsonElement.JsonNull;
-import com.github.tonivade.json.JsonElement.JsonObject;
-import com.github.tonivade.json.JsonPrimitive.JsonBoolean;
-import com.github.tonivade.json.JsonPrimitive.JsonNumber;
-import com.github.tonivade.json.JsonPrimitive.JsonString;
 import com.github.tonivade.purefun.Function1;
 import com.github.tonivade.purefun.data.ImmutableArray;
 import com.github.tonivade.purefun.data.ImmutableList;
@@ -43,74 +36,79 @@ import com.github.tonivade.purefun.data.ImmutableSet;
 import com.github.tonivade.purefun.data.ImmutableTree;
 import com.github.tonivade.purefun.data.ImmutableTreeMap;
 import com.github.tonivade.purefun.data.Sequence;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 
 @FunctionalInterface
 @SuppressWarnings("preview")
 public interface JsonDecoder<T> {
   
   JsonDecoder<String> STRING = json -> {
-    if (json instanceof JsonString s) {
-      return s.value();
+    if (json instanceof JsonPrimitive p && p.isString()) {
+      return p.getAsString();
     }
     throw new IllegalArgumentException(json.toString());
   };
   JsonDecoder<Character> CHAR = json -> {
-    if (json instanceof JsonNumber n) {
-      return (char) n.value().intValue();
+    if (json instanceof JsonPrimitive p && p.isString()) {
+      return p.getAsCharacter();
     }
     throw new IllegalArgumentException(json.toString());
   };
   JsonDecoder<Byte> BYTE = json -> {
-    if (json instanceof JsonNumber n) {
-      return n.value().byteValue();
+    if (json instanceof JsonPrimitive p && p.isNumber()) {
+      return p.getAsByte();
     }
     throw new IllegalArgumentException(json.toString());
   };
   JsonDecoder<Short> SHORT = json -> {
-    if (json instanceof JsonNumber n) {
-      return n.value().shortValue();
+    if (json instanceof JsonPrimitive p && p.isNumber()) {
+      return p.getAsShort();
     }
     throw new IllegalArgumentException(json.toString());
   };
   JsonDecoder<Integer> INTEGER = json -> {
-    if (json instanceof JsonNumber n) {
-      return n.value().intValue();
+    if (json instanceof JsonPrimitive p && p.isNumber()) {
+      return p.getAsInt();
     }
     throw new IllegalArgumentException(json.toString());
   };
   JsonDecoder<Long> LONG = json -> {
-    if (json instanceof JsonNumber n) {
-      return n.value().longValue();
+    if (json instanceof JsonPrimitive p && p.isNumber()) {
+      return p.getAsLong();
     }
     throw new IllegalArgumentException(json.toString());
   };
   JsonDecoder<Float> FLOAT = json -> {
-    if (json instanceof JsonNumber n) {
-      return n.value().floatValue();
+    if (json instanceof JsonPrimitive p && p.isNumber()) {
+      return p.getAsFloat();
     }
     throw new IllegalArgumentException(json.toString());
   };
   JsonDecoder<Double> DOUBLE = json -> {
-    if (json instanceof JsonNumber n) {
-      return n.value().doubleValue();
+    if (json instanceof JsonPrimitive p && p.isNumber()) {
+      return p.getAsDouble();
     }
     throw new IllegalArgumentException(json.toString());
   };
   JsonDecoder<BigInteger> BIG_INTEGER = json -> {
-    if (json instanceof JsonNumber n) {
-      return BigInteger.valueOf(n.value().longValue());
+    if (json instanceof JsonPrimitive p && p.isNumber()) {
+      return p.getAsBigInteger();
     }
     throw new IllegalArgumentException(json.toString());
   };
   JsonDecoder<BigDecimal> BIG_DECIMAL = json -> {
-    if (json instanceof JsonNumber n) {
-      return BigDecimal.valueOf(n.value().doubleValue());
+    if (json instanceof JsonPrimitive p && p.isNumber()) {
+      return p.getAsBigDecimal();
     }
     throw new IllegalArgumentException(json.toString());
   };
   JsonDecoder<Boolean> BOOLEAN = json -> {
-    if (json instanceof JsonBoolean b) {
-      return b.value();
+    if (json instanceof JsonPrimitive p && p.isBoolean()) {
+      return p.getAsBoolean();
     }
     throw new IllegalArgumentException(json.toString());
   };
@@ -128,6 +126,9 @@ public interface JsonDecoder<T> {
     }
     if (type instanceof ParameterizedType paramType) {
       return nullSafe(create(paramType));
+    }
+    if (type instanceof GenericArrayType arrayType) {
+      return nullSafe(create(arrayType));
     }
     if (type instanceof WildcardType wildcardType) {
       return nullSafe(create(wildcardType));
@@ -156,6 +157,15 @@ public interface JsonDecoder<T> {
         && type.getActualTypeArguments()[0].equals(String.class)) {
       var create = create(type.getActualTypeArguments()[1]);
       return (JsonDecoder<T>) mapDecoder(create).andThen(toImmutableMap(c));
+    }
+    throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
+  }
+
+  @SuppressWarnings("unchecked")
+  static <T> JsonDecoder<T> create(GenericArrayType type) {
+    Type genericComponentType = type.getGenericComponentType();
+    if (genericComponentType instanceof Class<?> c) {
+      return (JsonDecoder<T>) arrayDecoder(c);
     }
     throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
   }
@@ -207,10 +217,10 @@ public interface JsonDecoder<T> {
   static <T> JsonDecoder<T[]> arrayDecoder(Class<T> type) {
     return json -> {
       if (json instanceof JsonArray a) {
-        var array = Array.newInstance(type, a.elements().size());
+        var array = Array.newInstance(type, a.size());
         var itemDecoder = create((Type) type);
-        for (int i = 0; i < a.elements().size(); i++) {
-          JsonElement element = a.elements().get(i);
+        for (int i = 0; i < a.size(); i++) {
+          JsonElement element = a.get(i);
           Array.set(array, i, itemDecoder.decode(element));
         }
         return (T[]) array;
@@ -220,12 +230,7 @@ public interface JsonDecoder<T> {
   }
 
   static <T extends Enum<T>> JsonDecoder<T> enumDecoder(Class<T> type) {
-    return json -> {
-      if (json instanceof JsonString s) {
-        return Enum.valueOf(type, s.value());
-      }
-      throw new IllegalArgumentException(json.toString());
-    };
+    return STRING.andThen(string -> Enum.valueOf(type, string));
   }
 
   static <T> JsonDecoder<T> recordDecoder(Class<T> type) {
@@ -235,7 +240,7 @@ public interface JsonDecoder<T> {
         var values = new ArrayList<>();
         for (RecordComponent recordComponent : type.getRecordComponents()) {
           types.add(recordComponent.getType());
-          JsonElement jsonElement = o.values().getOrDefault(recordComponent.getName(), NULL);
+          JsonElement jsonElement = o.get(recordComponent.getName());
           var fieldDecoder = create(recordComponent.getGenericType());
           values.add(fieldDecoder.decode(jsonElement));
         }
@@ -258,7 +263,7 @@ public interface JsonDecoder<T> {
           T value = type.getDeclaredConstructor().newInstance();
           for (Field field : type.getDeclaredFields()) {
             if (!Modifier.isStatic(field.getModifiers()) && !field.isSynthetic() && field.trySetAccessible()) {
-              JsonElement jsonElement = o.values().getOrDefault(field.getName(), NULL);
+              JsonElement jsonElement = o.get(field.getName());
               var fieldDecoder = create(field.getGenericType());
               field.set(value, fieldDecoder.decode(jsonElement));
             }
@@ -290,7 +295,7 @@ public interface JsonDecoder<T> {
     return json -> {
       if (json instanceof JsonObject object) {
         var map = new LinkedHashMap<String, V>();
-        for (Map.Entry<String, ? extends JsonElement> entry : object) {
+        for (Map.Entry<String, ? extends JsonElement> entry : object.entrySet()) {
           map.put(entry.getKey(), itemEncoder.decode(entry.getValue()));
         }
         return unmodifiableMap(map);
@@ -371,6 +376,6 @@ public interface JsonDecoder<T> {
   }
   
   private static <T> JsonDecoder<T> nullSafe(JsonDecoder<T> decoder) {
-    return json -> json instanceof JsonNull ? null : decoder.decode(json);
+    return json -> json == null || json instanceof JsonNull ? null : decoder.decode(json);
   }
 }

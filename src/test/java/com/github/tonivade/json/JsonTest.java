@@ -4,8 +4,8 @@
  */
 package com.github.tonivade.json;
 
-import static com.github.tonivade.json.JsonElement.entry;
-import static com.github.tonivade.json.JsonElement.object;
+import static com.github.tonivade.json.JsonDSL.entry;
+import static com.github.tonivade.json.JsonDSL.object;
 import static com.github.tonivade.json.Stats.stats;
 import static com.github.tonivade.purefun.data.Sequence.arrayOf;
 import static com.github.tonivade.purefun.data.Sequence.emptyArray;
@@ -35,7 +35,6 @@ import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
 
-import com.github.tonivade.json.JsonElement.JsonObject;
 import com.github.tonivade.purefun.Equal;
 import com.github.tonivade.purefun.Function1;
 import com.github.tonivade.purefun.data.ImmutableArray;
@@ -46,6 +45,8 @@ import com.github.tonivade.purefun.data.ImmutableTree;
 import com.github.tonivade.purefun.data.Sequence;
 import com.github.tonivade.purefun.effect.UIO;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
 
 @SuppressWarnings("preview")
 class JsonTest {
@@ -215,7 +216,7 @@ class JsonTest {
   @Test
   void serializeList() {
     var json = new Json();
-    Type listOfUsers = new Reflection<List<User>>() {}.getType();
+    Type listOfUsers = new TypeToken<List<User>>() {}.getType();
     var result1 = json.toString(List.of(new User(1, "toni")), listOfUsers);
     var result2 = json.toString(List.of(new User(1, null)), listOfUsers);
     var result3 = json.toString(listWithNull(), listOfUsers);
@@ -238,7 +239,7 @@ class JsonTest {
   @Test
   void serializeImmutableList() {
     var json = new Json();
-    Type listOfUsers = new Reflection<ImmutableList<User>>() {}.getType();
+    Type listOfUsers = new TypeToken<ImmutableList<User>>() {}.getType();
     var result1 = json.toString(listOf(new User(1, "toni")), listOfUsers);
     var result2 = json.toString(listOf(new User(1, null)), listOfUsers);
     var result3 = json.toString(emptyList().append(null), listOfUsers);
@@ -261,7 +262,7 @@ class JsonTest {
   @Test
   void serializeImmutableArray() {
     var json = new Json();
-    Type listOfUsers = new Reflection<ImmutableArray<User>>() {}.getType();
+    Type listOfUsers = new TypeToken<ImmutableArray<User>>() {}.getType();
     var result1 = json.toString(arrayOf(new User(1, "toni")), listOfUsers);
     var result2 = json.toString(arrayOf(new User(1, null)), listOfUsers);
     var result3 = json.toString(emptyArray().append(null), listOfUsers);
@@ -284,7 +285,7 @@ class JsonTest {
   @Test
   void serializeImmutableSet() {
     var json = new Json();
-    Type listOfUsers = new Reflection<ImmutableSet<User>>() {}.getType();
+    Type listOfUsers = new TypeToken<ImmutableSet<User>>() {}.getType();
     var result1 = json.toString(setOf(new User(1, "toni")), listOfUsers);
     var result2 = json.toString(setOf(new User(1, null)), listOfUsers);
     var result3 = json.toString(emptySet().append(null), listOfUsers);
@@ -329,7 +330,7 @@ class JsonTest {
   @Test
   void serializeMap() {
     var json = new Json();
-    Type mapOfUsers = new Reflection<Map<String, User>>(){}.getType();
+    Type mapOfUsers = new TypeToken<Map<String, User>>(){}.getType();
     var result1 = json.toString(Map.of("toni", new User(1, "toni")), mapOfUsers);
     var result2 = json.toString(Map.of("toni", new User(1, null)), mapOfUsers);
     var result3 = json.toString(singletonMap("toni", null), mapOfUsers);
@@ -352,7 +353,7 @@ class JsonTest {
   @Test
   void serializeImmutableMap() {
     var json = new Json();
-    Type mapOfUsers = new Reflection<ImmutableMap<String, User>>(){}.getType();
+    Type mapOfUsers = new TypeToken<ImmutableMap<String, User>>(){}.getType();
     var result1 = json.toString(ImmutableMap.empty().put("toni", new User(1, "toni")), mapOfUsers);
     var result2 = json.toString(ImmutableMap.empty().put("toni", new User(1, null)), mapOfUsers);
     var result3 = json.toString(ImmutableMap.empty().put("toni", null), mapOfUsers);
@@ -548,7 +549,7 @@ class JsonTest {
     var string4 = "[null]";
     var string5 = "null";
 
-    var listOfUsers = new Reflection<User[]>() {};
+    var listOfUsers = new TypeToken<User[]>() {};
     var json = new Json();
     User[] array1 = json.fromJson(string1, listOfUsers.getType());
     User[] array2 = json.fromJson(string2, listOfUsers.getType());
@@ -579,7 +580,7 @@ class JsonTest {
         """.strip();
     var string5 = "null";
 
-    var listOfUsers = new Reflection<List<User>>() {};
+    var listOfUsers = new TypeToken<List<User>>() {};
     var json = new Json();
     List<User> list1 = json.fromJson(string1, listOfUsers.getType());
     List<User> list2 = json.fromJson(string2, listOfUsers.getType());
@@ -610,7 +611,7 @@ class JsonTest {
         """.strip();
     var string5 = "null";
 
-    var mapOfUsers = new Reflection<Map<String, User>>() {};
+    var mapOfUsers = new TypeToken<Map<String, User>>() {};
     var json = new Json();
     Map<String, User> map1 = json.fromJson(string1, mapOfUsers.getType());
     Map<String, User> map2 = json.fromJson(string2, mapOfUsers.getType());
@@ -630,8 +631,8 @@ class JsonTest {
     var json = new Json();
     
     assertEquals("null", json.toString(null));
-    assertEquals("65", json.toString('A'));
-    assertEquals("193", json.toString('Á'));
+    assertEquals("\"A\"", json.toString('A'));
+    assertEquals("\"Á\"", json.toString('Á'));
     assertEquals("1", json.toString((byte)1));
     assertEquals("1", json.toString((short)1));
     assertEquals("1", json.toString(1));
@@ -639,7 +640,7 @@ class JsonTest {
     assertEquals("1.0", json.toString(1f));
     assertEquals("1.0", json.toString(1d));
     assertEquals("1", json.toString(BigInteger.ONE));
-    assertEquals("1.0", json.toString(BigDecimal.ONE));
+    assertEquals("1", json.toString(BigDecimal.ONE));
     assertEquals("\"asdfg\"", json.toString("asdfg"));
     assertEquals("\"VAL1\"", json.toString(EnumTest.VAL1));
   }
@@ -651,8 +652,8 @@ class JsonTest {
     assertNull(json.fromJson("null", String.class));
     assertEquals(Byte.valueOf((byte)1), json.<Byte>fromJson("1", byte.class));
     assertEquals(Short.valueOf((short)1), json.<Short>fromJson("1", short.class));
-    assertEquals(Character.valueOf('A'), json.<Character>fromJson("65", char.class));
-    assertEquals(Character.valueOf('Á'), json.<Character>fromJson("193", char.class));
+    assertEquals(Character.valueOf('A'), json.<Character>fromJson("A", char.class));
+    assertEquals(Character.valueOf('Á'), json.<Character>fromJson("Á", char.class));
     assertEquals(Integer.valueOf(1), json.<Integer>fromJson("1", int.class));
     assertEquals(Long.valueOf(1L), json.<Long>fromJson("1", long.class));
     assertEquals(Float.valueOf(1L), json.<Float>fromJson("1.0", float.class));
@@ -665,7 +666,7 @@ class JsonTest {
   
   @Test
   void parsePerformance() {
-    var listOfUsers = new Reflection<List<Pojo>>() { }.getType();
+    var listOfUsers = new TypeToken<List<Pojo>>() { }.getType();
     var json1 = new Json();
     var json2 = new Json().add(listOfUsers, JsonAdapter.create(listOfUsers));
     var json3 = new Json().add(listOfUsers, 
@@ -678,8 +679,8 @@ class JsonTest {
             json -> {
               if (json instanceof JsonObject o) {
                 return new Pojo(
-                    JsonDecoder.INTEGER.decode(o.values().get("id")), 
-                    JsonDecoder.STRING.decode(o.values().get("name")));
+                    JsonDecoder.INTEGER.decode(o.get("id")), 
+                    JsonDecoder.STRING.decode(o.get("name")));
               }
               throw new IllegalArgumentException();
             })));
@@ -701,7 +702,7 @@ class JsonTest {
 
   @Test
   void serializePerformance() {
-    var listOfUsers = new Reflection<List<Pojo>>() { }.getType();
+    var listOfUsers = new TypeToken<List<Pojo>>() { }.getType();
     var json1 = new Json();
     var json2 = new Json().add(listOfUsers, JsonAdapter.create(listOfUsers));
     var json3 = new Json().add(listOfUsers,
@@ -714,8 +715,8 @@ class JsonTest {
             json -> {
               if (json instanceof JsonObject o) {
                 return new Pojo(
-                    JsonDecoder.INTEGER.decode(o.values().get("id")), 
-                    JsonDecoder.STRING.decode(o.values().get("name")));
+                    JsonDecoder.INTEGER.decode(o.get("id")), 
+                    JsonDecoder.STRING.decode(o.get("name")));
               }
               throw new IllegalArgumentException();
             })));

@@ -9,6 +9,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Map;
 
+import com.google.gson.JsonElement;
+
 public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
 
   JsonAdapter<String> STRING = of(JsonEncoder.STRING, JsonDecoder.STRING);

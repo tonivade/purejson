@@ -4,6 +4,9 @@
  */
 package com.github.tonivade.json;
 
+import static com.github.tonivade.json.JsonElement.entry;
+import static com.github.tonivade.json.JsonElement.object;
+import static com.github.tonivade.json.Stats.stats;
 import static com.github.tonivade.purefun.data.Sequence.arrayOf;
 import static com.github.tonivade.purefun.data.Sequence.emptyArray;
 import static com.github.tonivade.purefun.data.Sequence.emptyList;
@@ -22,7 +25,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -33,17 +35,15 @@ import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
 
+import com.github.tonivade.json.JsonElement.JsonObject;
 import com.github.tonivade.purefun.Equal;
 import com.github.tonivade.purefun.Function1;
-import com.github.tonivade.purefun.Nothing;
-import com.github.tonivade.purefun.Tuple2;
 import com.github.tonivade.purefun.data.ImmutableArray;
 import com.github.tonivade.purefun.data.ImmutableList;
 import com.github.tonivade.purefun.data.ImmutableMap;
 import com.github.tonivade.purefun.data.ImmutableSet;
 import com.github.tonivade.purefun.data.ImmutableTree;
 import com.github.tonivade.purefun.data.Sequence;
-import com.github.tonivade.purefun.effect.Schedule;
 import com.github.tonivade.purefun.effect.UIO;
 import com.google.gson.GsonBuilder;
 
@@ -670,18 +670,33 @@ class JsonTest {
     var json2 = new Json().add(listOfUsers, JsonAdapter.create(listOfUsers));
     var json3 = new Json().add(listOfUsers, 
         JsonAdapter.iterableAdapter(JsonAdapter.builder(Pojo.class).addInteger("id", Pojo::getId).addString("name", Pojo::getName).build()));
+    var json4 = new Json().add(listOfUsers, 
+        JsonAdapter.iterableAdapter(JsonAdapter.<Pojo>of(
+            value -> object(
+                entry("id", JsonEncoder.INTEGER.encode(value.getId())),
+                entry("name", JsonEncoder.STRING.encode(value.getName()))), 
+            json -> {
+              if (json instanceof JsonObject o) {
+                return new Pojo(
+                    JsonDecoder.INTEGER.decode(o.values().get("id")), 
+                    JsonDecoder.STRING.decode(o.values().get("name")));
+              }
+              throw new IllegalArgumentException();
+            })));
     var gson = new GsonBuilder().create();
     
-    int times = 500;
-    var pureJsonParser1 = parseTask(times, string -> json1.fromJson(string, listOfUsers));
-    var pureJsonParser2 = parseTask(times, string -> json2.fromJson(string, listOfUsers));
-    var pureJsonParser3 = parseTask(times, string -> json3.fromJson(string, listOfUsers));
-    var gsonParser = parseTask(times, string -> gson.fromJson(string, listOfUsers));
+    var pureJsonParser1 = parseTask(string -> json1.fromJson(string, listOfUsers));
+    var pureJsonParser2 = parseTask(string -> json2.fromJson(string, listOfUsers));
+    var pureJsonParser3 = parseTask(string -> json3.fromJson(string, listOfUsers));
+    var pureJsonParser4 = parseTask(string -> json4.fromJson(string, listOfUsers));
+    var gsonParser = parseTask(string -> gson.fromJson(string, listOfUsers));
 
-    run("parse pureJson reflection", pureJsonParser1);
-    run("parse pureJson reflection cached", pureJsonParser2);
-    run("parse pureJson builder", pureJsonParser3);
-    run("parse gson", gsonParser);
+    int times = 500;
+    stats(times, "parse pureJson reflection", pureJsonParser1);
+    stats(times, "parse pureJson reflection cached", pureJsonParser2);
+    stats(times, "parse pureJson builder", pureJsonParser3);
+    stats(times, "parse pureJson explicit", pureJsonParser4);
+    stats(times, "parse gson", gsonParser);
   }
 
   @Test
@@ -691,63 +706,51 @@ class JsonTest {
     var json2 = new Json().add(listOfUsers, JsonAdapter.create(listOfUsers));
     var json3 = new Json().add(listOfUsers,
         JsonAdapter.iterableAdapter(JsonAdapter.builder(Pojo.class).addInteger("id", Pojo::getId).addString("name", Pojo::getName).build()));
+    var json4 = new Json().add(listOfUsers, 
+        JsonAdapter.iterableAdapter(JsonAdapter.<Pojo>of(
+            value -> object(
+                entry("id", JsonEncoder.INTEGER.encode(value.getId())),
+                entry("name", JsonEncoder.STRING.encode(value.getName()))), 
+            json -> {
+              if (json instanceof JsonObject o) {
+                return new Pojo(
+                    JsonDecoder.INTEGER.decode(o.values().get("id")), 
+                    JsonDecoder.STRING.decode(o.values().get("name")));
+              }
+              throw new IllegalArgumentException();
+            })));
     var gson = new GsonBuilder().create();
 
     int times = 500;
-    var pureJsonParser1 = serializeTask(times, value -> json1.toString(value, listOfUsers));
-    var pureJsonParser2 = serializeTask(times, value -> json2.toString(value, listOfUsers));
-    var pureJsonParser3 = serializeTask(times, value -> json3.toString(value, listOfUsers));
-    var gsonParser = serializeTask(times, value -> gson.toJson(value, listOfUsers));
+    var pureJsonParser1 = serializeTask(value -> json1.toString(value, listOfUsers));
+    var pureJsonParser2 = serializeTask(value -> json2.toString(value, listOfUsers));
+    var pureJsonParser3 = serializeTask(value -> json3.toString(value, listOfUsers));
+    var pureJsonParser4 = serializeTask(value -> json4.toString(value, listOfUsers));
+    var gsonParser = serializeTask(value -> gson.toJson(value, listOfUsers));
 
-    run("serialize pureJson reflection", pureJsonParser1);
-    run("serialize pureJson reflection cached", pureJsonParser2);
-    run("serialize pureJson builder", pureJsonParser3);
-    run("serialize gson", gsonParser);
+    stats(times, "serialize pureJson reflection", pureJsonParser1);
+    stats(times, "serialize pureJson reflection cached", pureJsonParser2);
+    stats(times, "serialize pureJson builder", pureJsonParser3);
+    stats(times, "serialize pureJson explicit", pureJsonParser4);
+    stats(times, "serialize gson", gsonParser);
   }
 
-  private UIO<Sequence<Tuple2<Duration, String>>> serializeTask(int times, Function1<List<Pojo>, String> serializer) {
+  private UIO<String> serializeTask(Function1<List<Pojo>, String> serializer) {
     var user = new Pojo(1, "toni");
 
     var listOfUsers = Stream.generate(() -> user).limit(3000).collect(toList());
 
-    return UIO.task(() -> serializer.apply(listOfUsers)).timed().repeat(recursAndCollect(times));
+    return UIO.task(() -> serializer.apply(listOfUsers));
   }
 
-  private UIO<Sequence<Tuple2<Duration, List<Pojo>>>> parseTask(int times, Function1<String, List<Pojo>> parser) {
+  private UIO<List<Pojo>> parseTask(Function1<String, List<Pojo>> parser) {
     var user = """
         {"id":1,"name":"toni"}
         """.strip();
     
     var listOfUsers = Stream.generate(() -> user).limit(3000).collect(joining(",", "[", "]"));
 
-    return UIO.task(() -> parser.apply(listOfUsers)).timed().repeat(recursAndCollect(times));
-  }
-
-  private <T> Schedule<Nothing, Tuple2<Duration, T>, Sequence<Tuple2<Duration, T>>> recursAndCollect(int times) {
-    return Schedule.<Nothing, Tuple2<Duration, T>>recurs(times).zipRight(Schedule.identity()).collectAll();
-  }
-
-  private <T> void run(String name, UIO<Sequence<Tuple2<Duration, T>>> task) {
-    Sequence<Duration> result = task.unsafeRunSync().map(Tuple2::get1);
-    
-    Duration totalDuration = result.reduce(Duration::plus).getOrElseThrow();
-    Duration max = result.foldLeft(Duration.ZERO, (d1, d2) -> d1.compareTo(d2) > 0 ? d1 : d2);
-    Duration min = result.foldLeft(Duration.ofDays(1), (d1, d2) -> d1.compareTo(d2) > 0 ? d2 : d1);
-    
-    System.out.println(name + " total: " + totalDuration.toMillis());
-    System.out.println(name + " min: " + min.toMillis());
-    System.out.println(name + " max: " + max.toMillis());
-    System.out.println(name + " mean: "  + totalDuration.dividedBy(result.size()).toMillis());
-    System.out.println(name + " p50: " + percentile(50, result));
-    System.out.println(name + " p90: " + percentile(90, result));
-    System.out.println(name + " p95: " + percentile(95, result));
-    System.out.println(name + " p99: " + percentile(99, result));
-  }
-  
-  private long percentile(double percentile, Sequence<Duration> results) {
-    var array = results.asArray().sort(Duration::compareTo);
-    
-    return array.get((int) Math.round(percentile / 100.0 * (array.size() - 1))).toMillis();
+    return UIO.task(() -> parser.apply(listOfUsers));
   }
 
   private <T> ArrayList<T> listWithNull() {

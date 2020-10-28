@@ -5,7 +5,6 @@
 package com.github.tonivade.json;
 
 import static com.github.tonivade.json.JsonAdapter.iterableAdapter;
-import static com.github.tonivade.json.JsonElement.object;
 import static com.github.tonivade.purefun.Precondition.checkNonEmpty;
 import static com.github.tonivade.purefun.Precondition.checkNonNull;
 
@@ -16,8 +15,9 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import com.github.tonivade.json.JsonElement.JsonObject;
 import com.github.tonivade.purefun.Function1;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 @SuppressWarnings("preview")
 public final class JsonAdapterBuilder<T> {
@@ -71,20 +71,20 @@ public final class JsonAdapterBuilder<T> {
     return JsonAdapter.of(
 
         value -> {
-          var entries = new LinkedHashMap<String, JsonElement>();
+          var object = new JsonObject();
           for (var entry : encoders.entrySet()) {
-            entries.put(entry.getKey(), entry.getValue().encode(value));
+            object.add(entry.getKey(), entry.getValue().encode(value));
           }
-          return object(entries.entrySet());
+          return object;
         },
 
         json -> {
           if (json instanceof JsonObject o) {
             var params = new ArrayList<>();
             for (var entry : decoders.entrySet()) {
-              JsonElement element = o.values().get(entry.getKey());
+              JsonElement element = o.get(entry.getKey());
               
-              params.add(entry.getValue().decode(element));
+              params.add(entry.getValue().decode(element != null ? element :JsonDSL.NULL));
             }
 
             try {

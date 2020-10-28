@@ -19,7 +19,7 @@ public class JsonParserTest {
 
   @Test
   void parseObject() {
-    String json = """
+    var json = """
         {"id":1,"name":"toni","active":true} 
         """.strip();
 
@@ -30,7 +30,7 @@ public class JsonParserTest {
 
   @Test
   void parseArray() {
-    String json = """
+    var json = """
         ["toni","olivia","vanessa"]
         """.strip();
 

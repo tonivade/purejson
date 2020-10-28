@@ -24,7 +24,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.StreamSupport;
 
@@ -130,11 +129,10 @@ public interface JsonEncoder<T> {
     }
   }
 
-  @SuppressWarnings({ "rawtypes", "unchecked" })
   static <T> JsonEncoder<T> arrayEncoder(Class<T> type) {
     return value -> {
-      JsonEncoder arrayEncoder = create((Type) type.getComponentType());
-      List<JsonElement> items = new LinkedList<>();
+      var arrayEncoder = create((Type) type.getComponentType());
+      var items = new LinkedList<JsonElement>();
       for (Object object : (Object[]) value) {
         items.add(arrayEncoder.encode(object));
       }
@@ -142,13 +140,12 @@ public interface JsonEncoder<T> {
     };
   }
 
-  @SuppressWarnings({ "rawtypes", "unchecked" })
   static <T> JsonEncoder<T> pojoEncoder(Class<T> type) {
     return value -> {
-      List<Map.Entry<String, JsonElement>> entries = new ArrayList<>();
+      var entries = new ArrayList<Map.Entry<String, JsonElement>>();
       for (Field field : type.getDeclaredFields()) {
         if (!isStatic(field.getModifiers()) && !field.isSynthetic() && field.trySetAccessible()) {
-          JsonEncoder fieldEncoder = create(field.getGenericType());
+          var fieldEncoder = create(field.getGenericType());
           try {
             entries.add(entry(field.getName(), fieldEncoder.encode(field.get(value))));
           } catch (IllegalArgumentException | IllegalAccessException e) {

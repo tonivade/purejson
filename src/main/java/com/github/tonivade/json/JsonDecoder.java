@@ -286,7 +286,7 @@ public interface JsonDecoder<T> {
   static <V> JsonDecoder<Map<String, V>> mapDecoder(JsonDecoder<V> itemEncoder) {
     return json -> {
       if (json instanceof JsonElement.JsonObject object) {
-        Map<String, V> map = new LinkedHashMap<>();
+        var map = new LinkedHashMap<String, V>();
         for (Map.Entry<String, ? extends JsonElement> entry : object) {
           map.put(entry.getKey(), itemEncoder.decode(entry.getValue()));
         }

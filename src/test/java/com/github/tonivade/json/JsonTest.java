@@ -14,6 +14,7 @@ import static com.github.tonivade.purefun.data.Sequence.treeOf;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -663,7 +664,7 @@ class JsonTest {
   }
   
   @Test
-  void parformance() {
+  void parsePerformance() {
     var listOfUsers = new Reflection<List<Pojo>>() { }.getType();
     var json1 = new Json();
     var json2 = new Json().add(listOfUsers, JsonAdapter.create(listOfUsers));
@@ -677,26 +678,57 @@ class JsonTest {
     var pureJsonParser3 = parseTask(times, string -> json3.fromJson(string, listOfUsers));
     var gsonParser = parseTask(times, string -> gson.fromJson(string, listOfUsers));
 
-    runParser("pureJson reflection", pureJsonParser1);
-    runParser("pureJson reflection cached", pureJsonParser2);
-    runParser("pureJson builder", pureJsonParser3);
-    runParser("gson", gsonParser);
+    run("parse pureJson reflection", pureJsonParser1);
+    run("parse pureJson reflection cached", pureJsonParser2);
+    run("parse pureJson builder", pureJsonParser3);
+    run("parse gson", gsonParser);
   }
-  
+
+  @Test
+  void serializePerformance() {
+    var listOfUsers = new Reflection<List<Pojo>>() { }.getType();
+    var json1 = new Json();
+    var json2 = new Json().add(listOfUsers, JsonAdapter.create(listOfUsers));
+    var json3 = new Json().add(listOfUsers,
+        JsonAdapter.iterableAdapter(JsonAdapter.builder(Pojo.class).addInteger("id", Pojo::getId).addString("name", Pojo::getName).build()));
+    var gson = new GsonBuilder().create();
+
+    int times = 500;
+    var pureJsonParser1 = serializeTask(times, value -> json1.toString(value, listOfUsers));
+    var pureJsonParser2 = serializeTask(times, value -> json2.toString(value, listOfUsers));
+    var pureJsonParser3 = serializeTask(times, value -> json3.toString(value, listOfUsers));
+    var gsonParser = serializeTask(times, value -> gson.toJson(value, listOfUsers));
+
+    run("serialize pureJson reflection", pureJsonParser1);
+    run("serialize pureJson reflection cached", pureJsonParser2);
+    run("serialize pureJson builder", pureJsonParser3);
+    run("serialize gson", gsonParser);
+  }
+
+  private UIO<Sequence<Tuple2<Duration, String>>> serializeTask(int times, Function1<List<Pojo>, String> serializer) {
+    var user = new Pojo(1, "toni");
+
+    var listOfUsers = Stream.generate(() -> user).limit(3000).collect(toList());
+
+    return UIO.task(() -> serializer.apply(listOfUsers)).timed().repeat(recursAndCollect(times));
+  }
+
   private UIO<Sequence<Tuple2<Duration, List<Pojo>>>> parseTask(int times, Function1<String, List<Pojo>> parser) {
-    var string = """
+    var user = """
         {"id":1,"name":"toni"}
         """.strip();
     
-    var bigString = Stream.generate(() -> string).limit(5000).collect(joining(",", "[", "]"));
+    var listOfUsers = Stream.generate(() -> user).limit(3000).collect(joining(",", "[", "]"));
 
-    var recurs = Schedule.<Nothing, Tuple2<Duration, List<Pojo>>>recurs(times).zipRight(Schedule.identity());
-    var timed = UIO.<List<Pojo>>task(() -> parser.apply(bigString)).timed();
-    return timed.repeat(recurs.collectAll());
+    return UIO.task(() -> parser.apply(listOfUsers)).timed().repeat(recursAndCollect(times));
   }
 
-  private void runParser(String name, UIO<Sequence<Tuple2<Duration, List<Pojo>>>> pureJsonParser) {
-    Sequence<Duration> result = pureJsonParser.unsafeRunSync().map(Tuple2::get1);
+  private <T> Schedule<Nothing, Tuple2<Duration, T>, Sequence<Tuple2<Duration, T>>> recursAndCollect(int times) {
+    return Schedule.<Nothing, Tuple2<Duration, T>>recurs(times).zipRight(Schedule.identity()).collectAll();
+  }
+
+  private <T> void run(String name, UIO<Sequence<Tuple2<Duration, T>>> task) {
+    Sequence<Duration> result = task.unsafeRunSync().map(Tuple2::get1);
     
     Duration totalDuration = result.reduce(Duration::plus).getOrElseThrow();
     Duration max = result.foldLeft(Duration.ZERO, (d1, d2) -> d1.compareTo(d2) > 0 ? d1 : d2);

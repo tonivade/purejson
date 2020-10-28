@@ -9,8 +9,10 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
@@ -253,12 +255,13 @@ public interface JsonDecoder<T> {
     return json -> {
       if (json instanceof JsonObject o) {
         try {
-          T value = type.getConstructor().newInstance();
+          T value = type.getDeclaredConstructor().newInstance();
           for (Field field : type.getDeclaredFields()) {
-            field.setAccessible(true);
-            JsonElement jsonElement = o.values().getOrDefault(field.getName(), NULL);
-            var fieldDecoder = create(field.getGenericType());
-            field.set(value, fieldDecoder.decode(jsonElement));
+            if (!Modifier.isStatic(field.getModifiers()) && !field.isSynthetic() && field.trySetAccessible()) {
+              JsonElement jsonElement = o.values().getOrDefault(field.getName(), NULL);
+              var fieldDecoder = create(field.getGenericType());
+              field.set(value, fieldDecoder.decode(jsonElement));
+            }
           }
           return value;
         } catch (IllegalArgumentException | IllegalAccessException | InstantiationException 

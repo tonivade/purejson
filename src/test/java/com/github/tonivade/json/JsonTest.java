@@ -13,6 +13,7 @@ import static com.github.tonivade.purefun.data.Sequence.setOf;
 import static com.github.tonivade.purefun.data.Sequence.treeOf;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
+import static java.util.stream.Collectors.joining;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -20,35 +21,45 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
 
 import com.github.tonivade.purefun.Equal;
+import com.github.tonivade.purefun.Function1;
+import com.github.tonivade.purefun.Nothing;
+import com.github.tonivade.purefun.Tuple2;
 import com.github.tonivade.purefun.data.ImmutableArray;
 import com.github.tonivade.purefun.data.ImmutableList;
 import com.github.tonivade.purefun.data.ImmutableMap;
 import com.github.tonivade.purefun.data.ImmutableSet;
 import com.github.tonivade.purefun.data.ImmutableTree;
 import com.github.tonivade.purefun.data.Sequence;
+import com.github.tonivade.purefun.effect.Schedule;
+import com.github.tonivade.purefun.effect.UIO;
+import com.google.gson.GsonBuilder;
 
 @SuppressWarnings("preview")
 class JsonTest {
 
   record User(Integer id, String name) {}
 
-  final class Pojo {
+  static final class Pojo {
     
     @SuppressWarnings("unused")
     private static final int x = 1;
     
     private Integer id;
     private String name;
+    
+    Pojo() { }
 
     Pojo(Integer id, String name) {
       this.id = id;
@@ -361,7 +372,7 @@ class JsonTest {
   }
 
   @Test
-  void parse() {
+  void parseRecord() {
     var string = """
         {"id":1,"name":"toni"} 
         """.strip();
@@ -369,6 +380,17 @@ class JsonTest {
     User user = new Json().fromJson(string, User.class);
 
     assertEquals(new User(1, "toni"), user);
+  }
+
+  @Test
+  void parsePojo() {
+    var string = """
+        {"id":1,"name":"toni"} 
+        """.strip();
+
+    Pojo user = new Json().fromJson(string, Pojo.class);
+
+    assertEquals(new Pojo(1, "toni"), user);
   }
 
   @Test
@@ -638,6 +660,62 @@ class JsonTest {
     assertEquals(BigDecimal.valueOf(1.0), json.fromJson("1.0", BigDecimal.class));
     assertEquals("asdfg", json.fromJson("\"asdfg\"", String.class));
     assertEquals(EnumTest.VAL1, json.fromJson("\"VAL1\"", EnumTest.class));
+  }
+  
+  @Test
+  void parformance() {
+    var listOfUsers = new Reflection<List<Pojo>>() { }.getType();
+    var json1 = new Json();
+    var json2 = new Json().add(listOfUsers, JsonAdapter.create(listOfUsers));
+    var json3 = new Json().add(listOfUsers, 
+        JsonAdapter.iterableAdapter(JsonAdapter.builder(Pojo.class).addInteger("id", Pojo::getId).addString("name", Pojo::getName).build()));
+    var gson = new GsonBuilder().create();
+    
+    int times = 500;
+    var pureJsonParser1 = parseTask(times, string -> json1.fromJson(string, listOfUsers));
+    var pureJsonParser2 = parseTask(times, string -> json2.fromJson(string, listOfUsers));
+    var pureJsonParser3 = parseTask(times, string -> json3.fromJson(string, listOfUsers));
+    var gsonParser = parseTask(times, string -> gson.fromJson(string, listOfUsers));
+
+    runParser("pureJson reflection", pureJsonParser1);
+    runParser("pureJson reflection cached", pureJsonParser2);
+    runParser("pureJson builder", pureJsonParser3);
+    runParser("gson", gsonParser);
+  }
+  
+  private UIO<Sequence<Tuple2<Duration, List<Pojo>>>> parseTask(int times, Function1<String, List<Pojo>> parser) {
+    var string = """
+        {"id":1,"name":"toni"}
+        """.strip();
+    
+    var bigString = Stream.generate(() -> string).limit(5000).collect(joining(",", "[", "]"));
+
+    var recurs = Schedule.<Nothing, Tuple2<Duration, List<Pojo>>>recurs(times).zipRight(Schedule.identity());
+    var timed = UIO.<List<Pojo>>task(() -> parser.apply(bigString)).timed();
+    return timed.repeat(recurs.collectAll());
+  }
+
+  private void runParser(String name, UIO<Sequence<Tuple2<Duration, List<Pojo>>>> pureJsonParser) {
+    Sequence<Duration> result = pureJsonParser.unsafeRunSync().map(Tuple2::get1);
+    
+    Duration totalDuration = result.reduce(Duration::plus).getOrElseThrow();
+    Duration max = result.foldLeft(Duration.ZERO, (d1, d2) -> d1.compareTo(d2) > 0 ? d1 : d2);
+    Duration min = result.foldLeft(Duration.ofDays(1), (d1, d2) -> d1.compareTo(d2) > 0 ? d2 : d1);
+    
+    System.out.println(name + " total: " + totalDuration.toMillis());
+    System.out.println(name + " min: " + min.toMillis());
+    System.out.println(name + " max: " + max.toMillis());
+    System.out.println(name + " mean: "  + totalDuration.dividedBy(result.size()).toMillis());
+    System.out.println(name + " p50: " + percentile(50, result));
+    System.out.println(name + " p90: " + percentile(90, result));
+    System.out.println(name + " p95: " + percentile(95, result));
+    System.out.println(name + " p99: " + percentile(99, result));
+  }
+  
+  private long percentile(double percentile, Sequence<Duration> results) {
+    var array = results.asArray().sort(Duration::compareTo);
+    
+    return array.get((int) Math.round(percentile / 100.0 * (array.size() - 1))).toMillis();
   }
 
   private <T> ArrayList<T> listWithNull() {

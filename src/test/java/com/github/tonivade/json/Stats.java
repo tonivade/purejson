@@ -14,31 +14,30 @@ import com.github.tonivade.purefun.data.Sequence;
 import com.github.tonivade.purefun.effect.Schedule;
 import com.github.tonivade.purefun.effect.UIO;
 
-class Stats {
+@SuppressWarnings("preview")
+record Stats(String name, Duration total, Duration min, Duration max, Duration mean, 
+    Duration p50, Duration p90, Duration p95, Duration p99) {
 
-  static <T> void stats(int times, String name, UIO<T> task) {
+  public static <T> Stats stats(int times, String name, UIO<T> task) {
     var repeat = task.timed().map(Tuple2::get1).repeat(recursAndCollect(times));
 
-    Sequence<Duration> result = repeat.unsafeRunSync();
-    
-    Duration totalDuration = result.reduce(Duration::plus).getOrElseThrow();
-    Duration max = result.foldLeft(Duration.ZERO, (d1, d2) -> d1.compareTo(d2) > 0 ? d1 : d2);
-    Duration min = result.foldLeft(Duration.ofDays(1), (d1, d2) -> d1.compareTo(d2) > 0 ? d2 : d1);
-    
-    System.out.println(name + " total: " + totalDuration.toMillis());
-    System.out.println(name + " min: " + min.toMillis());
-    System.out.println(name + " max: " + max.toMillis());
-    System.out.println(name + " mean: " + totalDuration.dividedBy(result.size()).toMillis());
-    System.out.println(name + " p50: " + percentile(50, result));
-    System.out.println(name + " p90: " + percentile(90, result));
-    System.out.println(name + " p95: " + percentile(95, result));
-    System.out.println(name + " p99: " + percentile(99, result));
+    Duration totalDuration = repeat.unsafeRunSync().reduce(Duration::plus).getOrElseThrow();
+    return new Stats(
+        name,
+        totalDuration, 
+        repeat.unsafeRunSync().foldLeft(Duration.ofDays(1), (d1, d2) -> d1.compareTo(d2) > 0 ? d2 : d1), 
+        repeat.unsafeRunSync().foldLeft(Duration.ZERO, (d1, d2) -> d1.compareTo(d2) > 0 ? d1 : d2), 
+        totalDuration.dividedBy(repeat.unsafeRunSync().size()), 
+        percentile(50, repeat.unsafeRunSync()), 
+        percentile(90, repeat.unsafeRunSync()), 
+        percentile(90, repeat.unsafeRunSync()), 
+        percentile(99, repeat.unsafeRunSync()));
   }
   
-  private static long percentile(double percentile, Sequence<Duration> results) {
+  private static Duration percentile(double percentile, Sequence<Duration> results) {
     var array = results.asArray().sort(Duration::compareTo);
     
-    return array.get((int) Math.round(percentile / 100.0 * (array.size() - 1))).toMillis();
+    return array.get((int) Math.round(percentile / 100.0 * (array.size() - 1)));
   }
 
   private static <T> Schedule<Nothing, T, Sequence<T>> recursAndCollect(int times) {

@@ -693,11 +693,12 @@ class JsonTest {
     var gsonParser = parseTask(string -> gson.fromJson(string, listOfUsers));
 
     int times = 500;
-    stats(times, "parse pureJson reflection", pureJsonParser1);
-    stats(times, "parse pureJson reflection cached", pureJsonParser2);
-    stats(times, "parse pureJson builder", pureJsonParser3);
-    stats(times, "parse pureJson explicit", pureJsonParser4);
-    stats(times, "parse gson", gsonParser);
+    Stats stats1 = stats(times, "reflection", pureJsonParser1);
+    Stats stats2 = stats(times, "cached", pureJsonParser2);
+    Stats stats3 = stats(times, "builder", pureJsonParser3);
+    Stats stats4 = stats(times, "explicit", pureJsonParser4);
+    Stats stats5 = stats(times, "gson", gsonParser);
+    printStats("parse", stats1, stats2, stats3, stats4, stats5);
   }
 
   @Test
@@ -729,11 +730,12 @@ class JsonTest {
     var pureJsonParser4 = serializeTask(value -> json4.toString(value, listOfUsers));
     var gsonParser = serializeTask(value -> gson.toJson(value, listOfUsers));
 
-    stats(times, "serialize pureJson reflection", pureJsonParser1);
-    stats(times, "serialize pureJson reflection cached", pureJsonParser2);
-    stats(times, "serialize pureJson builder", pureJsonParser3);
-    stats(times, "serialize pureJson explicit", pureJsonParser4);
-    stats(times, "serialize gson", gsonParser);
+    Stats stats1 = stats(times, "reflection", pureJsonParser1);
+    Stats stats2 = stats(times, "cached", pureJsonParser2);
+    Stats stats3 = stats(times, "builder", pureJsonParser3);
+    Stats stats4 = stats(times, "explicit", pureJsonParser4);
+    Stats stats5 = stats(times, "gson", gsonParser);
+    printStats("serialize", stats1, stats2, stats3, stats4, stats5);
   }
 
   private UIO<String> serializeTask(Function1<List<Pojo>, String> serializer) {
@@ -752,6 +754,23 @@ class JsonTest {
     var listOfUsers = Stream.generate(() -> user).limit(3000).collect(joining(",", "[", "]"));
 
     return UIO.task(() -> parser.apply(listOfUsers));
+  }
+
+  private void printStats(String name, Stats... stats) {
+    System.out.println("Performance " + name);
+    System.out.println("name\ttot\tmin\tmax\tmean\tp50\tp90\tp95\tp99");
+    for (var s : stats) {
+      System.out.println("%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d".formatted(
+          s.name().substring(0, 4), 
+          s.total().toMillis(), 
+          s.min().toMillis(), 
+          s.max().toMillis(), 
+          s.mean().toMillis(), 
+          s.p50().toMillis(), 
+          s.p90().toMillis(), 
+          s.p95().toMillis(), 
+          s.p99().toMillis()));
+    }
   }
 
   private <T> ArrayList<T> listWithNull() {

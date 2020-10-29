@@ -4,21 +4,21 @@
  */
 package com.github.tonivade.json;
 
+import static java.lang.reflect.Modifier.isStatic;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
+import static java.util.stream.Collectors.toList;
 
 import java.lang.reflect.Array;
-import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.LinkedHashMap;
@@ -29,6 +29,7 @@ import java.util.Queue;
 import java.util.Set;
 
 import com.github.tonivade.purefun.Function1;
+import com.github.tonivade.purefun.Tuple2;
 import com.github.tonivade.purefun.data.ImmutableArray;
 import com.github.tonivade.purefun.data.ImmutableList;
 import com.github.tonivade.purefun.data.ImmutableMap;
@@ -215,10 +216,10 @@ public interface JsonDecoder<T> {
 
   @SuppressWarnings("unchecked")
   static <T> JsonDecoder<T[]> arrayDecoder(Class<T> type) {
+    var itemDecoder = create((Type) type);
     return json -> {
       if (json instanceof JsonArray a) {
         var array = Array.newInstance(type, a.size());
-        var itemDecoder = create((Type) type);
         for (int i = 0; i < a.size(); i++) {
           JsonElement element = a.get(i);
           Array.set(array, i, itemDecoder.decode(element));
@@ -234,15 +235,17 @@ public interface JsonDecoder<T> {
   }
 
   static <T> JsonDecoder<T> recordDecoder(Class<T> type) {
+    var fields = Arrays.stream(type.getRecordComponents())
+        .map(f -> Tuple2.of(f, create(f.getGenericType())))
+        .collect(toList());
     return json -> {
       if (json instanceof JsonObject o) {
         var types = new ArrayList<Class<?>>();
         var values = new ArrayList<>();
-        for (RecordComponent recordComponent : type.getRecordComponents()) {
-          types.add(recordComponent.getType());
-          JsonElement jsonElement = o.get(recordComponent.getName());
-          var fieldDecoder = create(recordComponent.getGenericType());
-          values.add(fieldDecoder.decode(jsonElement));
+        for (var pair : fields) {
+          types.add(pair.get1().getType());
+          JsonElement jsonElement = o.get(pair.get1().getName());
+          values.add(pair.get2().decode(jsonElement));
         }
         try {
           var constructor = type.getDeclaredConstructor(types.toArray(Class[]::new));
@@ -257,16 +260,19 @@ public interface JsonDecoder<T> {
   }
 
   static <T> JsonDecoder<T> pojoDecoder(Class<T> type) {
+    var fields = Arrays.stream(type.getDeclaredFields())
+        .filter(f -> !isStatic(f.getModifiers()))
+        .filter(f -> !f.isSynthetic())
+        .filter(f -> f.trySetAccessible())
+        .map(f -> Tuple2.of(f, create(f.getGenericType())))
+        .collect(toList());
     return json -> {
       if (json instanceof JsonObject o) {
         try {
           T value = type.getDeclaredConstructor().newInstance();
-          for (Field field : type.getDeclaredFields()) {
-            if (!Modifier.isStatic(field.getModifiers()) && !field.isSynthetic() && field.trySetAccessible()) {
-              JsonElement jsonElement = o.get(field.getName());
-              var fieldDecoder = create(field.getGenericType());
-              field.set(value, fieldDecoder.decode(jsonElement));
-            }
+          for (var pair : fields) {
+            JsonElement jsonElement = o.get(pair.get1().getName());
+            pair.get1().set(value, pair.get2().decode(jsonElement));
           }
           return value;
         } catch (IllegalArgumentException | IllegalAccessException | InstantiationException 

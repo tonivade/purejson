@@ -6,19 +6,20 @@ package com.github.tonivade.json;
 
 import static com.github.tonivade.json.JsonDSL.NULL;
 import static java.lang.reflect.Modifier.isStatic;
+import static java.util.stream.Collectors.toList;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.Map;
 
 import com.github.tonivade.purefun.Function1;
+import com.github.tonivade.purefun.Tuple2;
 import com.github.tonivade.purefun.data.ImmutableMap;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -137,8 +138,8 @@ public interface JsonEncoder<T> {
   }
 
   static <T> JsonEncoder<T> arrayEncoder(Class<T> type) {
+    var arrayEncoder = create((Type) type.getComponentType());
     return value -> {
-      var arrayEncoder = create((Type) type.getComponentType());
       JsonArray array = new JsonArray();
       for (Object item : (Object[]) value) {
         array.add(arrayEncoder.encode(item));
@@ -148,16 +149,19 @@ public interface JsonEncoder<T> {
   }
 
   static <T> JsonEncoder<T> pojoEncoder(Class<T> type) {
+    var fields = Arrays.stream(type.getDeclaredFields())
+        .filter(f -> !isStatic(f.getModifiers()))
+        .filter(f -> !f.isSynthetic())
+        .filter(f -> f.trySetAccessible())
+        .map(f -> Tuple2.of(f, create(f.getGenericType())))
+        .collect(toList());
     return value -> {
       JsonObject object = new JsonObject();
-      for (Field field : type.getDeclaredFields()) {
-        if (!isStatic(field.getModifiers()) && !field.isSynthetic() && field.trySetAccessible()) {
-          var fieldEncoder = create(field.getGenericType());
-          try {
-            object.add(field.getName(), fieldEncoder.encode(field.get(value)));
-          } catch (IllegalArgumentException | IllegalAccessException e) {
-            throw new IllegalStateException(e);
-          }
+      for (var pair : fields) {
+        try {
+          object.add(pair.get1().getName(), pair.get2().encode(pair.get1().get(value)));
+        } catch (IllegalArgumentException | IllegalAccessException e) {
+          throw new IllegalStateException(e);
         }
       }
       return object;
@@ -165,13 +169,15 @@ public interface JsonEncoder<T> {
   }
 
   static <T> JsonEncoder<T> recordEncoder(Class<T> type) {
+    var fields = Arrays.stream(type.getRecordComponents())
+        .map(f -> Tuple2.of(f, create(f.getGenericType())))
+        .collect(toList());
     return value -> {
       JsonObject object = new JsonObject();
-      for (RecordComponent recordComponent : type.getRecordComponents()) {
-        var fieldEncoder = create(recordComponent.getGenericType());
+      for (var pair : fields) {
         try {
-          var field = recordComponent.getAccessor().invoke(value);
-          object.add(recordComponent.getName(), fieldEncoder.encode(field));
+          var field = pair.get1().getAccessor().invoke(value);
+          object.add(pair.get1().getName(), pair.get2().encode(field));
         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
           throw new IllegalStateException(e);
         }

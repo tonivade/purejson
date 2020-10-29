@@ -84,7 +84,7 @@ public final class JsonAdapterBuilder<T> {
             for (var entry : decoders.entrySet()) {
               JsonElement element = o.get(entry.getKey());
               
-              params.add(entry.getValue().decode(element != null ? element :JsonDSL.NULL));
+              params.add(entry.getValue().decode(element));
             }
 
             try {

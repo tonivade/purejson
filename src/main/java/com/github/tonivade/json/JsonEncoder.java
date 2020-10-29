@@ -129,7 +129,7 @@ public interface JsonEncoder<T> {
     } else if (type.isEnum()) {
       return (JsonEncoder<T>) ENUM;
     } else if (type.isArray()) {
-      return arrayEncoder(type);
+      return arrayEncoder(type.getComponentType());
     } else if (type.isRecord()) {
       return recordEncoder(type);
     } else {
@@ -137,8 +137,8 @@ public interface JsonEncoder<T> {
     }
   }
 
-  static <T> JsonEncoder<T> arrayEncoder(Class<T> type) {
-    var arrayEncoder = create((Type) type.getComponentType());
+  static <T> JsonEncoder<T> arrayEncoder(Type type) {
+    var arrayEncoder = create(type);
     return value -> {
       JsonArray array = new JsonArray();
       for (Object item : (Object[]) value) {

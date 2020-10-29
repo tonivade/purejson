@@ -6,7 +6,7 @@ package com.github.tonivade.json;
 
 import static com.github.tonivade.json.JsonDSL.entry;
 import static com.github.tonivade.json.JsonDSL.object;
-import static com.github.tonivade.json.Stats.stats;
+import static com.github.tonivade.purecheck.PerfCase.uioPerfCase;
 import static com.github.tonivade.purefun.data.Sequence.arrayOf;
 import static com.github.tonivade.purefun.data.Sequence.emptyArray;
 import static com.github.tonivade.purefun.data.Sequence.emptyList;
@@ -14,6 +14,8 @@ import static com.github.tonivade.purefun.data.Sequence.emptySet;
 import static com.github.tonivade.purefun.data.Sequence.listOf;
 import static com.github.tonivade.purefun.data.Sequence.setOf;
 import static com.github.tonivade.purefun.data.Sequence.treeOf;
+import static com.github.tonivade.purefun.data.SequenceOf.toSequence;
+import static com.github.tonivade.purefun.effect.UIOOf.toUIO;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
 import static java.util.stream.Collectors.joining;
@@ -35,6 +37,7 @@ import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
 
+import com.github.tonivade.purecheck.PerfCase.Stats;
 import com.github.tonivade.purefun.Equal;
 import com.github.tonivade.purefun.Function1;
 import com.github.tonivade.purefun.data.ImmutableArray;
@@ -44,6 +47,8 @@ import com.github.tonivade.purefun.data.ImmutableSet;
 import com.github.tonivade.purefun.data.ImmutableTree;
 import com.github.tonivade.purefun.data.Sequence;
 import com.github.tonivade.purefun.effect.UIO;
+import com.github.tonivade.purefun.instances.SequenceInstances;
+import com.github.tonivade.purefun.instances.UIOInstances;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
@@ -685,20 +690,18 @@ class JsonTest {
               throw new IllegalArgumentException();
             })));
     var gson = new GsonBuilder().create();
-    
-    var pureJsonParser1 = parseTask(string -> json1.fromJson(string, listOfUsers));
-    var pureJsonParser2 = parseTask(string -> json2.fromJson(string, listOfUsers));
-    var pureJsonParser3 = parseTask(string -> json3.fromJson(string, listOfUsers));
-    var pureJsonParser4 = parseTask(string -> json4.fromJson(string, listOfUsers));
-    var gsonParser = parseTask(string -> gson.fromJson(string, listOfUsers));
 
     int times = 500;
-    Stats stats1 = stats(times, "reflection", pureJsonParser1);
-    Stats stats2 = stats(times, "cached", pureJsonParser2);
-    Stats stats3 = stats(times, "builder", pureJsonParser3);
-    Stats stats4 = stats(times, "explicit", pureJsonParser4);
-    Stats stats5 = stats(times, "gson", gsonParser);
-    printStats("parse", stats1, stats2, stats3, stats4, stats5);
+    var stats1 = uioPerfCase("reflection", parseTask(string -> json1.fromJson(string, listOfUsers))).run(times);
+    var stats2 = uioPerfCase("cached", parseTask(string -> json2.fromJson(string, listOfUsers))).run(times);
+    var stats3 = uioPerfCase("builder", parseTask(string -> json3.fromJson(string, listOfUsers))).run(times);
+    var stats4 = uioPerfCase("explicit", parseTask(string -> json4.fromJson(string, listOfUsers))).run(times);
+    var stats5 = uioPerfCase("gson", parseTask(string -> gson.fromJson(string, listOfUsers))).run(times);
+
+    var stats = listOf(stats1, stats2, stats3, stats4, stats5);
+
+    printStats("parse", SequenceInstances.traverse().sequence(
+        UIOInstances.applicative(), stats).fix(toUIO()).unsafeRunSync().fix(toSequence()));
   }
 
   @Test
@@ -724,18 +727,16 @@ class JsonTest {
     var gson = new GsonBuilder().create();
 
     int times = 500;
-    var pureJsonParser1 = serializeTask(value -> json1.toString(value, listOfUsers));
-    var pureJsonParser2 = serializeTask(value -> json2.toString(value, listOfUsers));
-    var pureJsonParser3 = serializeTask(value -> json3.toString(value, listOfUsers));
-    var pureJsonParser4 = serializeTask(value -> json4.toString(value, listOfUsers));
-    var gsonParser = serializeTask(value -> gson.toJson(value, listOfUsers));
+    var stats1 = uioPerfCase("reflection", serializeTask(value -> json1.toString(value, listOfUsers))).run(times);
+    var stats2 = uioPerfCase("cached", serializeTask(value -> json2.toString(value, listOfUsers))).run(times);
+    var stats3 = uioPerfCase("builder", serializeTask(value -> json3.toString(value, listOfUsers))).run(times);
+    var stats4 = uioPerfCase("explicit", serializeTask(value -> json4.toString(value, listOfUsers))).run(times);
+    var stats5 = uioPerfCase("reflection", serializeTask(value -> gson.toJson(value, listOfUsers))).run(times);
 
-    Stats stats1 = stats(times, "reflection", pureJsonParser1);
-    Stats stats2 = stats(times, "cached", pureJsonParser2);
-    Stats stats3 = stats(times, "builder", pureJsonParser3);
-    Stats stats4 = stats(times, "explicit", pureJsonParser4);
-    Stats stats5 = stats(times, "gson", gsonParser);
-    printStats("serialize", stats1, stats2, stats3, stats4, stats5);
+    var stats = listOf(stats1, stats2, stats3, stats4, stats5);
+    
+    printStats("serialize", SequenceInstances.traverse().sequence(
+        UIOInstances.applicative(), stats).fix(toUIO()).unsafeRunSync().fix(toSequence()));
   }
 
   private UIO<String> serializeTask(Function1<List<Pojo>, String> serializer) {
@@ -756,20 +757,20 @@ class JsonTest {
     return UIO.task(() -> parser.apply(listOfUsers));
   }
 
-  private void printStats(String name, Stats... stats) {
+  private void printStats(String name, Sequence<Stats> stats) {
     System.out.println("Performance " + name);
     System.out.println("name\ttot\tmin\tmax\tmean\tp50\tp90\tp95\tp99");
     for (var s : stats) {
       System.out.println("%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d".formatted(
-          s.name().substring(0, 4), 
-          s.total().toMillis(), 
-          s.min().toMillis(), 
-          s.max().toMillis(), 
-          s.mean().toMillis(), 
-          s.p50().toMillis(), 
-          s.p90().toMillis(), 
-          s.p95().toMillis(), 
-          s.p99().toMillis()));
+          s.getName().substring(0, 4), 
+          s.getTotal().toMillis(), 
+          s.getMin().toMillis(), 
+          s.getMax().toMillis(), 
+          s.getMean().toMillis(), 
+          s.getP50().toMillis(), 
+          s.getP90().toMillis(), 
+          s.getP95().toMillis(), 
+          s.getP99().toMillis()));
     }
   }
 

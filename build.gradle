@@ -53,7 +53,7 @@ dependencies {
   api 'com.google.code.gson:gson:2.8.6'
   testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
   testImplementation 'org.junit.platform:junit-platform-runner:1.7.0'
-  testImplementation 'com.github.tonivade:purefun-effect:2.2-SNAPSHOT'
+  testImplementation 'com.github.tonivade:purecheck:0.1.0-SNAPSHOT'
 }
 
 modifyPom {

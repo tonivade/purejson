@@ -5,6 +5,7 @@
 package com.github.tonivade.json;
 
 import java.util.AbstractMap;
+import java.util.List;
 import java.util.Map;
 
 import com.google.gson.JsonArray;
@@ -18,6 +19,10 @@ public final class JsonDSL {
   public static final JsonElement NULL = JsonNull.INSTANCE;
   
   public static JsonElement array(JsonElement... elements) {
+    return array(List.of(elements));
+  }
+
+  public static JsonElement array(Iterable<JsonElement> elements) {
     var array = new JsonArray();
     for (JsonElement jsonElement : elements) {
       array.add(jsonElement);
@@ -27,6 +32,14 @@ public final class JsonDSL {
 
   @SafeVarargs
   public static JsonElement object(Map.Entry<String, JsonElement>... elements) {
+    return object(List.of(elements));
+  }
+  
+  public static JsonElement object(Map<String, JsonElement> elements) {
+    return object(elements.entrySet());
+  }
+
+  public static JsonElement object(Iterable<Map.Entry<String, JsonElement>> elements) {
     var object = new JsonObject();
     for (Map.Entry<String, JsonElement> entry : elements) {
       object.add(entry.getKey(), entry.getValue());

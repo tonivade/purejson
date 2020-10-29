@@ -21,17 +21,19 @@ record Stats(String name, Duration total, Duration min, Duration max, Duration m
   public static <T> Stats stats(int times, String name, UIO<T> task) {
     var repeat = task.timed().map(Tuple2::get1).repeat(recursAndCollect(times));
 
-    Duration totalDuration = repeat.unsafeRunSync().reduce(Duration::plus).getOrElseThrow();
+    Sequence<Duration> result = repeat.unsafeRunSync();
+
+    Duration totalDuration = result.reduce(Duration::plus).getOrElseThrow();
     return new Stats(
         name,
         totalDuration, 
-        repeat.unsafeRunSync().foldLeft(Duration.ofDays(1), (d1, d2) -> d1.compareTo(d2) > 0 ? d2 : d1), 
-        repeat.unsafeRunSync().foldLeft(Duration.ZERO, (d1, d2) -> d1.compareTo(d2) > 0 ? d1 : d2), 
-        totalDuration.dividedBy(repeat.unsafeRunSync().size()), 
-        percentile(50, repeat.unsafeRunSync()), 
-        percentile(90, repeat.unsafeRunSync()), 
-        percentile(90, repeat.unsafeRunSync()), 
-        percentile(99, repeat.unsafeRunSync()));
+        result.foldLeft(Duration.ofDays(1), (d1, d2) -> d1.compareTo(d2) > 0 ? d2 : d1), 
+        result.foldLeft(Duration.ZERO, (d1, d2) -> d1.compareTo(d2) > 0 ? d1 : d2), 
+        totalDuration.dividedBy(result.size()), 
+        percentile(50, result), 
+        percentile(90, result), 
+        percentile(90, result), 
+        percentile(99, result));
   }
   
   private static Duration percentile(double percentile, Sequence<Duration> results) {

@@ -65,7 +65,7 @@ public sealed interface JsonNode extends Wrapper
     
     @Override
     public String toString() {
-      return "Null";
+      return "null";
     }
   }
 

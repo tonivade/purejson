@@ -657,8 +657,8 @@ class JsonTest {
     assertNull(json.fromJson("null", String.class));
     assertEquals(Byte.valueOf((byte)1), json.<Byte>fromJson("1", byte.class));
     assertEquals(Short.valueOf((short)1), json.<Short>fromJson("1", short.class));
-    assertEquals(Character.valueOf('A'), json.<Character>fromJson("A", char.class));
-    assertEquals(Character.valueOf('Á'), json.<Character>fromJson("Á", char.class));
+    assertEquals(Character.valueOf('A'), json.<Character>fromJson("\"A\"", char.class));
+    assertEquals(Character.valueOf('Á'), json.<Character>fromJson("\"Á\"", char.class));
     assertEquals(Integer.valueOf(1), json.<Integer>fromJson("1", int.class));
     assertEquals(Long.valueOf(1L), json.<Long>fromJson("1", long.class));
     assertEquals(Float.valueOf(1L), json.<Float>fromJson("1.0", float.class));

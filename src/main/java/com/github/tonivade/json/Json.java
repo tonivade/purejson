@@ -8,20 +8,18 @@ import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonNull;
 import com.google.gson.JsonParser;
 
 public final class Json {
 
   private final Map<String, JsonAdapter<?>> adapters = new HashMap<>();
   
-  public static String serialize(JsonElement element) {
+  public static String serialize(JsonNode element) {
     return element.toString();
   }
 
-  public static JsonElement parse(String json) {
-    return JsonParser.parseString(json);
+  public static JsonNode parse(String json) {
+    return JsonNode.from(JsonParser.parseString(json));
   }
 
   public <T> T fromJson(String json, Type type) {
@@ -29,8 +27,8 @@ public final class Json {
   }
 
   @SuppressWarnings("unchecked")
-  public <T> T fromJson(JsonElement element, Type type) {
-    if (element instanceof JsonNull) {
+  public <T> T fromJson(JsonNode element, Type type) {
+    if (element instanceof JsonNode.Null) {
       return null;
     }
     var jsonAdapter = getAdapter(type);
@@ -48,9 +46,9 @@ public final class Json {
     return serialize(toJson(object, type));
   }
 
-  public JsonElement toJson(Object object, Type type) {
+  public JsonNode toJson(Object object, Type type) {
     if (object == null) {
-      return JsonNull.INSTANCE;
+      return JsonNode.NULL;
     }
     var jsonAdapter = getAdapter(type);
     if (jsonAdapter != null) {

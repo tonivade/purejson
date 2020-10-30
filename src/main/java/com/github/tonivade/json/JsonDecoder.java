@@ -37,84 +37,79 @@ import com.github.tonivade.purefun.data.ImmutableSet;
 import com.github.tonivade.purefun.data.ImmutableTree;
 import com.github.tonivade.purefun.data.ImmutableTreeMap;
 import com.github.tonivade.purefun.data.Sequence;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonNull;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 
 @FunctionalInterface
 @SuppressWarnings("preview")
 public interface JsonDecoder<T> {
   
   JsonDecoder<String> STRING = json -> {
-    if (json instanceof JsonPrimitive p && p.isString()) {
-      return p.getAsString();
+    if (json instanceof JsonNode.Primitive p && p.isString()) {
+      return p.asString();
     }
     throw new IllegalArgumentException(json.toString());
   };
   JsonDecoder<Character> CHAR = json -> {
-    if (json instanceof JsonPrimitive p && p.isString()) {
-      return p.getAsCharacter();
+    if (json instanceof JsonNode.Primitive p && p.isString()) {
+      return p.asCharacter();
     }
     throw new IllegalArgumentException(json.toString());
   };
   JsonDecoder<Byte> BYTE = json -> {
-    if (json instanceof JsonPrimitive p && p.isNumber()) {
-      return p.getAsByte();
+    if (json instanceof JsonNode.Primitive p && p.isNumber()) {
+      return p.asByte();
     }
     throw new IllegalArgumentException(json.toString());
   };
   JsonDecoder<Short> SHORT = json -> {
-    if (json instanceof JsonPrimitive p && p.isNumber()) {
-      return p.getAsShort();
+    if (json instanceof JsonNode.Primitive p && p.isNumber()) {
+      return p.asShort();
     }
     throw new IllegalArgumentException(json.toString());
   };
   JsonDecoder<Integer> INTEGER = json -> {
-    if (json instanceof JsonPrimitive p && p.isNumber()) {
-      return p.getAsInt();
+    if (json instanceof JsonNode.Primitive p && p.isNumber()) {
+      return p.asInt();
     }
     throw new IllegalArgumentException(json.toString());
   };
   JsonDecoder<Long> LONG = json -> {
-    if (json instanceof JsonPrimitive p && p.isNumber()) {
-      return p.getAsLong();
+    if (json instanceof JsonNode.Primitive p && p.isNumber()) {
+      return p.asLong();
     }
     throw new IllegalArgumentException(json.toString());
   };
   JsonDecoder<Float> FLOAT = json -> {
-    if (json instanceof JsonPrimitive p && p.isNumber()) {
-      return p.getAsFloat();
+    if (json instanceof JsonNode.Primitive p && p.isNumber()) {
+      return p.asFloat();
     }
     throw new IllegalArgumentException(json.toString());
   };
   JsonDecoder<Double> DOUBLE = json -> {
-    if (json instanceof JsonPrimitive p && p.isNumber()) {
-      return p.getAsDouble();
+    if (json instanceof JsonNode.Primitive p && p.isNumber()) {
+      return p.asDouble();
     }
     throw new IllegalArgumentException(json.toString());
   };
   JsonDecoder<BigInteger> BIG_INTEGER = json -> {
-    if (json instanceof JsonPrimitive p && p.isNumber()) {
-      return p.getAsBigInteger();
+    if (json instanceof JsonNode.Primitive p && p.isNumber()) {
+      return p.asBigInteger();
     }
     throw new IllegalArgumentException(json.toString());
   };
   JsonDecoder<BigDecimal> BIG_DECIMAL = json -> {
-    if (json instanceof JsonPrimitive p && p.isNumber()) {
-      return p.getAsBigDecimal();
+    if (json instanceof JsonNode.Primitive p && p.isNumber()) {
+      return p.asBigDecimal();
     }
     throw new IllegalArgumentException(json.toString());
   };
   JsonDecoder<Boolean> BOOLEAN = json -> {
-    if (json instanceof JsonPrimitive p && p.isBoolean()) {
-      return p.getAsBoolean();
+    if (json instanceof JsonNode.Primitive p && p.isBoolean()) {
+      return p.asBoolean();
     }
     throw new IllegalArgumentException(json.toString());
   };
 
-  T decode(JsonElement json);
+  T decode(JsonNode json);
   
   default <R> JsonDecoder<R> andThen(Function1<T, R> next) {
     return json -> next.apply(decode(json));
@@ -218,10 +213,10 @@ public interface JsonDecoder<T> {
   static <T> JsonDecoder<T[]> arrayDecoder(Class<T> type) {
     var itemDecoder = create((Type) type);
     return json -> {
-      if (json instanceof JsonArray a) {
+      if (json instanceof JsonNode.Array a) {
         var array = Array.newInstance(type, a.size());
         for (int i = 0; i < a.size(); i++) {
-          JsonElement element = a.get(i);
+          JsonNode element = a.get(i);
           Array.set(array, i, itemDecoder.decode(element));
         }
         return (T[]) array;
@@ -239,12 +234,12 @@ public interface JsonDecoder<T> {
         .map(f -> Tuple2.of(f, create(f.getGenericType())))
         .collect(toList());
     return json -> {
-      if (json instanceof JsonObject o) {
+      if (json instanceof JsonNode.Object o) {
         var types = new ArrayList<Class<?>>();
         var values = new ArrayList<>();
         for (var pair : fields) {
           types.add(pair.get1().getType());
-          JsonElement jsonElement = o.get(pair.get1().getName());
+          JsonNode jsonElement = o.get(pair.get1().getName());
           values.add(pair.get2().decode(jsonElement));
         }
         try {
@@ -267,11 +262,11 @@ public interface JsonDecoder<T> {
         .map(f -> Tuple2.of(f, create(f.getGenericType())))
         .collect(toList());
     return json -> {
-      if (json instanceof JsonObject o) {
+      if (json instanceof JsonNode.Object o) {
         try {
           T value = type.getDeclaredConstructor().newInstance();
           for (var pair : fields) {
-            JsonElement jsonElement = o.get(pair.get1().getName());
+            JsonNode jsonElement = o.get(pair.get1().getName());
             pair.get1().set(value, pair.get2().decode(jsonElement));
           }
           return value;
@@ -286,9 +281,9 @@ public interface JsonDecoder<T> {
 
   static <E> JsonDecoder<Iterable<E>> iterableDecoder(JsonDecoder<E> itemDecoder) {
     return json -> {
-      if (json instanceof JsonArray array) {
+      if (json instanceof JsonNode.Array array) {
         var list = new ArrayList<E>();
-        for (JsonElement object : array) {
+        for (JsonNode object : array) {
           list.add(itemDecoder.decode(object));
         }
         return unmodifiableList(list);
@@ -299,9 +294,9 @@ public interface JsonDecoder<T> {
 
   static <V> JsonDecoder<Map<String, V>> mapDecoder(JsonDecoder<V> itemEncoder) {
     return json -> {
-      if (json instanceof JsonObject object) {
+      if (json instanceof JsonNode.Object object) {
         var map = new LinkedHashMap<String, V>();
-        for (Map.Entry<String, ? extends JsonElement> entry : object.entrySet()) {
+        for (Map.Entry<String, JsonNode> entry : object) {
           map.put(entry.getKey(), itemEncoder.decode(entry.getValue()));
         }
         return unmodifiableMap(map);
@@ -382,6 +377,6 @@ public interface JsonDecoder<T> {
   }
   
   private static <T> JsonDecoder<T> nullSafe(JsonDecoder<T> decoder) {
-    return json -> json == null || json instanceof JsonNull ? null : decoder.decode(json);
+    return json -> json instanceof JsonNode.Null ? null : decoder.decode(json);
   }
 }

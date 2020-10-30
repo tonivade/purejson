@@ -9,57 +9,52 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 
 public final class JsonDSL {
   
-  public static final JsonElement NULL = JsonNull.INSTANCE;
-  
-  public static JsonElement array(JsonElement... elements) {
+  public static JsonNode array(JsonNode... elements) {
     return array(List.of(elements));
   }
 
-  public static JsonElement array(Iterable<JsonElement> elements) {
+  public static JsonNode array(Iterable<JsonNode> elements) {
     var array = new JsonArray();
-    for (JsonElement jsonElement : elements) {
-      array.add(jsonElement);
+    for (JsonNode jsonElement : elements) {
+      array.add(jsonElement.unwrap());
     }
-    return array;
+    return new JsonNode.Array(array);
   }
 
   @SafeVarargs
-  public static JsonElement object(Map.Entry<String, JsonElement>... elements) {
+  public static JsonNode object(Map.Entry<String, JsonNode>... elements) {
     return object(List.of(elements));
   }
   
-  public static JsonElement object(Map<String, JsonElement> elements) {
+  public static JsonNode object(Map<String, JsonNode> elements) {
     return object(elements.entrySet());
   }
 
-  public static JsonElement object(Iterable<Map.Entry<String, JsonElement>> elements) {
+  public static JsonNode object(Iterable<Map.Entry<String, JsonNode>> elements) {
     var object = new JsonObject();
-    for (Map.Entry<String, JsonElement> entry : elements) {
-      object.add(entry.getKey(), entry.getValue());
+    for (Map.Entry<String, JsonNode> entry : elements) {
+      object.add(entry.getKey(), entry.getValue().unwrap());
     }
-    return object;
+    return new JsonNode.Object(object);
   }
   
-  public static Map.Entry<String, JsonElement> entry(String name, JsonElement value) {
+  public static Map.Entry<String, JsonNode> entry(String name, JsonNode value) {
     return new AbstractMap.SimpleImmutableEntry<>(name, value);
   }
 
-  public static JsonElement string(String value) {
-    return new JsonPrimitive(value);
+  public static JsonNode string(String value) {
+    return new JsonNode.Primitive(value);
   }
 
-  public static JsonElement number(Number value) {
-    return new JsonPrimitive(value);
+  public static JsonNode number(Number value) {
+    return new JsonNode.Primitive(value);
   }
 
-  public static JsonElement bool(Boolean value) {
-    return new JsonPrimitive(value);
+  public static JsonNode bool(Boolean value) {
+    return new JsonNode.Primitive(value);
   }
 }

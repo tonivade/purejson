@@ -4,7 +4,6 @@
  */
 package com.github.tonivade.json;
 
-import static com.github.tonivade.json.JsonDSL.NULL;
 import static java.lang.reflect.Modifier.isStatic;
 import static java.util.stream.Collectors.toList;
 
@@ -22,28 +21,26 @@ import com.github.tonivade.purefun.Function1;
 import com.github.tonivade.purefun.Tuple2;
 import com.github.tonivade.purefun.data.ImmutableMap;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 
 @FunctionalInterface
 @SuppressWarnings("preview")
 public interface JsonEncoder<T> {
   
-  JsonEncoder<String> STRING = JsonPrimitive::new;
-  JsonEncoder<Character> CHAR = JsonPrimitive::new;
-  JsonEncoder<Byte> BYTE = JsonPrimitive::new;
-  JsonEncoder<Short> SHORT = JsonPrimitive::new;
-  JsonEncoder<Integer> INTEGER = JsonPrimitive::new;
-  JsonEncoder<Long> LONG = JsonPrimitive::new;
-  JsonEncoder<BigDecimal> BIG_DECIMAL = JsonPrimitive::new;
-  JsonEncoder<BigInteger> BIG_INTEGER = JsonPrimitive::new;
-  JsonEncoder<Float> FLOAT = JsonPrimitive::new;
-  JsonEncoder<Double> DOUBLE = JsonPrimitive::new;
-  JsonEncoder<Boolean> BOOLEAN = JsonPrimitive::new;
+  JsonEncoder<String> STRING = JsonNode.Primitive::new;
+  JsonEncoder<Character> CHAR = STRING.compose(Object::toString);
+  JsonEncoder<Byte> BYTE = JsonNode.Primitive::new;
+  JsonEncoder<Short> SHORT = JsonNode.Primitive::new;
+  JsonEncoder<Integer> INTEGER = JsonNode.Primitive::new;
+  JsonEncoder<Long> LONG = JsonNode.Primitive::new;
+  JsonEncoder<BigDecimal> BIG_DECIMAL = JsonNode.Primitive::new;
+  JsonEncoder<BigInteger> BIG_INTEGER = JsonNode.Primitive::new;
+  JsonEncoder<Float> FLOAT = JsonNode.Primitive::new;
+  JsonEncoder<Double> DOUBLE = JsonNode.Primitive::new;
+  JsonEncoder<Boolean> BOOLEAN = JsonNode.Primitive::new;
   JsonEncoder<Enum<?>> ENUM = STRING.compose(Enum::name);
   
-  JsonElement encode(T value);
+  JsonNode encode(T value);
   
   default <R> JsonEncoder<R> compose(Function1<R, T> accesor) {
     return value -> encode(accesor.apply(value));
@@ -142,9 +139,9 @@ public interface JsonEncoder<T> {
     return value -> {
       JsonArray array = new JsonArray();
       for (Object item : (Object[]) value) {
-        array.add(arrayEncoder.encode(item));
+        array.add(arrayEncoder.encode(item).unwrap());
       }
-      return array;
+      return new JsonNode.Array(array);
     };
   }
 
@@ -159,12 +156,12 @@ public interface JsonEncoder<T> {
       JsonObject object = new JsonObject();
       for (var pair : fields) {
         try {
-          object.add(pair.get1().getName(), pair.get2().encode(pair.get1().get(value)));
+          object.add(pair.get1().getName(), pair.get2().encode(pair.get1().get(value)).unwrap());
         } catch (IllegalArgumentException | IllegalAccessException e) {
           throw new IllegalStateException(e);
         }
       }
-      return object;
+      return new JsonNode.Object(object);
     };
   }
 
@@ -177,12 +174,12 @@ public interface JsonEncoder<T> {
       for (var pair : fields) {
         try {
           var field = pair.get1().getAccessor().invoke(value);
-          object.add(pair.get1().getName(), pair.get2().encode(field));
+          object.add(pair.get1().getName(), pair.get2().encode(field).unwrap());
         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
           throw new IllegalStateException(e);
         }
       }
-      return object;
+      return new JsonNode.Object(object);
     };
   }
 
@@ -190,9 +187,9 @@ public interface JsonEncoder<T> {
     return value -> {
       JsonArray array = new JsonArray();
       for (E item : value) {
-        array.add(itemEncoder.encode(item));
+        array.add(itemEncoder.encode(item).unwrap());
       }
-      return array;
+      return new JsonNode.Array(array);
     };
   }
 
@@ -200,9 +197,9 @@ public interface JsonEncoder<T> {
     return value -> {
       JsonObject object = new JsonObject();
       for (Map.Entry<String, V> entry : value.entrySet()) {
-        object.add(entry.getKey(), valueEncoder.encode(entry.getValue()));
+        object.add(entry.getKey(), valueEncoder.encode(entry.getValue()).unwrap());
       }
-      return object;
+      return new JsonNode.Object(object);
     };
   }
 
@@ -240,6 +237,6 @@ public interface JsonEncoder<T> {
   }
   
   private static <T> JsonEncoder<T> nullSafe(JsonEncoder<T> encoder) {
-    return value -> value == null ? NULL : encoder.encode(value);
+    return value -> value == null ? JsonNode.NULL : encoder.encode(value);
   }
 }

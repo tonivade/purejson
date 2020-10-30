@@ -50,7 +50,6 @@ import com.github.tonivade.purefun.effect.UIO;
 import com.github.tonivade.purefun.instances.SequenceInstances;
 import com.github.tonivade.purefun.instances.UIOInstances;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 
 @SuppressWarnings("preview")
@@ -682,7 +681,7 @@ class JsonTest {
                 entry("id", JsonEncoder.INTEGER.encode(value.getId())),
                 entry("name", JsonEncoder.STRING.encode(value.getName()))), 
             json -> {
-              if (json instanceof JsonObject o) {
+              if (json instanceof JsonNode.Object o) {
                 return new Pojo(
                     JsonDecoder.INTEGER.decode(o.get("id")), 
                     JsonDecoder.STRING.decode(o.get("name")));
@@ -717,7 +716,7 @@ class JsonTest {
                 entry("id", JsonEncoder.INTEGER.encode(value.getId())),
                 entry("name", JsonEncoder.STRING.encode(value.getName()))), 
             json -> {
-              if (json instanceof JsonObject o) {
+              if (json instanceof JsonNode.Object o) {
                 return new Pojo(
                     JsonDecoder.INTEGER.decode(o.get("id")), 
                     JsonDecoder.STRING.decode(o.get("name")));
@@ -761,16 +760,15 @@ class JsonTest {
     System.out.println("Performance " + name);
     System.out.println("name\ttot\tmin\tmax\tmean\tp50\tp90\tp95\tp99");
     for (var s : stats) {
-      System.out.println("%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d".formatted(
-          s.getName().substring(0, 4), 
-          s.getTotal().toMillis(), 
-          s.getMin().toMillis(), 
-          s.getMax().toMillis(), 
-          s.getMean().toMillis(), 
-          s.getP50().toMillis(), 
-          s.getP90().toMillis(), 
-          s.getP95().toMillis(), 
-          s.getP99().toMillis()));
+      System.out.printf("%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d%n", s.getName().substring(0, 4),
+          s.getTotal().toMillis(),
+          s.getMin().toMillis(),
+          s.getMax().toMillis(),
+          s.getMean().toMillis(),
+          s.getP50().toMillis(),
+          s.getP90().toMillis(),
+          s.getP95().toMillis(),
+          s.getP99().toMillis());
     }
   }
 

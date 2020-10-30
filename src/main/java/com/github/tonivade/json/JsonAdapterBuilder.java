@@ -16,7 +16,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.github.tonivade.purefun.Function1;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 @SuppressWarnings("preview")
@@ -73,16 +72,16 @@ public final class JsonAdapterBuilder<T> {
         value -> {
           var object = new JsonObject();
           for (var entry : encoders.entrySet()) {
-            object.add(entry.getKey(), entry.getValue().encode(value));
+            object.add(entry.getKey(), entry.getValue().encode(value).unwrap());
           }
-          return object;
+          return new JsonNode.Object(object);
         },
 
         json -> {
-          if (json instanceof JsonObject o) {
+          if (json instanceof JsonNode.Object o) {
             var params = new ArrayList<>();
             for (var entry : decoders.entrySet()) {
-              JsonElement element = o.get(entry.getKey());
+              JsonNode element = o.get(entry.getKey());
               
               params.add(entry.getValue().decode(element));
             }

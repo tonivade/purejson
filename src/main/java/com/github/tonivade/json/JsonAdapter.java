@@ -9,8 +9,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Map;
 
-import com.google.gson.JsonElement;
-
 public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
 
   JsonAdapter<String> STRING = of(JsonEncoder.STRING, JsonDecoder.STRING);
@@ -37,12 +35,12 @@ public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
     return new JsonAdapter<>() {
 
       @Override
-      public JsonElement encode(T value) {
+      public JsonNode encode(T value) {
         return encoder.encode(value);
       }
       
       @Override
-      public T decode(JsonElement json) {
+      public T decode(JsonNode json) {
         return decoder.decode(json);
       }
     };

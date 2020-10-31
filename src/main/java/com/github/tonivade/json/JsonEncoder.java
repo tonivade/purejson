@@ -139,7 +139,7 @@ public interface JsonEncoder<T> {
     return value -> {
       JsonArray array = new JsonArray();
       for (Object item : (Object[]) value) {
-        array.add(arrayEncoder.encode(item).unwrap());
+        array.add(arrayEncoder.encode(item));
       }
       return new JsonNode.Array(array);
     };
@@ -156,7 +156,7 @@ public interface JsonEncoder<T> {
       JsonObject object = new JsonObject();
       for (var pair : fields) {
         try {
-          object.add(pair.get1().getName(), pair.get2().encode(pair.get1().get(value)).unwrap());
+          object.add(pair.get1().getName(), pair.get2().encode(pair.get1().get(value)));
         } catch (IllegalArgumentException | IllegalAccessException e) {
           throw new IllegalStateException(e);
         }
@@ -174,7 +174,7 @@ public interface JsonEncoder<T> {
       for (var pair : fields) {
         try {
           var field = pair.get1().getAccessor().invoke(value);
-          object.add(pair.get1().getName(), pair.get2().encode(field).unwrap());
+          object.add(pair.get1().getName(), pair.get2().encode(field));
         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
           throw new IllegalStateException(e);
         }
@@ -187,7 +187,7 @@ public interface JsonEncoder<T> {
     return value -> {
       JsonArray array = new JsonArray();
       for (E item : value) {
-        array.add(itemEncoder.encode(item).unwrap());
+        array.add(itemEncoder.encode(item));
       }
       return new JsonNode.Array(array);
     };
@@ -197,7 +197,7 @@ public interface JsonEncoder<T> {
     return value -> {
       JsonObject object = new JsonObject();
       for (Map.Entry<String, V> entry : value.entrySet()) {
-        object.add(entry.getKey(), valueEncoder.encode(entry.getValue()).unwrap());
+        object.add(entry.getKey(), valueEncoder.encode(entry.getValue()));
       }
       return new JsonNode.Object(object);
     };

@@ -44,67 +44,67 @@ public interface JsonDecoder<T> {
   
   JsonDecoder<String> STRING = json -> {
     if (json instanceof JsonNode.Primitive p && p.isString()) {
-      return p.asString();
+      return p.getAsString();
     }
     throw new IllegalArgumentException(json.toString());
   };
   JsonDecoder<Character> CHAR = json -> {
     if (json instanceof JsonNode.Primitive p && p.isString()) {
-      return p.asCharacter();
+      return p.getAsCharacter();
     }
     throw new IllegalArgumentException(json.toString());
   };
   JsonDecoder<Byte> BYTE = json -> {
     if (json instanceof JsonNode.Primitive p && p.isNumber()) {
-      return p.asByte();
+      return p.getAsByte();
     }
     throw new IllegalArgumentException(json.toString());
   };
   JsonDecoder<Short> SHORT = json -> {
     if (json instanceof JsonNode.Primitive p && p.isNumber()) {
-      return p.asShort();
+      return p.getAsShort();
     }
     throw new IllegalArgumentException(json.toString());
   };
   JsonDecoder<Integer> INTEGER = json -> {
     if (json instanceof JsonNode.Primitive p && p.isNumber()) {
-      return p.asInt();
+      return p.getAsInt();
     }
     throw new IllegalArgumentException(json.toString());
   };
   JsonDecoder<Long> LONG = json -> {
     if (json instanceof JsonNode.Primitive p && p.isNumber()) {
-      return p.asLong();
+      return p.getAsLong();
     }
     throw new IllegalArgumentException(json.toString());
   };
   JsonDecoder<Float> FLOAT = json -> {
     if (json instanceof JsonNode.Primitive p && p.isNumber()) {
-      return p.asFloat();
+      return p.getAsFloat();
     }
     throw new IllegalArgumentException(json.toString());
   };
   JsonDecoder<Double> DOUBLE = json -> {
     if (json instanceof JsonNode.Primitive p && p.isNumber()) {
-      return p.asDouble();
+      return p.getAsDouble();
     }
     throw new IllegalArgumentException(json.toString());
   };
   JsonDecoder<BigInteger> BIG_INTEGER = json -> {
     if (json instanceof JsonNode.Primitive p && p.isNumber()) {
-      return p.asBigInteger();
+      return p.getAsBigInteger();
     }
     throw new IllegalArgumentException(json.toString());
   };
   JsonDecoder<BigDecimal> BIG_DECIMAL = json -> {
     if (json instanceof JsonNode.Primitive p && p.isNumber()) {
-      return p.asBigDecimal();
+      return p.getAsBigDecimal();
     }
     throw new IllegalArgumentException(json.toString());
   };
   JsonDecoder<Boolean> BOOLEAN = json -> {
     if (json instanceof JsonNode.Primitive p && p.isBoolean()) {
-      return p.asBoolean();
+      return p.getAsBoolean();
     }
     throw new IllegalArgumentException(json.toString());
   };

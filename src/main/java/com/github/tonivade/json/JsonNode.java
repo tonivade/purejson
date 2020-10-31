@@ -20,12 +20,138 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
 @SuppressWarnings("preview")
-public sealed interface JsonNode extends Wrapper
-    permits JsonNode.Null, JsonNode.Array, JsonNode.Object, JsonNode.Primitive {
-  
-  JsonNode NULL = new Null();
+public abstract class JsonNode extends JsonElement {
 
-  static JsonNode from(JsonElement element) {
+  public static final JsonNode NULL = new Null();
+
+  private final JsonElement element;
+
+  private JsonNode(JsonElement element) {
+    this.element = checkNonNull(element);
+  }
+
+  @Override
+  public JsonElement deepCopy() {
+    return from(element.deepCopy());
+  }
+
+  @Override
+  public boolean isJsonArray() {
+    return element.isJsonArray();
+  }
+
+  @Override
+  public boolean isJsonObject() {
+    return element.isJsonObject();
+  }
+
+  @Override
+  public boolean isJsonPrimitive() {
+    return element.isJsonPrimitive();
+  }
+
+  @Override
+  public boolean isJsonNull() {
+    return element.isJsonNull();
+  }
+
+  @Override
+  public JsonObject getAsJsonObject() {
+    return element.getAsJsonObject();
+  }
+
+  @Override
+  public JsonArray getAsJsonArray() {
+    return element.getAsJsonArray();
+  }
+
+  @Override
+  public JsonPrimitive getAsJsonPrimitive() {
+    return element.getAsJsonPrimitive();
+  }
+
+  @Override
+  public JsonNull getAsJsonNull() {
+    return element.getAsJsonNull();
+  }
+
+  @Override
+  public boolean getAsBoolean() {
+    return element.getAsBoolean();
+  }
+
+  @Override
+  public Number getAsNumber() {
+    return element.getAsNumber();
+  }
+
+  @Override
+  public String getAsString() {
+    return element.getAsString();
+  }
+
+  @Override
+  public double getAsDouble() {
+    return element.getAsDouble();
+  }
+
+  @Override
+  public float getAsFloat() {
+    return element.getAsFloat();
+  }
+
+  @Override
+  public long getAsLong() {
+    return element.getAsLong();
+  }
+
+  @Override
+  public int getAsInt() {
+    return element.getAsInt();
+  }
+
+  @Override
+  public byte getAsByte() {
+    return element.getAsByte();
+  }
+
+  @Override
+  @Deprecated
+  public char getAsCharacter() {
+    return element.getAsCharacter();
+  }
+
+  @Override
+  public BigDecimal getAsBigDecimal() {
+    return element.getAsBigDecimal();
+  }
+
+  @Override
+  public BigInteger getAsBigInteger() {
+    return element.getAsBigInteger();
+  }
+
+  @Override
+  public short getAsShort() {
+    return element.getAsShort();
+  }
+
+  @Override
+  public int hashCode() {
+    return element.hashCode();
+  }
+
+  @Override
+  public boolean equals(java.lang.Object obj) {
+    return element.equals(obj);
+  }
+
+  @Override
+  public String toString() {
+    return element.toString();
+  }
+
+  public static JsonNode from(JsonElement element) {
     if (element == null) {
       return NULL;
     }
@@ -44,116 +170,52 @@ public sealed interface JsonNode extends Wrapper
     throw new IllegalArgumentException();
   }
   
-  final class Null implements JsonNode {
+  public static final class Null extends JsonNode {
 
-    private Null() {}
-
-    @Override
-    public JsonElement unwrap() {
-      return JsonNull.INSTANCE;
-    }
-    
-    @Override
-    public int hashCode() {
-      return 1;
-    }
-    
-    @Override
-    public boolean equals(java.lang.Object obj) {
-      return obj instanceof Null;
-    }
-    
-    @Override
-    public String toString() {
-      return "null";
+    private Null() {
+      super(JsonNull.INSTANCE);
     }
   }
 
-  final class Array implements JsonNode, Iterable<JsonNode> {
-    
-    private final JsonArray array;
-    
+  public static final class Array extends JsonNode implements Iterable<JsonNode> {
+
     public Array(JsonArray array) {
-      this.array = checkNonNull(array);
+      super(array);
     }
 
     int size() {
-      return array.size();
+      return getAsJsonArray().size();
     }
     
     @Override
     public Iterator<JsonNode> iterator() {
-      return StreamSupport.stream(array.spliterator(), false).map(JsonNode::from).iterator();
+      return StreamSupport.stream(getAsJsonArray().spliterator(), false).map(JsonNode::from).iterator();
     }
 
     JsonNode get(int i) {
-      return JsonNode.from(array.get(i));
-    }
-    
-    @Override
-    public JsonElement unwrap() {
-      return array;
-    }
-
-    @Override
-    public int hashCode() {
-      return array.hashCode();
-    }
-
-    @Override
-    public boolean equals(java.lang.Object obj) {
-      return array.equals(obj);
-    }
-
-    @Override
-    public String toString() {
-      return array.toString();
+      return JsonNode.from(getAsJsonArray().get(i));
     }
   }
 
-  final class Object implements JsonNode, Iterable<Map.Entry<String, JsonNode>> {
-    
-    private final JsonObject object;
+  public static final class Object extends JsonNode implements Iterable<Map.Entry<String, JsonNode>> {
     
     public Object(JsonObject object) {
-      this.object = checkNonNull(object);
+      super(object);
     }
 
     JsonNode get(String name) {
-      return JsonNode.from(object.get(name));
+      return JsonNode.from(getAsJsonObject().get(name));
     }
     
     @Override
     public Iterator<Map.Entry<String, JsonNode>> iterator() {
-      return object.entrySet().stream()
+      return getAsJsonObject().entrySet().stream()
           .map(entry -> entry(entry.getKey(), JsonNode.from(entry.getValue()))).iterator();
-    }
-    
-    @Override
-    public JsonElement unwrap() {
-      return object;
-    }
-
-    @Override
-    public int hashCode() {
-      return object.hashCode();
-    }
-
-    @Override
-    public boolean equals(java.lang.Object obj) {
-      return object.equals(obj);
-    }
-
-    @Override
-    public String toString() {
-      return object.toString();
     }
   }
   
-  final class Primitive implements JsonNode {
+  public static final class Primitive extends JsonNode {
     
-    private final JsonPrimitive value;
-
     public Primitive(String value) {
       this(new JsonPrimitive(value));
     }
@@ -167,87 +229,19 @@ public sealed interface JsonNode extends Wrapper
     }
 
     private Primitive(JsonPrimitive value) {
-      this.value = checkNonNull(value);
-    }
-
-    @Override
-    public JsonElement unwrap() {
-      return value;
+      super(value);
     }
 
     boolean isString() {
-      return value.isString();
+      return getAsJsonPrimitive().isString();
     }
 
     boolean isNumber() {
-      return value.isNumber();
+      return getAsJsonPrimitive().isNumber();
     }
 
     boolean isBoolean() {
-      return value.isBoolean();
-    }
-
-    String asString() {
-      return value.getAsString();
-    }
-
-    Character asCharacter() {
-      return value.getAsCharacter();
-    }
-
-    Byte asByte() {
-      return value.getAsByte();
-    }
-
-    Short asShort() {
-      return value.getAsShort();
-    }
-
-    Integer asInt() {
-      return value.getAsInt();
-    }
-
-    Long asLong() {
-      return value.getAsLong();
-    }
-
-    Float asFloat() {
-      return value.getAsFloat();
-    }
-
-    Double asDouble() {
-      return value.getAsDouble();
-    }
-
-    BigInteger asBigInteger() {
-      return value.getAsBigInteger();
-    }
-
-    BigDecimal asBigDecimal() {
-      return value.getAsBigDecimal();
-    }
-
-    Boolean asBoolean() {
-      return value.getAsBoolean();
-    }
-
-    @Override
-    public int hashCode() {
-      return value.hashCode();
-    }
-
-    @Override
-    public boolean equals(java.lang.Object obj) {
-      return value.equals(obj);
-    }
-
-    @Override
-    public String toString() {
-      return value.toString();
+      return getAsJsonPrimitive().isBoolean();
     }
   }
-}
-
-interface Wrapper {
-  JsonElement unwrap();
 }

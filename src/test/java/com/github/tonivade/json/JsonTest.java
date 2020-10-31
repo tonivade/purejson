@@ -110,47 +110,38 @@ class JsonTest extends IOTestSpec<String> {
   enum EnumTest { VAL1, VAL2 }
 
   @Test
-  void serializeRecord() {
-    var result = new Json().toString(new User(1, "toni"));
+  void serializeObject() {
 
-    var expected = """
-        {"id":1,"name":"toni"} 
-        """.strip();
+    suite("serialize object", 
+        it.should("serialize a record")
+          .given(new User(1, "toni"))
+          .when(value -> new Json().toString(value))
+          .thenMustBe(equalsTo(success("""
+              {"id":1,"name":"toni"} 
+              """.strip()))),
 
-    assertEquals(success(expected), result);
-  }
+        it.should("serialize a record with null fields")
+          .given(new User(1, null))
+          .when(value -> new Json().toString(value))
+          .thenMustBe(equalsTo(success("""
+              {"id":1,"name":null} 
+              """.strip()))),
+          
+        it.should("serialize a pojo")
+          .given(new Pojo(1, "toni"))
+          .when(value -> new Json().toString(value))
+          .thenMustBe(equalsTo(success("""
+              {"id":1,"name":"toni"} 
+              """.strip()))),
+          
+        it.should("serialize a pojo with null fields")
+          .given(new Pojo(1, null))
+          .when(value -> new Json().toString(value))
+          .thenMustBe(equalsTo(success("""
+              {"id":1,"name":null} 
+              """.strip())))
 
-  @Test
-  void serializeRecordNull() {
-    var result = new Json().toString(new User(1, null));
-
-    var expected = """
-        {"id":1,"name":null} 
-        """.strip();
-
-    assertEquals(success(expected), result);
-  }
-
-  @Test
-  void serializePojo() {
-    var result = new Json().toString(new Pojo(1, "toni"));
-
-    var expected = """
-        {"id":1,"name":"toni"} 
-        """.strip();
-
-    assertEquals(success(expected), result);
-  }
-
-  @Test
-  void serializePojoNull() {
-    var result = new Json().toString(new Pojo(1, null));
-
-    var expected = """
-        {"id":1,"name":null} 
-        """.strip();
-
-    assertEquals(success(expected), result);
+        ).run().assertion();
   }
   
   @Test
@@ -647,68 +638,68 @@ class JsonTest extends IOTestSpec<String> {
     suite("serialize primitives", 
 
         it.should("serialize null")
-          .given(Json::new)
-          .when(json -> json.toString(null))
+          .givenNull()
+          .when(value -> new Json().toString(value))
           .thenMustBe(equalsTo(success("null"))),
 
         it.should("serialize a character")
-          .given(Json::new)
-          .when(json -> json.toString("A"))
+          .given("A")
+          .when(value -> new Json().toString(value))
           .thenMustBe(equalsTo(success("\"A\""))),
 
         it.should("serialize a unicode character")
-          .given(Json::new)
-          .when(json -> json.toString("Á"))
+          .given("Á")
+          .when(value -> new Json().toString(value))
           .thenMustBe(equalsTo(success("\"Á\""))),
 
         it.should("serialize a byte")
-          .given(Json::new)
-          .when(json -> json.toString((byte) 1))
+          .given((byte) 1)
+          .when(value -> new Json().toString(value))
           .thenMustBe(equalsTo(success("1"))),
 
         it.should("serialize a short")
-          .given(Json::new)
-          .when(json -> json.toString((short) 1))
+          .given((short) 1)
+          .when(value -> new Json().toString(value))
           .thenMustBe(equalsTo(success("1"))),
 
         it.should("serialize an integer")
-          .given(Json::new)
-          .when(json -> json.toString(1))
+          .given(1)
+          .when(value -> new Json().toString(value))
           .thenMustBe(equalsTo(success("1"))),
 
         it.should("serialize a long")
-          .given(Json::new)
-          .when(json -> json.toString(1L))
+          .given(1L)
+          .when(value -> new Json().toString(value))
           .thenMustBe(equalsTo(success("1"))),
 
         it.should("serialize a float")
-          .given(Json::new)
-          .when(json -> json.toString(1F))
+          .given(1F)
+          .when(value -> new Json().toString(value))
           .thenMustBe(equalsTo(success("1.0"))),
 
         it.should("serialize a double")
-          .given(Json::new)
-          .when(json -> json.toString(1D))
+          .given(1D)
+          .when(value -> new Json().toString(value))
           .thenMustBe(equalsTo(success("1.0"))),
 
         it.should("serialize a big integer")
-          .given(Json::new)
-          .when(json -> json.toString(BigInteger.ONE))
+          .given(BigInteger.ONE)
+          .when(value -> new Json().toString(value))
           .thenMustBe(equalsTo(success("1"))),
 
         it.should("serialize a big decimal")
-          .given(Json::new)
-          .when(json -> json.toString(BigDecimal.ONE))
+          .given(BigDecimal.ONE)
+          .when(value -> new Json().toString(value))
           .thenMustBe(equalsTo(success("1"))),
 
         it.should("serialize a string")
-          .given(Json::new)
-          .when(json -> json.toString("asdfg"))
+          .given("asdfg")
+          .when(value -> new Json().toString(value))
           .thenMustBe(equalsTo(success("\"asdfg\""))),
 
         it.should("serialize a enum")
-          .given(Json::new)
-          .when(json -> json.toString(EnumTest.VAL1))
+          .given(EnumTest.VAL1)
+          .when(value -> new Json().toString(value))
           .thenMustBe(equalsTo(success("\"VAL1\"")))
 
         ).run().assertion();
@@ -719,68 +710,68 @@ class JsonTest extends IOTestSpec<String> {
     suite("parse primitives", 
 
         it.should("parse null")
-          .given(Json::new)
-          .when(json -> json.fromJson("null", String.class))
+          .given("null")
+          .when(json -> new Json().fromJson(json, String.class))
           .thenMustBe(equalsTo(success(none()))),
 
         it.should("parse char")
-          .given(Json::new)
-          .when(json -> json.fromJson("\"A\"", char.class))
+          .given("\"A\"")
+          .when(json -> new Json().fromJson(json, char.class))
           .thenMustBe(equalsTo(success(some('A')))),
 
         it.should("parse unicode char")
-          .given(Json::new)
-          .when(json -> json.fromJson("\"Á\"", char.class))
+          .given("\"Á\"")
+          .when(json -> new Json().fromJson(json, char.class))
           .thenMustBe(equalsTo(success(some('Á')))),
 
         it.should("parse byte")
-          .given(Json::new)
-          .when(json -> json.fromJson("1", byte.class))
+          .given("1")
+          .when(json -> new Json().fromJson(json, byte.class))
           .thenMustBe(equalsTo(success(some((byte) 1)))),
 
         it.should("parse short")
-          .given(Json::new)
-          .when(json -> json.fromJson("1", short.class))
+          .given("1")
+          .when(json -> new Json().fromJson(json, short.class))
           .thenMustBe(equalsTo(success(some((short) 1)))),
 
         it.should("parse int")
-          .given(Json::new)
-          .when(json -> json.fromJson("1", int.class))
+          .given("1")
+          .when(json -> new Json().fromJson(json, int.class))
           .thenMustBe(equalsTo(success(some(1)))),
 
         it.should("parse long")
-          .given(Json::new)
-          .when(json -> json.fromJson("1", long.class))
+          .given("1")
+          .when(json -> new Json().fromJson(json, long.class))
           .thenMustBe(equalsTo(success(some(1L)))),
 
         it.should("parse float")
-          .given(Json::new)
-          .when(json -> json.fromJson("1.0", float.class))
+          .given("1.0")
+          .when(json -> new Json().fromJson(json, float.class))
           .thenMustBe(equalsTo(success(some(1F)))),
 
         it.should("parse double")
-          .given(Json::new)
-          .when(json -> json.fromJson("1.0", double.class))
+          .given("1.0")
+          .when(json -> new Json().fromJson(json, double.class))
           .thenMustBe(equalsTo(success(some(1D)))),
 
         it.should("parse big integer")
-          .given(Json::new)
-          .when(json -> json.fromJson("1", BigInteger.class))
+          .given("1")
+          .when(json -> new Json().fromJson(json, BigInteger.class))
           .thenMustBe(equalsTo(success(some(BigInteger.ONE)))),
 
         it.should("parse big decimal")
-          .given(Json::new)
-          .when(json -> json.fromJson("1.0", BigDecimal.class))
+          .given("1.0")
+          .when(json -> new Json().fromJson(json, BigDecimal.class))
           .thenMustBe(equalsTo(success(some(BigDecimal.valueOf(1.0))))),
 
         it.should("parse string")
-          .given(Json::new)
-          .when(json -> json.fromJson("\"asdfg\"", String.class))
+          .given("\"asdfg\"")
+          .when(json -> new Json().fromJson(json, String.class))
           .thenMustBe(equalsTo(success(some("asdfg")))),
 
         it.should("parse enum values")
-          .given(Json::new)
-          .when(json -> json.fromJson("\"VAL1\"", EnumTest.class))
+          .given("\"VAL1\"")
+          .when(json -> new Json().fromJson(json, EnumTest.class))
           .thenMustBe(equalsTo(success(some(EnumTest.VAL1))))
 
         ).run().assertion();

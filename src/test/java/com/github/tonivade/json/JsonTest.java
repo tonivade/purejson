@@ -113,6 +113,7 @@ class JsonTest extends IOTestSpec<String> {
   void serializeObject() {
 
     suite("serialize object", 
+
         it.should("serialize a record")
           .given(new User(1, "toni"))
           .when(value -> new Json().toString(value))
@@ -148,167 +149,213 @@ class JsonTest extends IOTestSpec<String> {
   void serializeInnerArray() {
 
     record Test(String[] values) {}
-    
-    var json = new Json();
-    var result1 = json.toString(new Test(List.of("hola", "adios").toArray(String[]::new)));
-    var result2 = json.toString(new Test(asList(null, "adios").toArray(String[]::new)));
-    var result3 = json.toString(new Test(null));
 
-    var expected1 = """
-        {"values":["hola","adios"]} 
-        """.strip();
-    var expected2 = """
-        {"values":[null,"adios"]} 
-        """.strip();
-    var expected3 = """
-        {"values":null} 
-        """.strip();
-    
-    assertEquals(success(expected1), result1);
-    assertEquals(success(expected2), result2);
-    assertEquals(success(expected3), result3);
+    suite("serialize inner array", 
+
+        it.should("serialize a inner array")
+          .given(new Test(List.of("hola", "adios").toArray(String[]::new)))
+          .when(value -> new Json().toString(value))
+          .thenMustBe(equalsTo(success("""
+              {"values":["hola","adios"]} 
+              """.strip()))),
+
+        it.should("serialize a inner array with null values")
+          .given(new Test(asList(null, "adios").toArray(String[]::new)))
+          .when(value -> new Json().toString(value))
+          .thenMustBe(equalsTo(success("""
+              {"values":[null,"adios"]} 
+              """.strip()))),
+
+        it.should("serialize a null inner array")
+          .given(new Test(null))
+          .when(value -> new Json().toString(value))
+          .thenMustBe(equalsTo(success("""
+              {"values":null} 
+              """.strip())))
+
+        ).run().assertion();
   }
   
   @Test
   void serializeInnerList() {
 
     record Test(List<String> values) {}
-    
-    var json = new Json();
-    var result1 = json.toString(new Test(List.of("hola", "adios")));
-    var result2 = json.toString(new Test(asList(null, "adios")));
-    var result3 = json.toString(new Test(null));
 
-    var expected1 = """
-        {"values":["hola","adios"]} 
-        """.strip();
-    var expected2 = """
-        {"values":[null,"adios"]} 
-        """.strip();
-    var expected3 = """
-        {"values":null} 
-        """.strip();
-    
-    assertEquals(success(expected1), result1);
-    assertEquals(success(expected2), result2);
-    assertEquals(success(expected3), result3);
+    suite("serialize inner list", 
+
+        it.should("serialize a inner list")
+          .given(new Test(List.of("hola", "adios")))
+          .when(value -> new Json().toString(value))
+          .thenMustBe(equalsTo(success("""
+              {"values":["hola","adios"]} 
+              """.strip()))),
+
+        it.should("serialize a inner list with null values")
+          .given(new Test(asList(null, "adios")))
+          .when(value -> new Json().toString(value))
+          .thenMustBe(equalsTo(success("""
+              {"values":[null,"adios"]} 
+              """.strip()))),
+
+        it.should("serialize a null inner list")
+          .given(new Test(null))
+          .when(value -> new Json().toString(value))
+          .thenMustBe(equalsTo(success("""
+              {"values":null} 
+              """.strip())))
+
+        ).run().assertion();
   }
 
   @Test
   void serializeInnerMap() {
 
     record Test(Map<String, String> values) {}
-    
-    var json = new Json();
-    var result1 = json.toString(new Test(Map.of("hola", "adios")));
-    var result2 = json.toString(new Test(singletonMap("hola", null)));
-    var result3 = json.toString(new Test(null));
 
-    var expected1 = """
-        {"values":{"hola":"adios"}} 
-        """.strip();
-    var expected2 = """
-        {"values":{"hola":null}} 
-        """.strip();
-    var expected3 = """
-        {"values":null} 
-        """.strip();
-    
-    assertEquals(success(expected1), result1);
-    assertEquals(success(expected2), result2);
-    assertEquals(success(expected3), result3);
+    suite("serialize inner map", 
+
+        it.should("serialize a inner map")
+          .given(new Test(Map.of("hola", "adios")))
+          .when(value -> new Json().toString(value))
+          .thenMustBe(equalsTo(success("""
+              {"values":{"hola":"adios"}} 
+              """.strip()))),
+
+        it.should("serialize a inner map with null values")
+          .given(new Test(singletonMap("hola", null)))
+          .when(value -> new Json().toString(value))
+          .thenMustBe(equalsTo(success("""
+              {"values":{"hola":null}} 
+              """.strip()))),
+
+        it.should("serialize a null inner map")
+          .given(new Test(null))
+          .when(value -> new Json().toString(value))
+          .thenMustBe(equalsTo(success("""
+              {"values":null} 
+              """.strip())))
+
+        ).run().assertion();
   }
 
   @Test
   void serializeList() {
-    var json = new Json();
     Type listOfUsers = new TypeToken<List<User>>() {}.getType();
-    var result1 = json.toString(List.of(new User(1, "toni")), listOfUsers);
-    var result2 = json.toString(List.of(new User(1, null)), listOfUsers);
-    var result3 = json.toString(listWithNull(), listOfUsers);
 
-    var expected1 = """
-        [{"id":1,"name":"toni"}]
-        """.strip();
-    var expected2 = """
-        [{"id":1,"name":null}]
-        """.strip();
-    var expected3 = """
-        [null]
-        """.strip();
+    suite("serialize list", 
 
-    assertEquals(success(expected1), result1);
-    assertEquals(success(expected2), result2);
-    assertEquals(success(expected3), result3);
+        it.should("serialize a list of records")
+          .given(List.of(new User(1, "toni")))
+          .when(value -> new Json().toString(value, listOfUsers))
+          .thenMustBe(equalsTo(success("""
+              [{"id":1,"name":"toni"}]
+              """.strip()))),
+
+        it.should("serialize a list of records with null fields")
+          .given(List.of(new User(1, null)))
+          .when(value -> new Json().toString(value, listOfUsers))
+          .thenMustBe(equalsTo(success("""
+              [{"id":1,"name":null}]
+              """.strip()))),
+
+        it.should("serialize a null list of records")
+          .given(listWithNull())
+          .when(value -> new Json().toString(value, listOfUsers))
+          .thenMustBe(equalsTo(success("""
+              [null]
+              """.strip())))
+          
+        ).run().assertion();
   }
 
   @Test
   void serializeImmutableList() {
-    var json = new Json();
     Type listOfUsers = new TypeToken<ImmutableList<User>>() {}.getType();
-    var result1 = json.toString(listOf(new User(1, "toni")), listOfUsers);
-    var result2 = json.toString(listOf(new User(1, null)), listOfUsers);
-    var result3 = json.toString(emptyList().append(null), listOfUsers);
 
-    var expected1 = """
-        [{"id":1,"name":"toni"}]
-        """.strip();
-    var expected2 = """
-        [{"id":1,"name":null}]
-        """.strip();
-    var expected3 = """
-        [null]
-        """.strip();
+    suite("serialize immutable list", 
 
-    assertEquals(success(expected1), result1);
-    assertEquals(success(expected2), result2);
-    assertEquals(success(expected3), result3);
+        it.should("serialize a immutable list of records")
+          .given(listOf(new User(1, "toni")))
+          .when(value -> new Json().toString(value, listOfUsers))
+          .thenMustBe(equalsTo(success("""
+              [{"id":1,"name":"toni"}]
+              """.strip()))),
+
+        it.should("serialize a immutable list of records with null fields")
+          .given(listOf(new User(1, null)))
+          .when(value -> new Json().toString(value, listOfUsers))
+          .thenMustBe(equalsTo(success("""
+              [{"id":1,"name":null}]
+              """.strip()))),
+
+        it.should("serialize a null immutable list")
+          .given(emptyList().append(null))
+          .when(value -> new Json().toString(value, listOfUsers))
+          .thenMustBe(equalsTo(success("""
+              [null]
+              """.strip())))
+          
+        ).run().assertion();
   }
 
   @Test
   void serializeImmutableArray() {
-    var json = new Json();
     Type listOfUsers = new TypeToken<ImmutableArray<User>>() {}.getType();
-    var result1 = json.toString(arrayOf(new User(1, "toni")), listOfUsers);
-    var result2 = json.toString(arrayOf(new User(1, null)), listOfUsers);
-    var result3 = json.toString(emptyArray().append(null), listOfUsers);
 
-    var expected1 = """
-        [{"id":1,"name":"toni"}]
-        """.strip();
-    var expected2 = """
-        [{"id":1,"name":null}]
-        """.strip();
-    var expected3 = """
-        [null]
-        """.strip();
+    suite("serialize immutable array", 
 
-    assertEquals(success(expected1), result1);
-    assertEquals(success(expected2), result2);
-    assertEquals(success(expected3), result3);
+        it.should("serialize a immutable array of records")
+          .given(arrayOf(new User(1, "toni")))
+          .when(value -> new Json().toString(value, listOfUsers))
+          .thenMustBe(equalsTo(success("""
+              [{"id":1,"name":"toni"}]
+              """.strip()))),
+
+        it.should("serialize a immutable array of records with null fields")
+          .given(arrayOf(new User(1, null)))
+          .when(value -> new Json().toString(value, listOfUsers))
+          .thenMustBe(equalsTo(success("""
+              [{"id":1,"name":null}]
+              """.strip()))),
+
+        it.should("serialize a null immutable array")
+          .given(emptyArray().append(null))
+          .when(value -> new Json().toString(value, listOfUsers))
+          .thenMustBe(equalsTo(success("""
+              [null]
+              """.strip())))
+          
+        ).run().assertion();
   }
 
   @Test
   void serializeImmutableSet() {
-    var json = new Json();
     Type listOfUsers = new TypeToken<ImmutableSet<User>>() {}.getType();
-    var result1 = json.toString(setOf(new User(1, "toni")), listOfUsers);
-    var result2 = json.toString(setOf(new User(1, null)), listOfUsers);
-    var result3 = json.toString(emptySet().append(null), listOfUsers);
 
-    var expected1 = """
-        [{"id":1,"name":"toni"}]
-        """.strip();
-    var expected2 = """
-        [{"id":1,"name":null}]
-        """.strip();
-    var expected3 = """
-        [null]
-        """.strip();
+    suite("serialize immutable set", 
 
-    assertEquals(success(expected1), result1);
-    assertEquals(success(expected2), result2);
-    assertEquals(success(expected3), result3);
+        it.should("serialize a immutable set of records")
+          .given(setOf(new User(1, "toni")))
+          .when(value -> new Json().toString(value, listOfUsers))
+          .thenMustBe(equalsTo(success("""
+              [{"id":1,"name":"toni"}]
+              """.strip()))),
+
+        it.should("serialize a immutable set of records with null fields")
+          .given(setOf(new User(1, null)))
+          .when(value -> new Json().toString(value, listOfUsers))
+          .thenMustBe(equalsTo(success("""
+              [{"id":1,"name":null}]
+              """.strip()))),
+
+        it.should("serialize a null immutable set")
+          .given(emptySet().append(null))
+          .when(value -> new Json().toString(value, listOfUsers))
+          .thenMustBe(equalsTo(success("""
+              [null]
+              """.strip())))
+          
+        ).run().assertion();
   }
 
   @Test
@@ -380,25 +427,49 @@ class JsonTest extends IOTestSpec<String> {
   }
 
   @Test
-  void parseRecord() {
-    var string = """
-        {"id":1,"name":"toni"} 
-        """.strip();
+  void parseObject() {
 
-    Try<Option<User>> user = new Json().fromJson(string, User.class);
+    suite("parse object", 
 
-    assertSuccessSome(new User(1, "toni"), user);
-  }
+        it.should("parse a record")
+          .given("""
+              {"id":1,"name":"toni"} 
+              """.strip())
+          .when(json -> new Json().fromJson(json, User.class))
+          .thenMustBe(equalsTo(success(some(new User(1, "toni"))))),
 
-  @Test
-  void parsePojo() {
-    var string = """
-        {"id":1,"name":"toni"} 
-        """.strip();
+        it.should("parse a record with null fields")
+          .given("""
+              {"id":1,"name":null} 
+              """.strip())
+          .when(json -> new Json().fromJson(json, User.class))
+          .thenMustBe(equalsTo(success(some(new User(1, null))))),
 
-    Try<Option<Pojo>> user = new Json().fromJson(string, Pojo.class);
+        it.should("parse a null record")
+          .given("null")
+          .when(json -> new Json().fromJson(json, User.class))
+          .thenMustBe(equalsTo(success(none()))),
 
-    assertSuccessSome(new Pojo(1, "toni"), user);
+        it.should("parse a pojo")
+          .given("""
+              {"id":1,"name":"toni"} 
+              """.strip())
+          .when(json -> new Json().fromJson(json, Pojo.class))
+          .thenMustBe(equalsTo(success(some(new Pojo(1, "toni"))))),
+
+        it.should("parse a pojo")
+          .given("""
+              {"id":1,"name":null} 
+              """.strip())
+          .when(json -> new Json().fromJson(json, Pojo.class))
+          .thenMustBe(equalsTo(success(some(new Pojo(1, null))))),
+
+        it.should("parse a null pojo")
+          .given("null")
+          .when(json -> new Json().fromJson(json, User.class))
+          .thenMustBe(equalsTo(success(none())))
+        
+        ).run().assertion();
   }
 
   @Test

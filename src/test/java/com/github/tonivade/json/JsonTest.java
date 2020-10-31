@@ -20,13 +20,15 @@ import static com.github.tonivade.purefun.data.Sequence.setOf;
 import static com.github.tonivade.purefun.data.Sequence.treeOf;
 import static com.github.tonivade.purefun.data.SequenceOf.toSequence;
 import static com.github.tonivade.purefun.monad.IOOf.toIO;
+import static com.github.tonivade.purefun.type.Option.none;
+import static com.github.tonivade.purefun.type.Option.some;
+import static com.github.tonivade.purefun.type.Try.success;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
@@ -56,6 +58,8 @@ import com.github.tonivade.purefun.data.Sequence;
 import com.github.tonivade.purefun.instances.IOInstances;
 import com.github.tonivade.purefun.instances.SequenceInstances;
 import com.github.tonivade.purefun.monad.IO_;
+import com.github.tonivade.purefun.type.Option;
+import com.github.tonivade.purefun.type.Try;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
@@ -113,7 +117,7 @@ class JsonTest extends IOTestSpec<String> {
         {"id":1,"name":"toni"} 
         """.strip();
 
-    assertEquals(expected, result);
+    assertEquals(success(expected), result);
   }
 
   @Test
@@ -124,7 +128,7 @@ class JsonTest extends IOTestSpec<String> {
         {"id":1,"name":null} 
         """.strip();
 
-    assertEquals(expected, result);
+    assertEquals(success(expected), result);
   }
 
   @Test
@@ -135,7 +139,7 @@ class JsonTest extends IOTestSpec<String> {
         {"id":1,"name":"toni"} 
         """.strip();
 
-    assertEquals(expected, result);
+    assertEquals(success(expected), result);
   }
 
   @Test
@@ -146,7 +150,7 @@ class JsonTest extends IOTestSpec<String> {
         {"id":1,"name":null} 
         """.strip();
 
-    assertEquals(expected, result);
+    assertEquals(success(expected), result);
   }
   
   @Test
@@ -169,9 +173,9 @@ class JsonTest extends IOTestSpec<String> {
         {"values":null} 
         """.strip();
     
-    assertEquals(expected1, result1);
-    assertEquals(expected2, result2);
-    assertEquals(expected3, result3);
+    assertEquals(success(expected1), result1);
+    assertEquals(success(expected2), result2);
+    assertEquals(success(expected3), result3);
   }
   
   @Test
@@ -194,9 +198,9 @@ class JsonTest extends IOTestSpec<String> {
         {"values":null} 
         """.strip();
     
-    assertEquals(expected1, result1);
-    assertEquals(expected2, result2);
-    assertEquals(expected3, result3);
+    assertEquals(success(expected1), result1);
+    assertEquals(success(expected2), result2);
+    assertEquals(success(expected3), result3);
   }
 
   @Test
@@ -219,9 +223,9 @@ class JsonTest extends IOTestSpec<String> {
         {"values":null} 
         """.strip();
     
-    assertEquals(expected1, result1);
-    assertEquals(expected2, result2);
-    assertEquals(expected3, result3);
+    assertEquals(success(expected1), result1);
+    assertEquals(success(expected2), result2);
+    assertEquals(success(expected3), result3);
   }
 
   @Test
@@ -242,9 +246,9 @@ class JsonTest extends IOTestSpec<String> {
         [null]
         """.strip();
 
-    assertEquals(expected1, result1);
-    assertEquals(expected2, result2);
-    assertEquals(expected3, result3);
+    assertEquals(success(expected1), result1);
+    assertEquals(success(expected2), result2);
+    assertEquals(success(expected3), result3);
   }
 
   @Test
@@ -265,9 +269,9 @@ class JsonTest extends IOTestSpec<String> {
         [null]
         """.strip();
 
-    assertEquals(expected1, result1);
-    assertEquals(expected2, result2);
-    assertEquals(expected3, result3);
+    assertEquals(success(expected1), result1);
+    assertEquals(success(expected2), result2);
+    assertEquals(success(expected3), result3);
   }
 
   @Test
@@ -288,9 +292,9 @@ class JsonTest extends IOTestSpec<String> {
         [null]
         """.strip();
 
-    assertEquals(expected1, result1);
-    assertEquals(expected2, result2);
-    assertEquals(expected3, result3);
+    assertEquals(success(expected1), result1);
+    assertEquals(success(expected2), result2);
+    assertEquals(success(expected3), result3);
   }
 
   @Test
@@ -311,9 +315,9 @@ class JsonTest extends IOTestSpec<String> {
         [null]
         """.strip();
 
-    assertEquals(expected1, result1);
-    assertEquals(expected2, result2);
-    assertEquals(expected3, result3);
+    assertEquals(success(expected1), result1);
+    assertEquals(success(expected2), result2);
+    assertEquals(success(expected3), result3);
   }
 
   @Test
@@ -333,9 +337,9 @@ class JsonTest extends IOTestSpec<String> {
         [null]
         """.strip();
 
-    assertEquals(expected1, result1);
-    assertEquals(expected2, result2);
-    assertEquals(expected3, result3);
+    assertEquals(success(expected1), result1);
+    assertEquals(success(expected2), result2);
+    assertEquals(success(expected3), result3);
   }
   
   @Test
@@ -356,9 +360,9 @@ class JsonTest extends IOTestSpec<String> {
         {"toni":null}
         """.strip();
 
-    assertEquals(expected1, result1);
-    assertEquals(expected2, result2);
-    assertEquals(expected3, result3);
+    assertEquals(success(expected1), result1);
+    assertEquals(success(expected2), result2);
+    assertEquals(success(expected3), result3);
   }
   
   @Test
@@ -379,9 +383,9 @@ class JsonTest extends IOTestSpec<String> {
         {"toni":null}
         """.strip();
 
-    assertEquals(expected1, result1);
-    assertEquals(expected2, result2);
-    assertEquals(expected3, result3);
+    assertEquals(success(expected1), result1);
+    assertEquals(success(expected2), result2);
+    assertEquals(success(expected3), result3);
   }
 
   @Test
@@ -390,9 +394,9 @@ class JsonTest extends IOTestSpec<String> {
         {"id":1,"name":"toni"} 
         """.strip();
 
-    User user = new Json().fromJson(string, User.class);
+    Try<Option<User>> user = new Json().fromJson(string, User.class);
 
-    assertEquals(new User(1, "toni"), user);
+    assertSuccessSome(new User(1, "toni"), user);
   }
 
   @Test
@@ -401,9 +405,9 @@ class JsonTest extends IOTestSpec<String> {
         {"id":1,"name":"toni"} 
         """.strip();
 
-    Pojo user = new Json().fromJson(string, Pojo.class);
+    Try<Option<Pojo>> user = new Json().fromJson(string, Pojo.class);
 
-    assertEquals(new Pojo(1, "toni"), user);
+    assertSuccessSome(new Pojo(1, "toni"), user);
   }
 
   @Test
@@ -415,9 +419,9 @@ class JsonTest extends IOTestSpec<String> {
         {"values":["one","two","three"]}
         """.strip();
 
-    Test result = new Json().fromJson(string, Test.class);
+    Try<Option<Test>> result = new Json().fromJson(string, Test.class);
 
-    assertEquals(new Test(listOf("one", "two", "three")), result);
+    assertSuccessSome(new Test(listOf("one", "two", "three")), result);
   }
 
   @Test
@@ -429,9 +433,9 @@ class JsonTest extends IOTestSpec<String> {
         {"values":["one","two","three"]}
         """.strip();
 
-    Test result = new Json().fromJson(string, Test.class);
+    Try<Option<Test>> result = new Json().fromJson(string, Test.class);
 
-    assertEquals(new Test(arrayOf("one", "two", "three")), result);
+    assertSuccessSome(new Test(arrayOf("one", "two", "three")), result);
   }
 
   @Test
@@ -443,9 +447,9 @@ class JsonTest extends IOTestSpec<String> {
         {"values":["one","two","three"]}
         """.strip();
 
-    Test result = new Json().fromJson(string, Test.class);
+    Try<Option<Test>> result = new Json().fromJson(string, Test.class);
 
-    assertEquals(new Test(listOf("one", "two", "three")), result);
+    assertSuccessSome(new Test(listOf("one", "two", "three")), result);
   }
 
   @Test
@@ -457,9 +461,9 @@ class JsonTest extends IOTestSpec<String> {
         {"values":["one","two","three"]}
         """.strip();
 
-    Test result = new Json().fromJson(string, Test.class);
+    Try<Option<Test>> result = new Json().fromJson(string, Test.class);
 
-    assertEquals(new Test(setOf("one", "two", "three")), result);
+    assertSuccessSome(new Test(setOf("one", "two", "three")), result);
   }
 
   @Test
@@ -471,9 +475,9 @@ class JsonTest extends IOTestSpec<String> {
         {"values":["one","two","three"]}
         """.strip();
 
-    Test result = new Json().fromJson(string, Test.class);
+    Try<Option<Test>> result = new Json().fromJson(string, Test.class);
 
-    assertEquals(new Test(treeOf("one", "two", "three")), result);
+    assertSuccessSome(new Test(treeOf("one", "two", "three")), result);
   }
 
   @Test
@@ -485,9 +489,9 @@ class JsonTest extends IOTestSpec<String> {
         {"values":["one","two","three"]}
         """.strip();
 
-    Test result = new Json().fromJson(string, Test.class);
+    Try<Option<Test>> result = new Json().fromJson(string, Test.class);
 
-    assertEquals(new Test(List.of("one", "two", "three")), result);
+    assertSuccessSome(new Test(List.of("one", "two", "three")), result);
   }
 
   @Test
@@ -499,9 +503,10 @@ class JsonTest extends IOTestSpec<String> {
         {"values":["one","two","three"]}
         """.strip();
 
-    Test result = new Json().fromJson(string, Test.class);
+    Try<Option<Test>> result = new Json().fromJson(string, Test.class);
 
-    assertArrayEquals(List.of("one", "two", "three").toArray(String[]::new), result.values);
+    assertArrayEquals(List.of("one", "two", "three").toArray(String[]::new), 
+        result.getOrElseThrow().getOrElseThrow().values);
   }
 
   @Test
@@ -513,9 +518,9 @@ class JsonTest extends IOTestSpec<String> {
         {"values":["one","two","three"]}
         """.strip();
 
-    Test result = new Json().fromJson(string, Test.class);
+    Try<Option<Test>> result = new Json().fromJson(string, Test.class);
 
-    assertEquals(new Test(List.of("one", "two", "three")), result);
+    assertSuccessSome(new Test(List.of("one", "two", "three")), result);
   }
 
   @Test
@@ -527,9 +532,9 @@ class JsonTest extends IOTestSpec<String> {
         {"values":["one","two","three"]}
         """.strip();
 
-    Test result = new Json().fromJson(string, Test.class);
+    Try<Option<Test>> result = new Json().fromJson(string, Test.class);
 
-    assertEquals(new Test(Set.of("one", "two", "three")), result);
+    assertSuccessSome(new Test(Set.of("one", "two", "three")), result);
   }
 
   @Test
@@ -541,9 +546,9 @@ class JsonTest extends IOTestSpec<String> {
         {"values":{"one":"1","two":"2","three":"3"}}
         """.strip();
 
-    Test result = new Json().fromJson(string, Test.class);
+    Try<Option<Test>> result = new Json().fromJson(string, Test.class);
 
-    assertEquals(new Test(Map.of("one", "1", "two", "2", "three", "3")), result);
+    assertSuccessSome(new Test(Map.of("one", "1", "two", "2", "three", "3")), result);
   }
 
   @Test
@@ -562,17 +567,17 @@ class JsonTest extends IOTestSpec<String> {
 
     var listOfUsers = new TypeToken<User[]>() {};
     var json = new Json();
-    User[] array1 = json.fromJson(string1, listOfUsers.getType());
-    User[] array2 = json.fromJson(string2, listOfUsers.getType());
-    User[] array3 = json.fromJson(string3, listOfUsers.getType());
-    User[] array4 = json.fromJson(string4, listOfUsers.getType());
-    User[] array5 = json.fromJson(string5, listOfUsers.getType());
+    Try<Option<User[]>> array1 = json.fromJson(string1, listOfUsers.getType());
+    Try<Option<User[]>> array2 = json.fromJson(string2, listOfUsers.getType());
+    Try<Option<User[]>> array3 = json.fromJson(string3, listOfUsers.getType());
+    Try<Option<User[]>> array4 = json.fromJson(string4, listOfUsers.getType());
+    Try<Option<User[]>> array5 = json.fromJson(string5, listOfUsers.getType());
 
-    assertArrayEquals(new User[] { new User(1, "toni") }, array1);
-    assertArrayEquals(new User[] { new User(1, null) }, array2);
-    assertArrayEquals(new User[] { new User(1, null) }, array3);
-    assertArrayEquals(new User[] { null }, array4);
-    assertNull(array5);
+    assertArrayEquals(new User[] { new User(1, "toni") }, array1.getOrElseThrow().getOrElseThrow());
+    assertArrayEquals(new User[] { new User(1, null) }, array2.getOrElseThrow().getOrElseThrow());
+    assertArrayEquals(new User[] { new User(1, null) }, array3.getOrElseThrow().getOrElseThrow());
+    assertArrayEquals(new User[] { null }, array4.getOrElseThrow().getOrElseThrow());
+    assertEquals(success(none()), array5);
   }
 
   @Test
@@ -593,17 +598,17 @@ class JsonTest extends IOTestSpec<String> {
 
     var listOfUsers = new TypeToken<List<User>>() {};
     var json = new Json();
-    List<User> list1 = json.fromJson(string1, listOfUsers.getType());
-    List<User> list2 = json.fromJson(string2, listOfUsers.getType());
-    List<User> list3 = json.fromJson(string3, listOfUsers.getType());
-    List<User> list4 = json.fromJson(string4, listOfUsers.getType());
-    List<User> list5 = json.fromJson(string5, listOfUsers.getType());
+    Try<Option<List<User>>> list1 = json.fromJson(string1, listOfUsers.getType());
+    Try<Option<List<User>>> list2 = json.fromJson(string2, listOfUsers.getType());
+    Try<Option<List<User>>> list3 = json.fromJson(string3, listOfUsers.getType());
+    Try<Option<List<User>>> list4 = json.fromJson(string4, listOfUsers.getType());
+    Try<Option<List<User>>> list5 = json.fromJson(string5, listOfUsers.getType());
 
-    assertEquals(List.of(new User(1, "toni")), list1);
-    assertEquals(List.of(new User(1, null)), list2);
-    assertEquals(List.of(new User(1, null)), list3);
-    assertEquals(listWithNull(), list4);
-    assertNull(list5);
+    assertSuccessSome(List.of(new User(1, "toni")), list1);
+    assertSuccessSome(List.of(new User(1, null)), list2);
+    assertSuccessSome(List.of(new User(1, null)), list3);
+    assertSuccessSome(listWithNull(), list4);
+    assertEquals(success(none()), list5);
   }
 
   @Test
@@ -624,17 +629,17 @@ class JsonTest extends IOTestSpec<String> {
 
     var mapOfUsers = new TypeToken<Map<String, User>>() {};
     var json = new Json();
-    Map<String, User> map1 = json.fromJson(string1, mapOfUsers.getType());
-    Map<String, User> map2 = json.fromJson(string2, mapOfUsers.getType());
-    Map<String, User> map3 = json.fromJson(string3, mapOfUsers.getType());
-    Map<String, User> map4 = json.fromJson(string4, mapOfUsers.getType());
-    Map<String, User> map5 = json.fromJson(string5, mapOfUsers.getType());
+    Try<Option<Map<String, User>>> map1 = json.fromJson(string1, mapOfUsers.getType());
+    Try<Option<Map<String, User>>> map2 = json.fromJson(string2, mapOfUsers.getType());
+    Try<Option<Map<String, User>>> map3 = json.fromJson(string3, mapOfUsers.getType());
+    Try<Option<Map<String, User>>> map4 = json.fromJson(string4, mapOfUsers.getType());
+    Try<Option<Map<String, User>>> map5 = json.fromJson(string5, mapOfUsers.getType());
 
-    assertEquals(Map.of("toni", new User(1, "toni")), map1);
-    assertEquals(Map.of("toni", new User(1, null)), map2);
-    assertEquals(Map.of("toni", new User(1, null)), map3);
-    assertEquals(singletonMap("toni", null), map4);
-    assertNull(map5);
+    assertSuccessSome(Map.of("toni", new User(1, "toni")), map1);
+    assertSuccessSome(Map.of("toni", new User(1, null)), map2);
+    assertSuccessSome(Map.of("toni", new User(1, null)), map3);
+    assertSuccessSome(singletonMap("toni", null), map4);
+    assertEquals(success(none()), map5);
   }
   
   @Test
@@ -644,90 +649,143 @@ class JsonTest extends IOTestSpec<String> {
         it.should("serialize null")
           .given(Json::new)
           .when(json -> json.toString(null))
-          .thenMustBe(equalsTo("null")),
+          .thenMustBe(equalsTo(success("null"))),
 
         it.should("serialize a character")
           .given(Json::new)
           .when(json -> json.toString("A"))
-          .thenMustBe(equalsTo("\"A\"")),
+          .thenMustBe(equalsTo(success("\"A\""))),
 
         it.should("serialize a unicode character")
           .given(Json::new)
           .when(json -> json.toString("Á"))
-          .thenMustBe(equalsTo("\"Á\"")),
+          .thenMustBe(equalsTo(success("\"Á\""))),
 
         it.should("serialize a byte")
           .given(Json::new)
           .when(json -> json.toString((byte) 1))
-          .thenMustBe(equalsTo("1")),
+          .thenMustBe(equalsTo(success("1"))),
 
         it.should("serialize a short")
           .given(Json::new)
           .when(json -> json.toString((short) 1))
-          .thenMustBe(equalsTo("1")),
+          .thenMustBe(equalsTo(success("1"))),
 
         it.should("serialize an integer")
           .given(Json::new)
           .when(json -> json.toString(1))
-          .thenMustBe(equalsTo("1")),
+          .thenMustBe(equalsTo(success("1"))),
 
         it.should("serialize a long")
           .given(Json::new)
           .when(json -> json.toString(1L))
-          .thenMustBe(equalsTo("1")),
+          .thenMustBe(equalsTo(success("1"))),
 
         it.should("serialize a float")
           .given(Json::new)
           .when(json -> json.toString(1F))
-          .thenMustBe(equalsTo("1.0")),
+          .thenMustBe(equalsTo(success("1.0"))),
 
         it.should("serialize a double")
           .given(Json::new)
           .when(json -> json.toString(1D))
-          .thenMustBe(equalsTo("1.0")),
+          .thenMustBe(equalsTo(success("1.0"))),
 
         it.should("serialize a big integer")
           .given(Json::new)
           .when(json -> json.toString(BigInteger.ONE))
-          .thenMustBe(equalsTo("1")),
+          .thenMustBe(equalsTo(success("1"))),
 
         it.should("serialize a big decimal")
           .given(Json::new)
           .when(json -> json.toString(BigDecimal.ONE))
-          .thenMustBe(equalsTo("1")),
+          .thenMustBe(equalsTo(success("1"))),
 
         it.should("serialize a string")
           .given(Json::new)
           .when(json -> json.toString("asdfg"))
-          .thenMustBe(equalsTo("\"asdfg\"")),
+          .thenMustBe(equalsTo(success("\"asdfg\""))),
 
         it.should("serialize a enum")
           .given(Json::new)
           .when(json -> json.toString(EnumTest.VAL1))
-          .thenMustBe(equalsTo("\"VAL1\""))
+          .thenMustBe(equalsTo(success("\"VAL1\"")))
 
         ).run().assertion();
   }
   
   @Test
   void parsePrimitives() {
-    var json = new Json();
-    
-    assertNull(json.fromJson("null", String.class));
-    assertEquals(Byte.valueOf((byte)1), json.<Byte>fromJson("1", byte.class));
-    assertEquals(Short.valueOf((short)1), json.<Short>fromJson("1", short.class));
-    assertEquals(Character.valueOf('A'), json.<Character>fromJson("\"A\"", char.class));
-    assertEquals(Character.valueOf('Á'), json.<Character>fromJson("\"Á\"", char.class));
-    assertEquals(Integer.valueOf(1), json.<Integer>fromJson("1", int.class));
-    assertEquals(Long.valueOf(1L), json.<Long>fromJson("1", long.class));
-    assertEquals(Float.valueOf(1L), json.<Float>fromJson("1.0", float.class));
-    assertEquals(Double.valueOf(1L), json.<Double>fromJson("1.0", double.class));
-    assertEquals(BigInteger.ONE, json.fromJson("1", BigInteger.class));
-    assertEquals(BigDecimal.valueOf(1.0), json.fromJson("1.0", BigDecimal.class));
-    assertEquals("asdfg", json.fromJson("\"asdfg\"", String.class));
-    assertEquals(EnumTest.VAL1, json.fromJson("\"VAL1\"", EnumTest.class));
+    suite("parse primitives", 
+
+        it.should("parse null")
+          .given(Json::new)
+          .when(json -> json.fromJson("null", String.class))
+          .thenMustBe(equalsTo(success(none()))),
+
+        it.should("parse char")
+          .given(Json::new)
+          .when(json -> json.fromJson("\"A\"", char.class))
+          .thenMustBe(equalsTo(success(some('A')))),
+
+        it.should("parse unicode char")
+          .given(Json::new)
+          .when(json -> json.fromJson("\"Á\"", char.class))
+          .thenMustBe(equalsTo(success(some('Á')))),
+
+        it.should("parse byte")
+          .given(Json::new)
+          .when(json -> json.fromJson("1", byte.class))
+          .thenMustBe(equalsTo(success(some((byte) 1)))),
+
+        it.should("parse short")
+          .given(Json::new)
+          .when(json -> json.fromJson("1", short.class))
+          .thenMustBe(equalsTo(success(some((short) 1)))),
+
+        it.should("parse int")
+          .given(Json::new)
+          .when(json -> json.fromJson("1", int.class))
+          .thenMustBe(equalsTo(success(some(1)))),
+
+        it.should("parse long")
+          .given(Json::new)
+          .when(json -> json.fromJson("1", long.class))
+          .thenMustBe(equalsTo(success(some(1L)))),
+
+        it.should("parse long")
+          .given(Json::new)
+          .when(json -> json.fromJson("1.0", float.class))
+          .thenMustBe(equalsTo(success(some(1F)))),
+
+        it.should("parse double")
+          .given(Json::new)
+          .when(json -> json.fromJson("1.0", double.class))
+          .thenMustBe(equalsTo(success(some(1D)))),
+
+        it.should("parse big integer")
+          .given(Json::new)
+          .when(json -> json.fromJson("1", BigInteger.class))
+          .thenMustBe(equalsTo(success(some(BigInteger.ONE)))),
+
+        it.should("parse big decimal")
+          .given(Json::new)
+          .when(json -> json.fromJson("1.0", BigDecimal.class))
+          .thenMustBe(equalsTo(success(some(BigDecimal.valueOf(1.0))))),
+
+        it.should("parse string")
+          .given(Json::new)
+          .when(json -> json.fromJson("\"asdfg\"", String.class))
+          .thenMustBe(equalsTo(success(some("asdfg")))),
+
+        it.should("parse enum values")
+          .given(Json::new)
+          .when(json -> json.fromJson("\"VAL1\"", String.class))
+          .thenMustBe(equalsTo(success(some(EnumTest.VAL1))))
+
+        ).run().assertion();
   }
-  
+
   @Test
   void parsePerformance() {
     var listOfUsers = new TypeToken<List<Pojo>>() { }.getType();
@@ -771,7 +829,7 @@ class JsonTest extends IOTestSpec<String> {
         IOInstances.applicative(), stats).fix(toIO()).unsafeRunSync().fix(toSequence()));
   }
 
-  private Producer<String> serializeTask(Function1<List<Pojo>, String> serializer) {
+  private <R> Producer<R> serializeTask(Function1<List<Pojo>, R> serializer) {
     var user = new Pojo(1, "toni");
 
     var listOfUsers = Stream.generate(() -> user).limit(3000).collect(toList());
@@ -779,7 +837,7 @@ class JsonTest extends IOTestSpec<String> {
     return () -> serializer.apply(listOfUsers);
   }
 
-  private Producer<List<Pojo>> parseTask(Function1<String, List<Pojo>> parser) {
+  private <R> Producer<R> parseTask(Function1<String, R> parser) {
     var user = """
         {"id":1,"name":"toni"}
         """.strip();
@@ -833,5 +891,9 @@ class JsonTest extends IOTestSpec<String> {
     var list = new ArrayList<T>();
     list.add(null);
     return list;
+  }
+  
+  private <T> void assertSuccessSome(T valueOf, Try<Option<T>> fromJson) {
+    assertEquals(success(some(valueOf)), fromJson);
   }
 }

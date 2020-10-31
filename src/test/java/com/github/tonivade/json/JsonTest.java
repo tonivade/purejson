@@ -9,7 +9,7 @@ import static com.github.tonivade.json.JsonAdapter.STRING;
 import static com.github.tonivade.json.JsonAdapter.iterableAdapter;
 import static com.github.tonivade.json.JsonDSL.entry;
 import static com.github.tonivade.json.JsonDSL.object;
-import static com.github.tonivade.purecheck.PerfCase.uioPerfCase;
+import static com.github.tonivade.purecheck.PerfCase.ioPerfCase;
 import static com.github.tonivade.purefun.data.Sequence.arrayOf;
 import static com.github.tonivade.purefun.data.Sequence.emptyArray;
 import static com.github.tonivade.purefun.data.Sequence.emptyList;
@@ -18,7 +18,7 @@ import static com.github.tonivade.purefun.data.Sequence.listOf;
 import static com.github.tonivade.purefun.data.Sequence.setOf;
 import static com.github.tonivade.purefun.data.Sequence.treeOf;
 import static com.github.tonivade.purefun.data.SequenceOf.toSequence;
-import static com.github.tonivade.purefun.effect.UIOOf.toUIO;
+import static com.github.tonivade.purefun.monad.IOOf.toIO;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
 import static java.util.stream.Collectors.joining;
@@ -44,16 +44,16 @@ import com.github.tonivade.purecheck.PerfCase.Stats;
 import com.github.tonivade.purefun.Equal;
 import com.github.tonivade.purefun.Function1;
 import com.github.tonivade.purefun.Kind;
+import com.github.tonivade.purefun.Producer;
 import com.github.tonivade.purefun.data.ImmutableArray;
 import com.github.tonivade.purefun.data.ImmutableList;
 import com.github.tonivade.purefun.data.ImmutableMap;
 import com.github.tonivade.purefun.data.ImmutableSet;
 import com.github.tonivade.purefun.data.ImmutableTree;
 import com.github.tonivade.purefun.data.Sequence;
-import com.github.tonivade.purefun.effect.UIO;
-import com.github.tonivade.purefun.effect.UIO_;
+import com.github.tonivade.purefun.instances.IOInstances;
 import com.github.tonivade.purefun.instances.SequenceInstances;
-import com.github.tonivade.purefun.instances.UIOInstances;
+import com.github.tonivade.purefun.monad.IO_;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
@@ -683,11 +683,11 @@ class JsonTest {
     var gson = new GsonBuilder().create();
 
     int times = 500;
-    var stats1 = uioPerfCase("reflection", parseTask(string -> json1.fromJson(string, listOfUsers))).run(times);
-    var stats2 = uioPerfCase("cached", parseTask(string -> json2.fromJson(string, listOfUsers))).run(times);
-    var stats3 = uioPerfCase("builder", parseTask(string -> json3.fromJson(string, listOfUsers))).run(times);
-    var stats4 = uioPerfCase("explicit", parseTask(string -> json4.fromJson(string, listOfUsers))).run(times);
-    var stats5 = uioPerfCase("gson", parseTask(string -> gson.fromJson(string, listOfUsers))).run(times);
+    var stats1 = ioPerfCase("reflection", parseTask(string -> json1.fromJson(string, listOfUsers))).run(times);
+    var stats2 = ioPerfCase("cached", parseTask(string -> json2.fromJson(string, listOfUsers))).run(times);
+    var stats3 = ioPerfCase("builder", parseTask(string -> json3.fromJson(string, listOfUsers))).run(times);
+    var stats4 = ioPerfCase("explicit", parseTask(string -> json4.fromJson(string, listOfUsers))).run(times);
+    var stats5 = ioPerfCase("gson", parseTask(string -> gson.fromJson(string, listOfUsers))).run(times);
 
     runPerf("parse", listOf(stats1, stats2, stats3, stats4, stats5));
   }
@@ -702,36 +702,36 @@ class JsonTest {
     var gson = new GsonBuilder().create();
 
     int times = 500;
-    var stats1 = uioPerfCase("reflection", serializeTask(value -> json1.toString(value, listOfUsers))).run(times);
-    var stats2 = uioPerfCase("cached", serializeTask(value -> json2.toString(value, listOfUsers))).run(times);
-    var stats3 = uioPerfCase("builder", serializeTask(value -> json3.toString(value, listOfUsers))).run(times);
-    var stats4 = uioPerfCase("explicit", serializeTask(value -> json4.toString(value, listOfUsers))).run(times);
-    var stats5 = uioPerfCase("reflection", serializeTask(value -> gson.toJson(value, listOfUsers))).run(times);
+    var stats1 = ioPerfCase("reflection", serializeTask(value -> json1.toString(value, listOfUsers))).run(times);
+    var stats2 = ioPerfCase("cached", serializeTask(value -> json2.toString(value, listOfUsers))).run(times);
+    var stats3 = ioPerfCase("builder", serializeTask(value -> json3.toString(value, listOfUsers))).run(times);
+    var stats4 = ioPerfCase("explicit", serializeTask(value -> json4.toString(value, listOfUsers))).run(times);
+    var stats5 = ioPerfCase("gson", serializeTask(value -> gson.toJson(value, listOfUsers))).run(times);
 
     runPerf("serialize", listOf(stats1, stats2, stats3, stats4, stats5));
   }
 
-  private void runPerf(String name, Sequence<Kind<UIO_, Stats>> stats) {
+  private void runPerf(String name, Sequence<Kind<IO_, Stats>> stats) {
     printStats(name, SequenceInstances.traverse().sequence(
-        UIOInstances.applicative(), stats).fix(toUIO()).unsafeRunSync().fix(toSequence()));
+        IOInstances.applicative(), stats).fix(toIO()).unsafeRunSync().fix(toSequence()));
   }
 
-  private UIO<String> serializeTask(Function1<List<Pojo>, String> serializer) {
+  private Producer<String> serializeTask(Function1<List<Pojo>, String> serializer) {
     var user = new Pojo(1, "toni");
 
     var listOfUsers = Stream.generate(() -> user).limit(3000).collect(toList());
 
-    return UIO.task(() -> serializer.apply(listOfUsers));
+    return () -> serializer.apply(listOfUsers);
   }
 
-  private UIO<List<Pojo>> parseTask(Function1<String, List<Pojo>> parser) {
+  private Producer<List<Pojo>> parseTask(Function1<String, List<Pojo>> parser) {
     var user = """
         {"id":1,"name":"toni"}
         """.strip();
     
     var listOfUsers = Stream.generate(() -> user).limit(3000).collect(joining(",", "[", "]"));
 
-    return UIO.task(() -> parser.apply(listOfUsers));
+    return () -> parser.apply(listOfUsers);
   }
 
   private JsonAdapter<Iterable<Pojo>> builderPojoAdapter() {
@@ -757,7 +757,8 @@ class JsonTest {
     System.out.println("Performance " + name);
     System.out.println("name\ttot\tmin\tmax\tmean\tp50\tp90\tp95\tp99");
     for (var s : stats) {
-      System.out.printf("%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d%n", s.getName().substring(0, 4),
+      System.out.printf("%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d%n", 
+          s.getName().substring(0, 4),
           s.getTotal().toMillis(),
           s.getMin().toMillis(),
           s.getMax().toMillis(),

@@ -42,72 +42,17 @@ import com.github.tonivade.purefun.data.Sequence;
 @SuppressWarnings("preview")
 public interface JsonDecoder<T> {
   
-  JsonDecoder<String> STRING = json -> {
-    if (json instanceof JsonNode.Primitive p && p.isString()) {
-      return p.getAsString();
-    }
-    throw new IllegalArgumentException(json.toString());
-  };
-  JsonDecoder<Character> CHAR = json -> {
-    if (json instanceof JsonNode.Primitive p && p.isString()) {
-      return p.getAsCharacter();
-    }
-    throw new IllegalArgumentException(json.toString());
-  };
-  JsonDecoder<Byte> BYTE = json -> {
-    if (json instanceof JsonNode.Primitive p && p.isNumber()) {
-      return p.getAsByte();
-    }
-    throw new IllegalArgumentException(json.toString());
-  };
-  JsonDecoder<Short> SHORT = json -> {
-    if (json instanceof JsonNode.Primitive p && p.isNumber()) {
-      return p.getAsShort();
-    }
-    throw new IllegalArgumentException(json.toString());
-  };
-  JsonDecoder<Integer> INTEGER = json -> {
-    if (json instanceof JsonNode.Primitive p && p.isNumber()) {
-      return p.getAsInt();
-    }
-    throw new IllegalArgumentException(json.toString());
-  };
-  JsonDecoder<Long> LONG = json -> {
-    if (json instanceof JsonNode.Primitive p && p.isNumber()) {
-      return p.getAsLong();
-    }
-    throw new IllegalArgumentException(json.toString());
-  };
-  JsonDecoder<Float> FLOAT = json -> {
-    if (json instanceof JsonNode.Primitive p && p.isNumber()) {
-      return p.getAsFloat();
-    }
-    throw new IllegalArgumentException(json.toString());
-  };
-  JsonDecoder<Double> DOUBLE = json -> {
-    if (json instanceof JsonNode.Primitive p && p.isNumber()) {
-      return p.getAsDouble();
-    }
-    throw new IllegalArgumentException(json.toString());
-  };
-  JsonDecoder<BigInteger> BIG_INTEGER = json -> {
-    if (json instanceof JsonNode.Primitive p && p.isNumber()) {
-      return p.getAsBigInteger();
-    }
-    throw new IllegalArgumentException(json.toString());
-  };
-  JsonDecoder<BigDecimal> BIG_DECIMAL = json -> {
-    if (json instanceof JsonNode.Primitive p && p.isNumber()) {
-      return p.getAsBigDecimal();
-    }
-    throw new IllegalArgumentException(json.toString());
-  };
-  JsonDecoder<Boolean> BOOLEAN = json -> {
-    if (json instanceof JsonNode.Primitive p && p.isBoolean()) {
-      return p.getAsBoolean();
-    }
-    throw new IllegalArgumentException(json.toString());
-  };
+  JsonDecoder<String> STRING = JsonNode::getAsString;
+  JsonDecoder<Character> CHAR = JsonNode::getAsCharacter;
+  JsonDecoder<Byte> BYTE = JsonNode::getAsByte;
+  JsonDecoder<Short> SHORT = JsonNode::getAsShort;
+  JsonDecoder<Integer> INTEGER = JsonNode::getAsInt;
+  JsonDecoder<Long> LONG = JsonNode::getAsLong;
+  JsonDecoder<Float> FLOAT = JsonNode::getAsFloat;
+  JsonDecoder<Double> DOUBLE = JsonNode::getAsDouble;
+  JsonDecoder<BigInteger> BIG_INTEGER = JsonNode::getAsBigInteger;
+  JsonDecoder<BigDecimal> BIG_DECIMAL = JsonNode::getAsBigDecimal;
+  JsonDecoder<Boolean> BOOLEAN = JsonNode::getAsBoolean;
 
   T decode(JsonNode json);
   

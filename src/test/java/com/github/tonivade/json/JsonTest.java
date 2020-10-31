@@ -753,7 +753,7 @@ class JsonTest extends IOTestSpec<String> {
           .when(json -> json.fromJson("1", long.class))
           .thenMustBe(equalsTo(success(some(1L)))),
 
-        it.should("parse long")
+        it.should("parse float")
           .given(Json::new)
           .when(json -> json.fromJson("1.0", float.class))
           .thenMustBe(equalsTo(success(some(1F)))),
@@ -887,7 +887,7 @@ class JsonTest extends IOTestSpec<String> {
     }
   }
 
-  private <T> ArrayList<T> listWithNull() {
+  private <T> List<T> listWithNull() {
     var list = new ArrayList<T>();
     list.add(null);
     return list;

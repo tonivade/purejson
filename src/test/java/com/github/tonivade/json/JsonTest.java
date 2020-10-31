@@ -10,6 +10,7 @@ import static com.github.tonivade.json.JsonAdapter.iterableAdapter;
 import static com.github.tonivade.json.JsonDSL.entry;
 import static com.github.tonivade.json.JsonDSL.object;
 import static com.github.tonivade.purecheck.PerfCase.ioPerfCase;
+import static com.github.tonivade.purefun.Validator.equalsTo;
 import static com.github.tonivade.purefun.data.Sequence.arrayOf;
 import static com.github.tonivade.purefun.data.Sequence.emptyArray;
 import static com.github.tonivade.purefun.data.Sequence.emptyList;
@@ -41,6 +42,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 import com.github.tonivade.purecheck.PerfCase.Stats;
+import com.github.tonivade.purecheck.spec.IOTestSpec;
 import com.github.tonivade.purefun.Equal;
 import com.github.tonivade.purefun.Function1;
 import com.github.tonivade.purefun.Kind;
@@ -58,7 +60,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
 @SuppressWarnings("preview")
-class JsonTest {
+class JsonTest extends IOTestSpec<String> {
 
   record User(Integer id, String name) {}
 
@@ -637,21 +639,74 @@ class JsonTest {
   
   @Test
   void serializePrimitives() {
-    var json = new Json();
-    
-    assertEquals("null", json.toString(null));
-    assertEquals("\"A\"", json.toString('A'));
-    assertEquals("\"Á\"", json.toString('Á'));
-    assertEquals("1", json.toString((byte)1));
-    assertEquals("1", json.toString((short)1));
-    assertEquals("1", json.toString(1));
-    assertEquals("1", json.toString(1L));
-    assertEquals("1.0", json.toString(1f));
-    assertEquals("1.0", json.toString(1d));
-    assertEquals("1", json.toString(BigInteger.ONE));
-    assertEquals("1", json.toString(BigDecimal.ONE));
-    assertEquals("\"asdfg\"", json.toString("asdfg"));
-    assertEquals("\"VAL1\"", json.toString(EnumTest.VAL1));
+    suite("serialize primitives", 
+
+        it.should("serialize null")
+          .given(Json::new)
+          .when(json -> json.toString(null))
+          .thenMustBe(equalsTo("null")),
+
+        it.should("serialize a character")
+          .given(Json::new)
+          .when(json -> json.toString("A"))
+          .thenMustBe(equalsTo("\"A\"")),
+
+        it.should("serialize a unicode character")
+          .given(Json::new)
+          .when(json -> json.toString("Á"))
+          .thenMustBe(equalsTo("\"Á\"")),
+
+        it.should("serialize a byte")
+          .given(Json::new)
+          .when(json -> json.toString((byte) 1))
+          .thenMustBe(equalsTo("1")),
+
+        it.should("serialize a short")
+          .given(Json::new)
+          .when(json -> json.toString((short) 1))
+          .thenMustBe(equalsTo("1")),
+
+        it.should("serialize an integer")
+          .given(Json::new)
+          .when(json -> json.toString(1))
+          .thenMustBe(equalsTo("1")),
+
+        it.should("serialize a long")
+          .given(Json::new)
+          .when(json -> json.toString(1L))
+          .thenMustBe(equalsTo("1")),
+
+        it.should("serialize a float")
+          .given(Json::new)
+          .when(json -> json.toString(1F))
+          .thenMustBe(equalsTo("1.0")),
+
+        it.should("serialize a double")
+          .given(Json::new)
+          .when(json -> json.toString(1D))
+          .thenMustBe(equalsTo("1.0")),
+
+        it.should("serialize a big integer")
+          .given(Json::new)
+          .when(json -> json.toString(BigInteger.ONE))
+          .thenMustBe(equalsTo("1")),
+
+        it.should("serialize a big decimal")
+          .given(Json::new)
+          .when(json -> json.toString(BigDecimal.ONE))
+          .thenMustBe(equalsTo("1")),
+
+        it.should("serialize a string")
+          .given(Json::new)
+          .when(json -> json.toString("asdfg"))
+          .thenMustBe(equalsTo("\"asdfg\"")),
+
+        it.should("serialize a enum")
+          .given(Json::new)
+          .when(json -> json.toString(EnumTest.VAL1))
+          .thenMustBe(equalsTo("\"VAL1\""))
+
+        ).run().assertion();
   }
   
   @Test
@@ -735,7 +790,11 @@ class JsonTest {
   }
 
   private JsonAdapter<Iterable<Pojo>> builderPojoAdapter() {
-    return iterableAdapter(JsonAdapter.builder(Pojo.class).addInteger("id", Pojo::getId).addString("name", Pojo::getName).build());
+    return iterableAdapter(
+        JsonAdapter.builder(Pojo.class)
+          .addInteger("id", Pojo::getId)
+          .addString("name", Pojo::getName)
+          .build());
   }
 
   private JsonAdapter<Iterable<Pojo>> adhocPojoAdapter() {

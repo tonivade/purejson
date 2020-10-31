@@ -4,6 +4,9 @@
  */
 package com.github.tonivade.json;
 
+import static com.github.tonivade.json.JsonAdapter.INTEGER;
+import static com.github.tonivade.json.JsonAdapter.STRING;
+import static com.github.tonivade.json.JsonAdapter.iterableAdapter;
 import static com.github.tonivade.json.JsonDSL.entry;
 import static com.github.tonivade.json.JsonDSL.object;
 import static com.github.tonivade.purecheck.PerfCase.uioPerfCase;
@@ -40,6 +43,7 @@ import org.junit.jupiter.api.Test;
 import com.github.tonivade.purecheck.PerfCase.Stats;
 import com.github.tonivade.purefun.Equal;
 import com.github.tonivade.purefun.Function1;
+import com.github.tonivade.purefun.Kind;
 import com.github.tonivade.purefun.data.ImmutableArray;
 import com.github.tonivade.purefun.data.ImmutableList;
 import com.github.tonivade.purefun.data.ImmutableMap;
@@ -47,6 +51,7 @@ import com.github.tonivade.purefun.data.ImmutableSet;
 import com.github.tonivade.purefun.data.ImmutableTree;
 import com.github.tonivade.purefun.data.Sequence;
 import com.github.tonivade.purefun.effect.UIO;
+import com.github.tonivade.purefun.effect.UIO_;
 import com.github.tonivade.purefun.instances.SequenceInstances;
 import com.github.tonivade.purefun.instances.UIOInstances;
 import com.google.gson.GsonBuilder;
@@ -673,21 +678,8 @@ class JsonTest {
     var listOfUsers = new TypeToken<List<Pojo>>() { }.getType();
     var json1 = new Json();
     var json2 = new Json().add(listOfUsers, JsonAdapter.create(listOfUsers));
-    var json3 = new Json().add(listOfUsers, 
-        JsonAdapter.iterableAdapter(JsonAdapter.builder(Pojo.class).addInteger("id", Pojo::getId).addString("name", Pojo::getName).build()));
-    var json4 = new Json().add(listOfUsers, 
-        JsonAdapter.iterableAdapter(JsonAdapter.<Pojo>of(
-            value -> object(
-                entry("id", JsonEncoder.INTEGER.encode(value.getId())),
-                entry("name", JsonEncoder.STRING.encode(value.getName()))), 
-            json -> {
-              if (json instanceof JsonNode.Object o) {
-                return new Pojo(
-                    JsonDecoder.INTEGER.decode(o.get("id")), 
-                    JsonDecoder.STRING.decode(o.get("name")));
-              }
-              throw new IllegalArgumentException();
-            })));
+    var json3 = new Json().add(listOfUsers, builderPojoAdapter());
+    var json4 = new Json().add(listOfUsers, adhocPojoAdapter());
     var gson = new GsonBuilder().create();
 
     int times = 500;
@@ -697,10 +689,7 @@ class JsonTest {
     var stats4 = uioPerfCase("explicit", parseTask(string -> json4.fromJson(string, listOfUsers))).run(times);
     var stats5 = uioPerfCase("gson", parseTask(string -> gson.fromJson(string, listOfUsers))).run(times);
 
-    var stats = listOf(stats1, stats2, stats3, stats4, stats5);
-
-    printStats("parse", SequenceInstances.traverse().sequence(
-        UIOInstances.applicative(), stats).fix(toUIO()).unsafeRunSync().fix(toSequence()));
+    runPerf("parse", listOf(stats1, stats2, stats3, stats4, stats5));
   }
 
   @Test
@@ -708,21 +697,8 @@ class JsonTest {
     var listOfUsers = new TypeToken<List<Pojo>>() { }.getType();
     var json1 = new Json();
     var json2 = new Json().add(listOfUsers, JsonAdapter.create(listOfUsers));
-    var json3 = new Json().add(listOfUsers,
-        JsonAdapter.iterableAdapter(JsonAdapter.builder(Pojo.class).addInteger("id", Pojo::getId).addString("name", Pojo::getName).build()));
-    var json4 = new Json().add(listOfUsers, 
-        JsonAdapter.iterableAdapter(JsonAdapter.<Pojo>of(
-            value -> object(
-                entry("id", JsonEncoder.INTEGER.encode(value.getId())),
-                entry("name", JsonEncoder.STRING.encode(value.getName()))), 
-            json -> {
-              if (json instanceof JsonNode.Object o) {
-                return new Pojo(
-                    JsonDecoder.INTEGER.decode(o.get("id")), 
-                    JsonDecoder.STRING.decode(o.get("name")));
-              }
-              throw new IllegalArgumentException();
-            })));
+    var json3 = new Json().add(listOfUsers, builderPojoAdapter());
+    var json4 = new Json().add(listOfUsers, adhocPojoAdapter());
     var gson = new GsonBuilder().create();
 
     int times = 500;
@@ -732,9 +708,11 @@ class JsonTest {
     var stats4 = uioPerfCase("explicit", serializeTask(value -> json4.toString(value, listOfUsers))).run(times);
     var stats5 = uioPerfCase("reflection", serializeTask(value -> gson.toJson(value, listOfUsers))).run(times);
 
-    var stats = listOf(stats1, stats2, stats3, stats4, stats5);
-    
-    printStats("serialize", SequenceInstances.traverse().sequence(
+    runPerf("serialize", listOf(stats1, stats2, stats3, stats4, stats5));
+  }
+
+  private void runPerf(String name, Sequence<Kind<UIO_, Stats>> stats) {
+    printStats(name, SequenceInstances.traverse().sequence(
         UIOInstances.applicative(), stats).fix(toUIO()).unsafeRunSync().fix(toSequence()));
   }
 
@@ -754,6 +732,25 @@ class JsonTest {
     var listOfUsers = Stream.generate(() -> user).limit(3000).collect(joining(",", "[", "]"));
 
     return UIO.task(() -> parser.apply(listOfUsers));
+  }
+
+  private JsonAdapter<Iterable<Pojo>> builderPojoAdapter() {
+    return iterableAdapter(JsonAdapter.builder(Pojo.class).addInteger("id", Pojo::getId).addString("name", Pojo::getName).build());
+  }
+
+  private JsonAdapter<Iterable<Pojo>> adhocPojoAdapter() {
+    return iterableAdapter(JsonAdapter.<Pojo>of(
+        value -> object(
+            entry("id", INTEGER.encode(value.getId())),
+            entry("name", STRING.encode(value.getName()))), 
+        json -> {
+          if (json instanceof JsonNode.Object o) {
+            return new Pojo(
+                INTEGER.decode(o.get("id")), 
+                STRING.decode(o.get("name")));
+          }
+          throw new IllegalArgumentException();
+        }));
   }
 
   private void printStats(String name, Sequence<Stats> stats) {

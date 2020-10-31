@@ -780,7 +780,7 @@ class JsonTest extends IOTestSpec<String> {
 
         it.should("parse enum values")
           .given(Json::new)
-          .when(json -> json.fromJson("\"VAL1\"", String.class))
+          .when(json -> json.fromJson("\"VAL1\"", EnumTest.class))
           .thenMustBe(equalsTo(success(some(EnumTest.VAL1))))
 
         ).run().assertion();

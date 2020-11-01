@@ -12,7 +12,7 @@ import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Try;
 import com.google.gson.JsonParser;
 
-public final class Json {
+public final class PureJson {
 
   private final Map<String, JsonAdapter<?>> adapters = new HashMap<>();
   
@@ -40,7 +40,7 @@ public final class Json {
   }
 
   public Try<String> toString(Object object, Type type) {
-    return toJson(object, type).flatMap(Json::serialize);
+    return toJson(object, type).flatMap(PureJson::serialize);
   }
 
   public Try<JsonNode> toJson(Object object, Type type) {
@@ -50,7 +50,7 @@ public final class Json {
     return getAdapter(type).map(adapter -> adapter.encode(object));
   }
 
-  public <T> Json add(Type type, JsonAdapter<T> adapter) {
+  public <T> PureJson add(Type type, JsonAdapter<T> adapter) {
     adapters.put(type.getTypeName(), adapter);
     return this;
   }

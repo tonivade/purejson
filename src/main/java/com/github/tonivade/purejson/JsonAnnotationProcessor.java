@@ -4,6 +4,9 @@
  */
 package com.github.tonivade.purejson;
 
+import static java.util.stream.Collectors.toList;
+
+import java.util.List;
 import java.util.Set;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -11,7 +14,12 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.RecordComponentElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
+import javax.tools.Diagnostic.Kind;
 
 @SupportedAnnotationTypes("com.github.tonivade.purejson.Json")
 public class JsonAnnotationProcessor extends AbstractProcessor {
@@ -25,7 +33,37 @@ public class JsonAnnotationProcessor extends AbstractProcessor {
   public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
     for (TypeElement annotation : annotations) {
       for (Element element : roundEnv.getElementsAnnotatedWith(annotation)) {
-        System.out.println(element);
+        if (element.getKind() == ElementKind.RECORD) {
+          processingEnv.getMessager().printMessage(Kind.NOTE, element.getSimpleName() + " record found");
+
+          List<RecordComponentElement> recordElements = element.getEnclosedElements().stream()
+              .filter(e -> e.getKind() == ElementKind.RECORD_COMPONENT)
+              .map(e -> (RecordComponentElement) e)
+              .collect(toList());
+
+          System.out.println("Record: " + element.getSimpleName());
+          System.out.println("elements:" + recordElements);
+        } else if (element.getKind() == ElementKind.CLASS) {
+          processingEnv.getMessager().printMessage(Kind.NOTE, element.getSimpleName() + " pojo found");
+
+          List<VariableElement> fields = element.getEnclosedElements().stream()
+              .filter(e -> e.getKind() == ElementKind.FIELD)
+              .map(e -> (VariableElement) e)
+              .collect(toList());
+
+          List<ExecutableElement> methods = element.getEnclosedElements().stream()
+              .filter(e -> e.getKind() == ElementKind.METHOD)
+              .filter(e -> e.getSimpleName().toString().startsWith("get"))
+              .map(e -> (ExecutableElement) e)
+              .collect(toList());
+          
+          System.out.println("Pojo: " + element.getSimpleName());
+          System.out.println("fields:" + fields);
+          System.out.println("accessors:" + methods);
+          
+        } else {
+          processingEnv.getMessager().printMessage(Kind.ERROR, element.getSimpleName() + " is not supported: " + element.getKind());
+        }
       }
     }
     return true;

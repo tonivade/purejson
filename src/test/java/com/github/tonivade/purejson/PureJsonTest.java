@@ -6,6 +6,7 @@ package com.github.tonivade.purejson;
 
 import static com.github.tonivade.purecheck.PerfCase.ioPerfCase;
 import static com.github.tonivade.purefun.Validator.equalsTo;
+import static com.github.tonivade.purefun.Validator.instanceOf;
 import static com.github.tonivade.purefun.data.Sequence.arrayOf;
 import static com.github.tonivade.purefun.data.Sequence.emptyArray;
 import static com.github.tonivade.purefun.data.Sequence.emptyList;
@@ -61,6 +62,7 @@ import com.github.tonivade.purefun.monad.IO_;
 import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Try;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
 @SuppressWarnings("preview")
@@ -694,6 +696,41 @@ class PureJsonTest extends IOTestSpec<String> {
     assertSuccessSome(Map.of("toni", new User(1, null)), map3);
     assertSuccessSome(singletonMap("toni", null), map4);
     assertEquals(success(none()), map5);
+  }
+  
+  @Test
+  void failure() {
+    suite("failure", 
+        
+        it.should("fail when not supported")
+          .given(List.of(1, 2, 3))
+          .when(list -> new PureJson().toString(list))
+          .thenMustBe(instanceOf(UnsupportedOperationException.class).compose(Try::getCause)),
+        
+        it.should("fail when invalid json syntax")
+          .given("this is wrong")
+          .when(json -> new PureJson().fromJson(json, User.class))
+          .thenMustBe(instanceOf(JsonSyntaxException.class).compose(Try::getCause)),
+        
+        it.should("be none when empty string")
+          .given("")
+          .when(json -> new PureJson().fromJson(json, User.class))
+          .thenMustBe(equalsTo(success(none()))),
+        
+        it.should("fail when null string")
+          .<String>givenNull()
+          .when(json -> new PureJson().fromJson(json, User.class))
+          .thenMustBe(instanceOf(IllegalArgumentException.class).compose(Try::getCause)),
+        
+        it.should("fail when type doesn't match with json")
+          .given("""
+              {"id":1,"name":"toni"} 
+              """)
+          .when(json -> new PureJson().fromJson(json, new TypeToken<List<User>>() {}.getType()))
+          .thenMustBe(instanceOf(IllegalArgumentException.class).compose(Try::getCause))
+        
+        ).run().assertion();
+    
   }
   
   @Test

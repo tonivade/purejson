@@ -20,6 +20,7 @@ import java.util.Map;
 import com.github.tonivade.purefun.Function1;
 import com.github.tonivade.purefun.Tuple2;
 import com.github.tonivade.purefun.data.ImmutableMap;
+import com.github.tonivade.purefun.type.Try;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
@@ -41,6 +42,10 @@ public interface JsonEncoder<T> {
   JsonEncoder<Enum<?>> ENUM = STRING.compose(Enum::name);
   
   JsonNode encode(T value);
+
+  default Try<JsonNode> tryEncode(T value) {
+    return Try.of(() -> encode(value));
+  }
   
   default <R> JsonEncoder<R> compose(Function1<R, T> accesor) {
     return value -> encode(accesor.apply(value));

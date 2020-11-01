@@ -8,8 +8,10 @@ import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.github.tonivade.purefun.Nothing;
 import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Try;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
 public final class PureJson {
@@ -21,7 +23,13 @@ public final class PureJson {
   }
 
   public static Try<JsonNode> parse(String json) {
-    return Try.of(() -> JsonParser.parseString(json)).map(JsonNode::from);
+    return Option.of(json).fold(Try::<String>illegalArgumentException, Try::success)
+        .flatMap(PureJson::tryParse)
+        .map(JsonNode::from);
+  }
+
+  public <T> Try<Option<T>> fromJson(String json, Class<T> type) {
+    return fromJson(json, (Type) type);
   }
 
   public <T> Try<Option<T>> fromJson(String json, Type type) {
@@ -32,11 +40,12 @@ public final class PureJson {
     if (node instanceof JsonNode.Null) {
       return Try.success(Option.none());
     }
-    return this.<T>getAdapter(type).map(adapter -> Option.of(adapter.decode(node)));
+    return this.<T>getAdapter(type)
+        .flatMap(adapter -> adapter.tryDecode(node)).map(Option::some);
   }
 
   public Try<String> toString(Object object) {
-    return toString(object, object != null ? object.getClass() : Void.class);
+    return toString(object, object != null ? object.getClass() : Nothing.class);
   }
 
   public Try<String> toString(Object object, Type type) {
@@ -47,7 +56,7 @@ public final class PureJson {
     if (object == null) {
       return Try.success(JsonNode.NULL);
     }
-    return getAdapter(type).map(adapter -> adapter.encode(object));
+    return getAdapter(type).flatMap(adapter -> adapter.tryEncode(object));
   }
 
   public <T> PureJson add(Type type, JsonAdapter<T> adapter) {
@@ -59,5 +68,9 @@ public final class PureJson {
   private <T> Try<JsonAdapter<T>> getAdapter(Type type) {
     return (Try<JsonAdapter<T>>) Option.of(adapters.get(type.getTypeName()))
         .fold(() -> Try.of(() -> JsonAdapter.create(type)), Try::success);
+  }
+
+  private static Try<JsonElement> tryParse(String json) {
+    return Try.of(() -> JsonParser.parseString(json));
   }
 }

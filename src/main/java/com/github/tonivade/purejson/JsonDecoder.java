@@ -37,6 +37,7 @@ import com.github.tonivade.purefun.data.ImmutableSet;
 import com.github.tonivade.purefun.data.ImmutableTree;
 import com.github.tonivade.purefun.data.ImmutableTreeMap;
 import com.github.tonivade.purefun.data.Sequence;
+import com.github.tonivade.purefun.type.Try;
 
 @FunctionalInterface
 @SuppressWarnings("preview")
@@ -55,6 +56,10 @@ public interface JsonDecoder<T> {
   JsonDecoder<Boolean> BOOLEAN = JsonNode::getAsBoolean;
 
   T decode(JsonNode json);
+
+  default Try<T> tryDecode(JsonNode json) {
+    return Try.of(() -> decode(json));
+  }
   
   default <R> JsonDecoder<R> andThen(Function1<T, R> next) {
     return json -> next.apply(decode(json));

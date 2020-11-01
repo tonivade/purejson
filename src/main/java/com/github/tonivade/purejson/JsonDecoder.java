@@ -38,6 +38,7 @@ import com.github.tonivade.purefun.data.ImmutableTree;
 import com.github.tonivade.purefun.data.ImmutableTreeMap;
 import com.github.tonivade.purefun.data.Sequence;
 import com.github.tonivade.purefun.type.Try;
+import com.google.gson.internal.reflect.ReflectionAccessor;
 
 @FunctionalInterface
 @SuppressWarnings("preview")
@@ -208,7 +209,7 @@ public interface JsonDecoder<T> {
     var fields = Arrays.stream(type.getDeclaredFields())
         .filter(f -> !isStatic(f.getModifiers()))
         .filter(f -> !f.isSynthetic())
-        .filter(f -> f.trySetAccessible())
+        .peek(f -> ReflectionAccessor.getInstance().makeAccessible(f))
         .map(f -> Tuple2.of(f, create(f.getGenericType())))
         .collect(toList());
     return json -> {

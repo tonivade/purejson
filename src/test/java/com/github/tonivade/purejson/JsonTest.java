@@ -2,13 +2,8 @@
  * Copyright (c) 2020, Antonio Gabriel Muñoz Conejo <antoniogmc at gmail dot com>
  * Distributed under the terms of the MIT License
  */
-package com.github.tonivade.json;
+package com.github.tonivade.purejson;
 
-import static com.github.tonivade.json.JsonAdapter.INTEGER;
-import static com.github.tonivade.json.JsonAdapter.STRING;
-import static com.github.tonivade.json.JsonAdapter.iterableAdapter;
-import static com.github.tonivade.json.JsonDSL.entry;
-import static com.github.tonivade.json.JsonDSL.object;
 import static com.github.tonivade.purecheck.PerfCase.ioPerfCase;
 import static com.github.tonivade.purefun.Validator.equalsTo;
 import static com.github.tonivade.purefun.data.Sequence.arrayOf;
@@ -23,6 +18,11 @@ import static com.github.tonivade.purefun.monad.IOOf.toIO;
 import static com.github.tonivade.purefun.type.Option.none;
 import static com.github.tonivade.purefun.type.Option.some;
 import static com.github.tonivade.purefun.type.Try.success;
+import static com.github.tonivade.purejson.JsonAdapter.INTEGER;
+import static com.github.tonivade.purejson.JsonAdapter.STRING;
+import static com.github.tonivade.purejson.JsonAdapter.iterableAdapter;
+import static com.github.tonivade.purejson.JsonDSL.entry;
+import static com.github.tonivade.purejson.JsonDSL.object;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
 import static java.util.stream.Collectors.joining;
@@ -60,6 +60,9 @@ import com.github.tonivade.purefun.instances.SequenceInstances;
 import com.github.tonivade.purefun.monad.IO_;
 import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Try;
+import com.github.tonivade.purejson.Json;
+import com.github.tonivade.purejson.JsonAdapter;
+import com.github.tonivade.purejson.JsonNode;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 

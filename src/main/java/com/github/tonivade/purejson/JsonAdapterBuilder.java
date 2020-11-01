@@ -2,11 +2,11 @@
  * Copyright (c) 2020, Antonio Gabriel Muñoz Conejo <antoniogmc at gmail dot com>
  * Distributed under the terms of the MIT License
  */
-package com.github.tonivade.json;
+package com.github.tonivade.purejson;
 
-import static com.github.tonivade.json.JsonAdapter.iterableAdapter;
 import static com.github.tonivade.purefun.Precondition.checkNonEmpty;
 import static com.github.tonivade.purefun.Precondition.checkNonNull;
+import static com.github.tonivade.purejson.JsonAdapter.iterableAdapter;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;

@@ -2,7 +2,7 @@
  * Copyright (c) 2020, Antonio Gabriel Muñoz Conejo <antoniogmc at gmail dot com>
  * Distributed under the terms of the MIT License
  */
-package com.github.tonivade.json;
+package com.github.tonivade.purejson;
 
 import java.lang.reflect.Type;
 import java.math.BigDecimal;

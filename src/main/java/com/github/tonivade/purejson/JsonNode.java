@@ -2,10 +2,10 @@
  * Copyright (c) 2020, Antonio Gabriel Muñoz Conejo <antoniogmc at gmail dot com>
  * Distributed under the terms of the MIT License
  */
-package com.github.tonivade.json;
+package com.github.tonivade.purejson;
 
-import static com.github.tonivade.json.JsonDSL.entry;
 import static com.github.tonivade.purefun.Precondition.checkNonNull;
+import static com.github.tonivade.purejson.JsonDSL.entry;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;

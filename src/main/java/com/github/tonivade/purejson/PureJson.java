@@ -67,7 +67,7 @@ public final class PureJson {
   @SuppressWarnings("unchecked")
   private <T> Try<JsonAdapter<T>> getAdapter(Type type) {
     return (Try<JsonAdapter<T>>) Option.of(adapters.get(type.getTypeName()))
-        .fold(() -> Try.of(() -> JsonAdapter.create(type)), Try::success);
+        .fold(() -> Try.of(() -> JsonAdapter.adapter(type)), Try::success);
   }
 
   private static Try<JsonElement> tryParse(String json) {

@@ -25,6 +25,30 @@ class JsonAnnotationProcessorTest {
 
         "@Json",
         "public record Foo(int id, String name) {}");
+
+    JavaFileObject expected = forSourceLines("test.FooAdapter",
+        "package test;",
+
+        "import static com.github.tonivade.purejson.JsonAdapter.*;",
+
+        "import javax.annotation.processing.Generated;",
+
+        "@Generated(\"com.github.tonivade.purejson.JsonAnnotationProcessor\")",
+        "public final class FooAdapter implements JsonAdapter<Foo> {",
+
+          "public JsonNode encode(Foo value) {",
+            "return object(",
+              "entry(\"id\", INTEGER.encode(number(value.id())), ",
+              "entry(\"name\", STRING.encode(value.name())));",
+          "}",
+
+          "public Foo decode(JsonNode node) {",
+            "var object = node.asObject();",
+            "return new Foo(",
+              "INTEGER.decode(object.get(\"id\"),",
+              "STRING.decode(object.get(\"name\")))",
+          "}",
+        "}");
     
     Compilation compile = Compiler.javac()
         .withOptions("--enable-preview", "-source", 15)

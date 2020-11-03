@@ -171,6 +171,9 @@ public abstract class JsonNode extends JsonElement {
     if (element == null) {
       return NULL;
     }
+    if (element instanceof JsonNode node) {
+      return node;
+    }
     if (element instanceof JsonNull) {
       return NULL;
     }
@@ -183,7 +186,7 @@ public abstract class JsonNode extends JsonElement {
     if (element instanceof JsonPrimitive p) {
       return new Primitive(p);
     }
-    throw new IllegalArgumentException();
+    throw new IllegalArgumentException(element.getClass().getName());
   }
   
   public static final class Null extends JsonNode {

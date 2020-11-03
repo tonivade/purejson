@@ -45,6 +45,8 @@ public class ExampleAdapterTest {
   void testAdapter() {
     User user = new User(1, "toni", List.of("admin"));
 
-    assertEquals(user, UserAdapter.INSTANCE.decode(UserAdapter.INSTANCE.encode(user)));
+    JsonAdapter<User> adapter = JsonAdapter.adapter(User.class);
+
+    assertEquals(user, adapter.decode(adapter.encode(user)));
   }
 }

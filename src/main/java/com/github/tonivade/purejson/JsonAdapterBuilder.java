@@ -7,6 +7,7 @@ package com.github.tonivade.purejson;
 import static com.github.tonivade.purefun.Precondition.checkNonEmpty;
 import static com.github.tonivade.purefun.Precondition.checkNonNull;
 import static com.github.tonivade.purefun.data.Sequence.listOf;
+import static com.github.tonivade.purejson.JsonAdapter.adapter;
 import static com.github.tonivade.purejson.JsonAdapter.iterableAdapter;
 
 import java.lang.reflect.Constructor;
@@ -31,27 +32,27 @@ public final class JsonAdapterBuilder<T> {
   }
 
   public JsonAdapterBuilder<T> addInteger(String name, Function1<T, Integer> accessor) {
-    return add(name, accessor, JsonAdapter.INTEGER);
+    return add(name, accessor, adapter(Integer.class));
   }
 
   public JsonAdapterBuilder<T> addLong(String name, Function1<T, Long> accessor) {
-    return add(name, accessor, JsonAdapter.LONG);
+    return add(name, accessor, adapter(Long.class));
   }
 
   public JsonAdapterBuilder<T> addFloat(String name, Function1<T, Float> accessor) {
-    return add(name, accessor, JsonAdapter.FLOAT);
+    return add(name, accessor, adapter(Float.class));
   }
 
   public JsonAdapterBuilder<T> addDouble(String name, Function1<T, Double> accessor) {
-    return add(name, accessor, JsonAdapter.DOUBLE);
+    return add(name, accessor, adapter(Double.class));
   }
 
   public JsonAdapterBuilder<T> addBoolean(String name, Function1<T, Boolean> accessor) {
-    return add(name, accessor, JsonAdapter.BOOLEAN);
+    return add(name, accessor, adapter(Boolean.class));
   }
 
   public JsonAdapterBuilder<T> addString(String name, Function1<T, String> accessor) {
-    return add(name, accessor, JsonAdapter.STRING);
+    return add(name, accessor, adapter(String.class));
   }
 
   public <R> JsonAdapterBuilder<T> addObject(String name, Function1<T, R> accessor, JsonAdapter<R> other) {

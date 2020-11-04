@@ -45,11 +45,15 @@ public class ExampleAdapterTest {
 
   @Test
   void testAdapter() {
-    User user = new User(1, "toni", List.of(new Role("admin")));
+    User user1 = new User(1, "toni", List.of(new Role("admin")));
+    User user2 = new User(1, "toni", List.of(new Role("admin")));
+    User user3 = new User(1, null, null);
 
     JsonAdapter<User> adapter = JsonAdapter.adapter(User.class);
 
-    assertEquals(user, adapter.decode(adapter.encode(user)));
+    assertEquals(user1, adapter.decode(adapter.encode(user1)));
+    assertEquals(user2, adapter.decode(adapter.encode(user2)));
+    assertEquals(user3, adapter.decode(adapter.encode(user3)));
     assertNull(adapter.decode(adapter.encode(null)));
   }
 }

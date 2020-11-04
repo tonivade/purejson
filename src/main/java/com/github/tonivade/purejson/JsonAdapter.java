@@ -11,7 +11,6 @@ import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
 

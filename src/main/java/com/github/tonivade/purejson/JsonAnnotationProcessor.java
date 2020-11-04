@@ -175,7 +175,7 @@ public class JsonAnnotationProcessor extends AbstractProcessor {
     return processingEnv.getFiler().createSourceFile(qualifiedName);
   }
 
-  private Model modelForPojo(TypeElement element) {
+  private static Model modelForPojo(TypeElement element) {
     ImmutableList<VariableElement> fields = element.getEnclosedElements().stream()
         .filter(e -> e.getKind() == ElementKind.FIELD)
         .map(e -> (VariableElement) e)
@@ -211,7 +211,7 @@ public class JsonAnnotationProcessor extends AbstractProcessor {
         .collect(toImmutableList()));
   }
 
-  private Model modelForRecord(TypeElement element) {
+  private static Model modelForRecord(TypeElement element) {
     ImmutableList<RecordComponentElement> fields = element.getEnclosedElements().stream()
         .filter(e -> e.getKind() == ElementKind.RECORD_COMPONENT)
         .map(e -> (RecordComponentElement) e)

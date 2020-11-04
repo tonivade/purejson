@@ -36,7 +36,7 @@ public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
   }
 
   static <T> JsonAdapter<T> adapter(Type type) {
-    return JsonAdapterCache.get(type);
+    return of(encoder(type), decoder(type));
   }
   
   static <T> JsonAdapter<T> of(JsonEncoder<T> encoder, JsonDecoder<T> decoder) {
@@ -60,31 +60,5 @@ public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
 
   static <V> JsonAdapter<Map<String, V>> mapAdapter(JsonAdapter<V> valueAdapter) {
     return of(JsonEncoder.mapEncoder(valueAdapter), JsonDecoder.mapDecoder(valueAdapter));
-  }
-}
-
-@SuppressWarnings({"preview", "unchecked"})
-interface JsonAdapterCache {
-  
-  ConcurrentHashMap<Type, JsonAdapter<?>> cache = new ConcurrentHashMap<>();
-  
-  static <T> JsonAdapter<T> get(Type type) {
-    return (JsonAdapter<T>) cache.computeIfAbsent(type, JsonAdapterCache::load);
-  }
-
-  private static JsonAdapter<?> load(Type type) {
-    if (type instanceof Class<?> c && !c.isPrimitive()) {
-      try {
-        Class<?> forName = Class.forName(type.getTypeName() + "Adapter");
-        if (forName.isEnum() && forName.getEnumConstants().length == 1) {
-          Object instance = forName.getEnumConstants()[0];
-          System.out.println("found instance for type: " + type.getTypeName());
-          return (JsonAdapter<?>) instance;
-        }
-      } catch (ClassNotFoundException e) {
-        // instance not found
-      }
-    }
-    return JsonAdapter.of(encoder(type), decoder(type));
   }
 }

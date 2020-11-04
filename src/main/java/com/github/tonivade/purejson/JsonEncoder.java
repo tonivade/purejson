@@ -42,7 +42,7 @@ public interface JsonEncoder<T> {
   @SuppressWarnings({ "unchecked", "rawtypes" })
   static <T> JsonEncoder<T> encoder(Type type) {
     if (type instanceof Class clazz) {
-      return nullSafe(create(clazz));
+      return nullSafe(encoder(clazz));
     }
     if (type instanceof ParameterizedType paramType) {
       return nullSafe(encoder(paramType));
@@ -164,7 +164,7 @@ public interface JsonEncoder<T> {
   }
 
   @SuppressWarnings("unchecked")
-  private static <T> JsonEncoder<T> create(Class<T> type) {
+  private static <T> JsonEncoder<T> encoder(Class<T> type) {
     if (type.isPrimitive()) {
       return primitiveEncoder(type);
     } else if (type.equals(String.class)) {

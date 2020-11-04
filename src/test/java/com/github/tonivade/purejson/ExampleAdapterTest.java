@@ -14,14 +14,15 @@ import java.util.List;
 @SuppressWarnings("preview")
 public class ExampleAdapterTest {
   
-  record User(int id, String name, List<String> roles) {}
+  record Role(String name) {}
+  record User(int id, String name, List<Role> roles) {}
 
   public enum UserAdapter implements JsonAdapter<User> {
     INSTANCE;
 
     private static final JsonAdapter<Integer> ID_ADAPTER = JsonAdapter.adapter(int.class);
     private static final JsonAdapter<String> NAME_ADAPTER = JsonAdapter.adapter(String.class);
-    private static final JsonAdapter<List<String>> ROLES_ADAPTER = JsonAdapter.adapter(new TypeToken<List<String>>(){}.getType());
+    private static final JsonAdapter<List<Role>> ROLES_ADAPTER = JsonAdapter.adapter(new TypeToken<List<Role>>(){}.getType());
 
     @Override
     public JsonNode encode(User value) {
@@ -43,7 +44,7 @@ public class ExampleAdapterTest {
 
   @Test
   void testAdapter() {
-    User user = new User(1, "toni", List.of("admin"));
+    User user = new User(1, "toni", List.of(new Role("admin")));
 
     JsonAdapter<User> adapter = JsonAdapter.adapter(User.class);
 

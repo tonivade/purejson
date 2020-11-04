@@ -20,6 +20,7 @@ import java.util.Map;
 import com.github.tonivade.purefun.Function1;
 import com.github.tonivade.purefun.Tuple2;
 import com.github.tonivade.purefun.data.ImmutableMap;
+import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Try;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -35,25 +36,17 @@ public interface JsonEncoder<T> {
     return Try.of(() -> encode(value));
   }
   
-  default <R> JsonEncoder<R> compose(Function1<R, T> accesor) {
+  default <R> JsonEncoder<R> compose(Function1<? super R, ? extends T> accesor) {
     return value -> encode(accesor.apply(value));
   }
   
-  @SuppressWarnings({ "unchecked", "rawtypes" })
   static <T> JsonEncoder<T> encoder(Type type) {
-    if (type instanceof Class clazz) {
-      return nullSafe(encoder(clazz));
-    }
-    if (type instanceof ParameterizedType paramType) {
-      return nullSafe(encoder(paramType));
-    }
-    if (type instanceof GenericArrayType arrayType) {
-      return nullSafe(encoder(arrayType));
-    }
-    if (type instanceof WildcardType wildcardType) {
-      return nullSafe(encoder(wildcardType));
-    }
-    throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
+    return nullSafe(JsonEncoder.<T>load(type).getOrElse(() -> create(type)));
+  }
+  
+  @SuppressWarnings("unchecked")
+  static <T> Option<JsonEncoder<T>> load(Type type) {
+    return JsonAdapter.load(type).map(e -> (JsonEncoder<T>) e);
   }
 
   static <T> JsonEncoder<T> arrayEncoder(Type type) {
@@ -129,8 +122,25 @@ public interface JsonEncoder<T> {
     return mapEncoder(valueEncoder).compose(ImmutableMap::toMap);
   }
 
+  @SuppressWarnings({ "unchecked", "rawtypes" })
+  private static <T> JsonEncoder<T> create(Type type) {
+    if (type instanceof Class clazz) {
+      return create(clazz);
+    }
+    if (type instanceof ParameterizedType paramType) {
+      return create(paramType);
+    }
+    if (type instanceof GenericArrayType arrayType) {
+      return create(arrayType);
+    }
+    if (type instanceof WildcardType wildcardType) {
+      return create(wildcardType);
+    }
+    throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
+  }
+
   @SuppressWarnings("unchecked")
-  private static <T> JsonEncoder<T> encoder(ParameterizedType type) {
+  private static <T> JsonEncoder<T> create(ParameterizedType type) {
     if (type.getRawType() instanceof Class<?> c 
         && ImmutableMap.class.isAssignableFrom(c)
         && type.getActualTypeArguments()[0].equals(String.class)) {
@@ -150,12 +160,12 @@ public interface JsonEncoder<T> {
     throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
   }
 
-  private static <T> JsonEncoder<T> encoder(WildcardType type) {
+  private static <T> JsonEncoder<T> create(WildcardType type) {
     throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
   }
 
   @SuppressWarnings("unchecked")
-  private static <T> JsonEncoder<T> encoder(GenericArrayType type) {
+  private static <T> JsonEncoder<T> create(GenericArrayType type) {
     Type genericComponentType = type.getGenericComponentType();
     if (genericComponentType instanceof Class<?> c) {
       return (JsonEncoder<T>) arrayEncoder(c);
@@ -164,7 +174,7 @@ public interface JsonEncoder<T> {
   }
 
   @SuppressWarnings("unchecked")
-  private static <T> JsonEncoder<T> encoder(Class<T> type) {
+  private static <T> JsonEncoder<T> create(Class<T> type) {
     if (type.isPrimitive()) {
       return primitiveEncoder(type);
     } else if (type.equals(String.class)) {

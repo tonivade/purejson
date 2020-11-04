@@ -12,6 +12,9 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Map;
 
+import com.github.tonivade.purefun.type.Option;
+import com.github.tonivade.purefun.type.Try;
+
 public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
 
   JsonAdapter<String> STRING = adapter(String.class);
@@ -34,10 +37,45 @@ public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
     return adapter((Type) type);
   }
 
+  /**
+   * <p>First, it tries to load the instance of an adapter generated using annotation processor,
+   * or else it will try to generate an adapter using reflection.
+   * 
+   * <p>if the type is not supported it will throw an {@code UnsupportedOperationException}.
+   * 
+   * @param <T>
+   * @param type
+   * @return
+   */
   static <T> JsonAdapter<T> adapter(Type type) {
-    return of(encoder(type), decoder(type));
+    return JsonAdapter.<T>load(type).getOrElse(() -> of(encoder(type), decoder(type)));
   }
   
+  /**
+   * Try to load the instance of an adapter generated using annotation processor via
+   * {@code @Json}.
+   * 
+   * @param <T>
+   * @param type
+   * @return
+   */
+  @SuppressWarnings("unchecked")
+  static <T> Option<JsonAdapter<T>> load(Type type) {
+    return Try.of(() -> Class.forName(type.getTypeName() + "Adapter"))
+      .filter(Class::isEnum)
+      .map(c -> c.getEnumConstants()[0])
+      .map(e -> (JsonAdapter<T>) e)
+      .toOption();
+  }
+
+  /**
+   * It will create an adapter with the given encoder and decoder
+   * 
+   * @param <T>
+   * @param encoder
+   * @param decoder
+   * @return
+   */
   static <T> JsonAdapter<T> of(JsonEncoder<T> encoder, JsonDecoder<T> decoder) {
     return new JsonAdapter<>() {
 

@@ -37,6 +37,7 @@ import com.github.tonivade.purefun.data.ImmutableSet;
 import com.github.tonivade.purefun.data.ImmutableTree;
 import com.github.tonivade.purefun.data.ImmutableTreeMap;
 import com.github.tonivade.purefun.data.Sequence;
+import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Try;
 import com.google.gson.internal.reflect.ReflectionAccessor;
 
@@ -50,25 +51,17 @@ public interface JsonDecoder<T> {
     return Try.of(() -> decode(json));
   }
   
-  default <R> JsonDecoder<R> andThen(Function1<T, R> next) {
+  default <R> JsonDecoder<R> andThen(Function1<? super T, ? extends R> next) {
     return json -> next.apply(decode(json));
   }
   
-  @SuppressWarnings({ "unchecked", "rawtypes" })
   static <T> JsonDecoder<T> decoder(Type type) {
-    if (type instanceof Class clazz) {
-      return nullSafe(decoder(clazz));
-    }
-    if (type instanceof ParameterizedType paramType) {
-      return nullSafe(decoder(paramType));
-    }
-    if (type instanceof GenericArrayType arrayType) {
-      return nullSafe(decoder(arrayType));
-    }
-    if (type instanceof WildcardType wildcardType) {
-      return nullSafe(decoder(wildcardType));
-    }
-    throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
+    return nullSafe(JsonDecoder.<T>load(type).getOrElse(() -> create(type)));
+  }
+  
+  @SuppressWarnings("unchecked")
+  static <T> Option<JsonDecoder<T>> load(Type type) {
+    return JsonAdapter.load(type).map(d -> (JsonDecoder<T>) d);
   }
 
   @SuppressWarnings("unchecked")
@@ -88,7 +81,7 @@ public interface JsonDecoder<T> {
   }
 
   static <T extends Enum<T>> JsonDecoder<T> enumDecoder(Class<T> type) {
-    return decoder(String.class).andThen(string -> Enum.valueOf(type, string));
+    return create(String.class).andThen(string -> Enum.valueOf(type, string));
   }
 
   static <T> JsonDecoder<T> recordDecoder(Class<T> type) {
@@ -166,9 +159,26 @@ public interface JsonDecoder<T> {
       throw new IllegalArgumentException(json.toString());
     };
   }
+  
+  @SuppressWarnings({ "unchecked", "rawtypes" })
+  private static <T> JsonDecoder<T> create(Type type) {
+    if (type instanceof Class clazz) {
+      return create(clazz);
+    }
+    if (type instanceof ParameterizedType paramType) {
+      return create(paramType);
+    }
+    if (type instanceof GenericArrayType arrayType) {
+      return create(arrayType);
+    }
+    if (type instanceof WildcardType wildcardType) {
+      return create(wildcardType);
+    }
+    throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
+  }
 
   @SuppressWarnings("unchecked")
-  private static <T> JsonDecoder<T> decoder(ParameterizedType type) {
+  private static <T> JsonDecoder<T> create(ParameterizedType type) {
     if (type.getRawType() instanceof Class<?> c && Collection.class.isAssignableFrom(c)) {
       var create = decoder(type.getActualTypeArguments()[0]);
       return (JsonDecoder<T>) iterableDecoder(create).andThen(toCollection(c));
@@ -193,7 +203,7 @@ public interface JsonDecoder<T> {
   }
 
   @SuppressWarnings("unchecked")
-  private static <T> JsonDecoder<T> decoder(GenericArrayType type) {
+  private static <T> JsonDecoder<T> create(GenericArrayType type) {
     Type genericComponentType = type.getGenericComponentType();
     if (genericComponentType instanceof Class<?> c) {
       return (JsonDecoder<T>) arrayDecoder(c);
@@ -201,12 +211,12 @@ public interface JsonDecoder<T> {
     throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
   }
 
-  private static <T> JsonDecoder<T> decoder(WildcardType type) {
+  private static <T> JsonDecoder<T> create(WildcardType type) {
     throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
   }
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
-  private static <T> JsonDecoder<T> decoder(Class<T> type) {
+  private static <T> JsonDecoder<T> create(Class<T> type) {
     if (type.isPrimitive()) {
       return primitiveDecoder(type);
     } else if (type.equals(String.class)) {

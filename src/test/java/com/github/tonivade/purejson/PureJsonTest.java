@@ -113,33 +113,33 @@ class PureJsonTest extends IOTestSpec<String> {
 
   @Test
   void serializeObject() {
-
+    
     suite("serialize object", 
 
         it.should("serialize a record")
           .given(new User(1, "toni"))
-          .when(value -> new PureJson().toString(value))
+          .when(value -> new PureJson<>(User.class).toString(value))
           .thenMustBe(equalsTo(success("""
               {"id":1,"name":"toni"} 
               """.strip()))),
 
         it.should("serialize a record with null fields")
           .given(new User(1, null))
-          .when(value -> new PureJson().toString(value))
+          .when(value -> new PureJson<>(User.class).toString(value))
           .thenMustBe(equalsTo(success("""
               {"id":1,"name":null} 
               """.strip()))),
           
         it.should("serialize a pojo")
           .given(new Pojo(1, "toni"))
-          .when(value -> new PureJson().toString(value))
+          .when(value -> new PureJson<>(Pojo.class).toString(value))
           .thenMustBe(equalsTo(success("""
               {"id":1,"name":"toni"} 
               """.strip()))),
           
         it.should("serialize a pojo with null fields")
           .given(new Pojo(1, null))
-          .when(value -> new PureJson().toString(value))
+          .when(value -> new PureJson<>(Pojo.class).toString(value))
           .thenMustBe(equalsTo(success("""
               {"id":1,"name":null} 
               """.strip())))
@@ -152,25 +152,27 @@ class PureJsonTest extends IOTestSpec<String> {
 
     record Test(String[] values) {}
 
+    var json = new PureJson<>(Test.class);
+
     suite("serialize inner array", 
 
         it.should("serialize a inner array")
           .given(new Test(List.of("hola", "adios").toArray(String[]::new)))
-          .when(value -> new PureJson().toString(value))
+          .when(value -> json.toString(value))
           .thenMustBe(equalsTo(success("""
               {"values":["hola","adios"]} 
               """.strip()))),
 
         it.should("serialize a inner array with null values")
           .given(new Test(asList(null, "adios").toArray(String[]::new)))
-          .when(value -> new PureJson().toString(value))
+          .when(value -> json.toString(value))
           .thenMustBe(equalsTo(success("""
               {"values":[null,"adios"]} 
               """.strip()))),
 
         it.should("serialize a null inner array")
           .given(new Test(null))
-          .when(value -> new PureJson().toString(value))
+          .when(value -> json.toString(value))
           .thenMustBe(equalsTo(success("""
               {"values":null} 
               """.strip())))
@@ -183,25 +185,27 @@ class PureJsonTest extends IOTestSpec<String> {
 
     record Test(List<String> values) {}
 
+    var json = new PureJson<>(Test.class);
+
     suite("serialize inner list", 
 
         it.should("serialize a inner list")
           .given(new Test(List.of("hola", "adios")))
-          .when(value -> new PureJson().toString(value))
+          .when(value -> json.toString(value))
           .thenMustBe(equalsTo(success("""
               {"values":["hola","adios"]} 
               """.strip()))),
 
         it.should("serialize a inner list with null values")
           .given(new Test(asList(null, "adios")))
-          .when(value -> new PureJson().toString(value))
+          .when(value -> json.toString(value))
           .thenMustBe(equalsTo(success("""
               {"values":[null,"adios"]} 
               """.strip()))),
 
         it.should("serialize a null inner list")
           .given(new Test(null))
-          .when(value -> new PureJson().toString(value))
+          .when(value -> json.toString(value))
           .thenMustBe(equalsTo(success("""
               {"values":null} 
               """.strip())))
@@ -214,25 +218,27 @@ class PureJsonTest extends IOTestSpec<String> {
 
     record Test(Map<String, String> values) {}
 
+    var json = new PureJson<>(Test.class);
+
     suite("serialize inner map", 
 
         it.should("serialize a inner map")
           .given(new Test(Map.of("hola", "adios")))
-          .when(value -> new PureJson().toString(value))
+          .when(value -> json.toString(value))
           .thenMustBe(equalsTo(success("""
               {"values":{"hola":"adios"}} 
               """.strip()))),
 
         it.should("serialize a inner map with null values")
           .given(new Test(singletonMap("hola", null)))
-          .when(value -> new PureJson().toString(value))
+          .when(value -> json.toString(value))
           .thenMustBe(equalsTo(success("""
               {"values":{"hola":null}} 
               """.strip()))),
 
         it.should("serialize a null inner map")
           .given(new Test(null))
-          .when(value -> new PureJson().toString(value))
+          .when(value -> json.toString(value))
           .thenMustBe(equalsTo(success("""
               {"values":null} 
               """.strip())))
@@ -244,25 +250,27 @@ class PureJsonTest extends IOTestSpec<String> {
   void serializeList() {
     Type listOfUsers = new TypeToken<List<User>>() {}.getType();
 
+    var json = new PureJson<>(listOfUsers);
+
     suite("serialize list", 
 
         it.should("serialize a list of records")
           .given(List.of(new User(1, "toni")))
-          .when(value -> new PureJson().toString(value, listOfUsers))
+          .when(value -> json.toString(value))
           .thenMustBe(equalsTo(success("""
               [{"id":1,"name":"toni"}]
               """.strip()))),
 
         it.should("serialize a list of records with null fields")
           .given(List.of(new User(1, null)))
-          .when(value -> new PureJson().toString(value, listOfUsers))
+          .when(value -> json.toString(value))
           .thenMustBe(equalsTo(success("""
               [{"id":1,"name":null}]
               """.strip()))),
 
         it.should("serialize a null list of records")
           .given(listWithNull())
-          .when(value -> new PureJson().toString(value, listOfUsers))
+          .when(value -> json.toString(value))
           .thenMustBe(equalsTo(success("[null]")))
           
         ).run().assertion();
@@ -272,25 +280,27 @@ class PureJsonTest extends IOTestSpec<String> {
   void serializeImmutableList() {
     Type listOfUsers = new TypeToken<ImmutableList<User>>() {}.getType();
 
+    var json = new PureJson<>(listOfUsers);
+
     suite("serialize immutable list", 
 
         it.should("serialize a immutable list of records")
           .given(listOf(new User(1, "toni")))
-          .when(value -> new PureJson().toString(value, listOfUsers))
+          .when(value -> json.toString(value))
           .thenMustBe(equalsTo(success("""
               [{"id":1,"name":"toni"}]
               """.strip()))),
 
         it.should("serialize a immutable list of records with null fields")
           .given(listOf(new User(1, null)))
-          .when(value -> new PureJson().toString(value, listOfUsers))
+          .when(value -> json.toString(value))
           .thenMustBe(equalsTo(success("""
               [{"id":1,"name":null}]
               """.strip()))),
 
         it.should("serialize a null immutable list")
           .given(emptyList().append(null))
-          .when(value -> new PureJson().toString(value, listOfUsers))
+          .when(value -> json.toString(value))
           .thenMustBe(equalsTo(success("[null]")))
           
         ).run().assertion();
@@ -300,25 +310,27 @@ class PureJsonTest extends IOTestSpec<String> {
   void serializeImmutableArray() {
     Type listOfUsers = new TypeToken<ImmutableArray<User>>() {}.getType();
 
+    var json = new PureJson<>(listOfUsers);
+
     suite("serialize immutable array", 
 
         it.should("serialize a immutable array of records")
           .given(arrayOf(new User(1, "toni")))
-          .when(value -> new PureJson().toString(value, listOfUsers))
+          .when(value -> json.toString(value))
           .thenMustBe(equalsTo(success("""
               [{"id":1,"name":"toni"}]
               """.strip()))),
 
         it.should("serialize a immutable array of records with null fields")
           .given(arrayOf(new User(1, null)))
-          .when(value -> new PureJson().toString(value, listOfUsers))
+          .when(value -> json.toString(value))
           .thenMustBe(equalsTo(success("""
               [{"id":1,"name":null}]
               """.strip()))),
 
         it.should("serialize a null immutable array")
           .given(emptyArray().append(null))
-          .when(value -> new PureJson().toString(value, listOfUsers))
+          .when(value -> json.toString(value))
           .thenMustBe(equalsTo(success("[null]")))
           
         ).run().assertion();
@@ -328,25 +340,27 @@ class PureJsonTest extends IOTestSpec<String> {
   void serializeImmutableSet() {
     Type listOfUsers = new TypeToken<ImmutableSet<User>>() {}.getType();
 
+    var json = new PureJson<>(listOfUsers);
+
     suite("serialize immutable set", 
 
         it.should("serialize a immutable set of records")
           .given(setOf(new User(1, "toni")))
-          .when(value -> new PureJson().toString(value, listOfUsers))
+          .when(value -> json.toString(value))
           .thenMustBe(equalsTo(success("""
               [{"id":1,"name":"toni"}]
               """.strip()))),
 
         it.should("serialize a immutable set of records with null fields")
           .given(setOf(new User(1, null)))
-          .when(value -> new PureJson().toString(value, listOfUsers))
+          .when(value -> json.toString(value))
           .thenMustBe(equalsTo(success("""
               [{"id":1,"name":null}]
               """.strip()))),
 
         it.should("serialize a null immutable set")
           .given(emptySet().append(null))
-          .when(value -> new PureJson().toString(value, listOfUsers))
+          .when(value -> json.toString(value))
           .thenMustBe(equalsTo(success("[null]")))
           
         ).run().assertion();
@@ -354,7 +368,7 @@ class PureJsonTest extends IOTestSpec<String> {
 
   @Test
   void serializeArray() {
-    var json = new PureJson();
+    var json = new PureJson<>(User[].class);
     var result1 = json.toString(new User[] { new User(1, "toni") });
     var result2 = json.toString(new User[] { new User(1, null) });
     var result3 = json.toString(new User[] { null });
@@ -376,11 +390,12 @@ class PureJsonTest extends IOTestSpec<String> {
   
   @Test
   void serializeMap() {
-    var json = new PureJson();
     Type mapOfUsers = new TypeToken<Map<String, User>>(){}.getType();
-    var result1 = json.toString(Map.of("toni", new User(1, "toni")), mapOfUsers);
-    var result2 = json.toString(Map.of("toni", new User(1, null)), mapOfUsers);
-    var result3 = json.toString(singletonMap("toni", null), mapOfUsers);
+    
+    var json = new PureJson<>(mapOfUsers);
+    var result1 = json.toString(Map.of("toni", new User(1, "toni")));
+    var result2 = json.toString(Map.of("toni", new User(1, null)));
+    var result3 = json.toString(singletonMap("toni", null));
 
     var expected1 = """
         {"toni":{"id":1,"name":"toni"}}
@@ -399,11 +414,12 @@ class PureJsonTest extends IOTestSpec<String> {
   
   @Test
   void serializeImmutableMap() {
-    var json = new PureJson();
     Type mapOfUsers = new TypeToken<ImmutableMap<String, User>>(){}.getType();
-    var result1 = json.toString(ImmutableMap.empty().put("toni", new User(1, "toni")), mapOfUsers);
-    var result2 = json.toString(ImmutableMap.empty().put("toni", new User(1, null)), mapOfUsers);
-    var result3 = json.toString(ImmutableMap.empty().put("toni", null), mapOfUsers);
+
+    var json = new PureJson<>(mapOfUsers);
+    var result1 = json.toString(ImmutableMap.empty().put("toni", new User(1, "toni")));
+    var result2 = json.toString(ImmutableMap.empty().put("toni", new User(1, null)));
+    var result3 = json.toString(ImmutableMap.empty().put("toni", null));
 
     var expected1 = """
         {"toni":{"id":1,"name":"toni"}}
@@ -422,45 +438,45 @@ class PureJsonTest extends IOTestSpec<String> {
 
   @Test
   void parseObject() {
-
+    
     suite("parse object", 
 
         it.should("parse a record")
           .given("""
               {"id":1,"name":"toni"} 
               """.strip())
-          .when(json -> new PureJson().fromJson(json, User.class))
+          .when(node -> new PureJson<>(User.class).fromJson(node))
           .thenMustBe(equalsTo(success(some(new User(1, "toni"))))),
 
         it.should("parse a record with null fields")
           .given("""
               {"id":1,"name":null} 
               """.strip())
-          .when(json -> new PureJson().fromJson(json, User.class))
+          .when(node -> new PureJson<>(User.class).fromJson(node))
           .thenMustBe(equalsTo(success(some(new User(1, null))))),
 
         it.should("parse a null record")
           .given("null")
-          .when(json -> new PureJson().fromJson(json, User.class))
+          .when(node -> new PureJson<>(User.class).fromJson(node))
           .thenMustBe(equalsTo(success(none()))),
 
         it.should("parse a pojo")
           .given("""
               {"id":1,"name":"toni"} 
               """.strip())
-          .when(json -> new PureJson().fromJson(json, Pojo.class))
+          .when(node -> new PureJson<>(Pojo.class).fromJson(node))
           .thenMustBe(equalsTo(success(some(new Pojo(1, "toni"))))),
 
         it.should("parse a pojo")
           .given("""
               {"id":1,"name":null} 
               """.strip())
-          .when(json -> new PureJson().fromJson(json, Pojo.class))
+          .when(node -> new PureJson<>(Pojo.class).fromJson(node))
           .thenMustBe(equalsTo(success(some(new Pojo(1, null))))),
 
         it.should("parse a null pojo")
           .given("null")
-          .when(json -> new PureJson().fromJson(json, User.class))
+          .when(node -> new PureJson<>(Pojo.class).fromJson(node))
           .thenMustBe(equalsTo(success(none())))
         
         ).run().assertion();
@@ -475,7 +491,7 @@ class PureJsonTest extends IOTestSpec<String> {
         {"values":["one","two","three"]}
         """.strip();
 
-    Try<Option<Test>> result = new PureJson().fromJson(string, Test.class);
+    Try<Option<Test>> result = new PureJson<>(Test.class).fromJson(string);
 
     assertSuccessSome(new Test(listOf("one", "two", "three")), result);
   }
@@ -489,7 +505,7 @@ class PureJsonTest extends IOTestSpec<String> {
         {"values":["one","two","three"]}
         """.strip();
 
-    Try<Option<Test>> result = new PureJson().fromJson(string, Test.class);
+    Try<Option<Test>> result = new PureJson<>(Test.class).fromJson(string);
 
     assertSuccessSome(new Test(arrayOf("one", "two", "three")), result);
   }
@@ -503,7 +519,7 @@ class PureJsonTest extends IOTestSpec<String> {
         {"values":["one","two","three"]}
         """.strip();
 
-    Try<Option<Test>> result = new PureJson().fromJson(string, Test.class);
+    Try<Option<Test>> result = new PureJson<>(Test.class).fromJson(string);
 
     assertSuccessSome(new Test(listOf("one", "two", "three")), result);
   }
@@ -517,7 +533,7 @@ class PureJsonTest extends IOTestSpec<String> {
         {"values":["one","two","three"]}
         """.strip();
 
-    Try<Option<Test>> result = new PureJson().fromJson(string, Test.class);
+    Try<Option<Test>> result = new PureJson<>(Test.class).fromJson(string);
 
     assertSuccessSome(new Test(setOf("one", "two", "three")), result);
   }
@@ -531,7 +547,7 @@ class PureJsonTest extends IOTestSpec<String> {
         {"values":["one","two","three"]}
         """.strip();
 
-    Try<Option<Test>> result = new PureJson().fromJson(string, Test.class);
+    Try<Option<Test>> result = new PureJson<>(Test.class).fromJson(string);
 
     assertSuccessSome(new Test(treeOf("one", "two", "three")), result);
   }
@@ -545,7 +561,7 @@ class PureJsonTest extends IOTestSpec<String> {
         {"values":["one","two","three"]}
         """.strip();
 
-    Try<Option<Test>> result = new PureJson().fromJson(string, Test.class);
+    Try<Option<Test>> result = new PureJson<>(Test.class).fromJson(string);
 
     assertSuccessSome(new Test(List.of("one", "two", "three")), result);
   }
@@ -559,7 +575,7 @@ class PureJsonTest extends IOTestSpec<String> {
         {"values":["one","two","three"]}
         """.strip();
 
-    Try<Option<Test>> result = new PureJson().fromJson(string, Test.class);
+    Try<Option<Test>> result = new PureJson<>(Test.class).fromJson(string);
 
     assertArrayEquals(List.of("one", "two", "three").toArray(String[]::new), 
         result.getOrElseThrow().getOrElseThrow().values);
@@ -574,7 +590,7 @@ class PureJsonTest extends IOTestSpec<String> {
         {"values":["one","two","three"]}
         """.strip();
 
-    Try<Option<Test>> result = new PureJson().fromJson(string, Test.class);
+    Try<Option<Test>> result = new PureJson<>(Test.class).fromJson(string);
 
     assertSuccessSome(new Test(List.of("one", "two", "three")), result);
   }
@@ -588,7 +604,7 @@ class PureJsonTest extends IOTestSpec<String> {
         {"values":["one","two","three"]}
         """.strip();
 
-    Try<Option<Test>> result = new PureJson().fromJson(string, Test.class);
+    Try<Option<Test>> result = new PureJson<>(Test.class).fromJson(string);
 
     assertSuccessSome(new Test(Set.of("one", "two", "three")), result);
   }
@@ -602,7 +618,7 @@ class PureJsonTest extends IOTestSpec<String> {
         {"values":{"one":"1","two":"2","three":"3"}}
         """.strip();
 
-    Try<Option<Test>> result = new PureJson().fromJson(string, Test.class);
+    Try<Option<Test>> result = new PureJson<>(Test.class).fromJson(string);
 
     assertSuccessSome(new Test(Map.of("one", "1", "two", "2", "three", "3")), result);
   }
@@ -621,13 +637,13 @@ class PureJsonTest extends IOTestSpec<String> {
     var string4 = "[null]";
     var string5 = "null";
 
-    var listOfUsers = new TypeToken<User[]>() {};
-    var json = new PureJson();
-    Try<Option<User[]>> array1 = json.fromJson(string1, listOfUsers.getType());
-    Try<Option<User[]>> array2 = json.fromJson(string2, listOfUsers.getType());
-    Try<Option<User[]>> array3 = json.fromJson(string3, listOfUsers.getType());
-    Try<Option<User[]>> array4 = json.fromJson(string4, listOfUsers.getType());
-    Try<Option<User[]>> array5 = json.fromJson(string5, listOfUsers.getType());
+    var listOfUsers = new TypeToken<User[]>() {}.getType();
+    var json = new PureJson<User[]>(listOfUsers);
+    Try<Option<User[]>> array1 = json.fromJson(string1);
+    Try<Option<User[]>> array2 = json.fromJson(string2);
+    Try<Option<User[]>> array3 = json.fromJson(string3);
+    Try<Option<User[]>> array4 = json.fromJson(string4);
+    Try<Option<User[]>> array5 = json.fromJson(string5);
 
     assertArrayEquals(new User[] { new User(1, "toni") }, array1.getOrElseThrow().getOrElseThrow());
     assertArrayEquals(new User[] { new User(1, null) }, array2.getOrElseThrow().getOrElseThrow());
@@ -652,13 +668,13 @@ class PureJsonTest extends IOTestSpec<String> {
         """.strip();
     var string5 = "null";
 
-    var listOfUsers = new TypeToken<List<User>>() {};
-    var json = new PureJson();
-    Try<Option<List<User>>> list1 = json.fromJson(string1, listOfUsers.getType());
-    Try<Option<List<User>>> list2 = json.fromJson(string2, listOfUsers.getType());
-    Try<Option<List<User>>> list3 = json.fromJson(string3, listOfUsers.getType());
-    Try<Option<List<User>>> list4 = json.fromJson(string4, listOfUsers.getType());
-    Try<Option<List<User>>> list5 = json.fromJson(string5, listOfUsers.getType());
+    var listOfUsers = new TypeToken<List<User>>() {}.getType();
+    var json = new PureJson<List<User>>(listOfUsers);
+    Try<Option<List<User>>> list1 = json.fromJson(string1);
+    Try<Option<List<User>>> list2 = json.fromJson(string2);
+    Try<Option<List<User>>> list3 = json.fromJson(string3);
+    Try<Option<List<User>>> list4 = json.fromJson(string4);
+    Try<Option<List<User>>> list5 = json.fromJson(string5);
 
     assertSuccessSome(List.of(new User(1, "toni")), list1);
     assertSuccessSome(List.of(new User(1, null)), list2);
@@ -683,13 +699,13 @@ class PureJsonTest extends IOTestSpec<String> {
         """.strip();
     var string5 = "null";
 
-    var mapOfUsers = new TypeToken<Map<String, User>>() {};
-    var json = new PureJson();
-    Try<Option<Map<String, User>>> map1 = json.fromJson(string1, mapOfUsers.getType());
-    Try<Option<Map<String, User>>> map2 = json.fromJson(string2, mapOfUsers.getType());
-    Try<Option<Map<String, User>>> map3 = json.fromJson(string3, mapOfUsers.getType());
-    Try<Option<Map<String, User>>> map4 = json.fromJson(string4, mapOfUsers.getType());
-    Try<Option<Map<String, User>>> map5 = json.fromJson(string5, mapOfUsers.getType());
+    var mapOfUsers = new TypeToken<Map<String, User>>() {}.getType();
+    var json = new PureJson<Map<String, User>>(mapOfUsers);
+    Try<Option<Map<String, User>>> map1 = json.fromJson(string1);
+    Try<Option<Map<String, User>>> map2 = json.fromJson(string2);
+    Try<Option<Map<String, User>>> map3 = json.fromJson(string3);
+    Try<Option<Map<String, User>>> map4 = json.fromJson(string4);
+    Try<Option<Map<String, User>>> map5 = json.fromJson(string5);
 
     assertSuccessSome(Map.of("toni", new User(1, "toni")), map1);
     assertSuccessSome(Map.of("toni", new User(1, null)), map2);
@@ -704,29 +720,29 @@ class PureJsonTest extends IOTestSpec<String> {
         
         it.should("fail when not supported")
           .given(List.of(1, 2, 3))
-          .when(list -> new PureJson().toString(list))
+          .when(list -> new PureJson<>(new TypeToken<List<Integer>>() {}.getType()).toString(list))
           .thenMustBe(instanceOf(UnsupportedOperationException.class).compose(Try::getCause)),
         
         it.should("fail when invalid json syntax")
           .given("this is wrong")
-          .when(json -> new PureJson().fromJson(json, User.class))
+          .when(json -> new PureJson<>(User.class).fromJson(json))
           .thenMustBe(instanceOf(JsonSyntaxException.class).compose(Try::getCause)),
         
         it.should("be none when empty string")
           .given("")
-          .when(json -> new PureJson().fromJson(json, User.class))
+          .when(json -> new PureJson<>(User.class).fromJson(json))
           .thenMustBe(equalsTo(success(none()))),
         
         it.should("fail when null string")
           .<String>givenNull()
-          .when(json -> new PureJson().fromJson(json, User.class))
+          .when(json -> new PureJson<>(User.class).fromJson(json))
           .thenMustBe(instanceOf(IllegalArgumentException.class).compose(Try::getCause)),
         
         it.should("fail when type doesn't match with json")
           .given("""
               {"id":1,"name":"toni"} 
               """)
-          .when(json -> new PureJson().fromJson(json, new TypeToken<List<User>>() {}.getType()))
+          .when(json -> new PureJson<>(new TypeToken<List<User>>() {}.getType()).fromJson(json))
           .thenMustBe(instanceOf(IllegalArgumentException.class).compose(Try::getCause))
         
         ).run().assertion();
@@ -738,68 +754,68 @@ class PureJsonTest extends IOTestSpec<String> {
     suite("serialize primitives", 
 
         it.should("serialize null")
-          .givenNull()
-          .when(value -> new PureJson().toString(value))
+          .<String>givenNull()
+          .when(value -> new PureJson<>(String.class).toString(value))
           .thenMustBe(equalsTo(success("null"))),
 
         it.should("serialize a character")
-          .given("A")
-          .when(value -> new PureJson().toString(value))
+          .given('A')
+          .when(value -> new PureJson<>(Character.class).toString(value))
           .thenMustBe(equalsTo(success("\"A\""))),
 
         it.should("serialize a unicode character")
-          .given("Á")
-          .when(value -> new PureJson().toString(value))
+          .given('Á')
+          .when(value -> new PureJson<>(Character.class).toString(value))
           .thenMustBe(equalsTo(success("\"Á\""))),
 
         it.should("serialize a byte")
           .given((byte) 1)
-          .when(value -> new PureJson().toString(value))
+          .when(value -> new PureJson<>(Byte.class).toString(value))
           .thenMustBe(equalsTo(success("1"))),
 
         it.should("serialize a short")
           .given((short) 1)
-          .when(value -> new PureJson().toString(value))
+          .when(value -> new PureJson<>(Short.class).toString(value))
           .thenMustBe(equalsTo(success("1"))),
 
         it.should("serialize an integer")
           .given(1)
-          .when(value -> new PureJson().toString(value))
+          .when(value -> new PureJson<>(Integer.class).toString(value))
           .thenMustBe(equalsTo(success("1"))),
 
         it.should("serialize a long")
           .given(1L)
-          .when(value -> new PureJson().toString(value))
+          .when(value -> new PureJson<>(Long.class).toString(value))
           .thenMustBe(equalsTo(success("1"))),
 
         it.should("serialize a float")
           .given(1F)
-          .when(value -> new PureJson().toString(value))
+          .when(value -> new PureJson<>(Float.class).toString(value))
           .thenMustBe(equalsTo(success("1.0"))),
 
         it.should("serialize a double")
           .given(1D)
-          .when(value -> new PureJson().toString(value))
+          .when(value -> new PureJson<>(Double.class).toString(value))
           .thenMustBe(equalsTo(success("1.0"))),
 
         it.should("serialize a big integer")
           .given(BigInteger.ONE)
-          .when(value -> new PureJson().toString(value))
+          .when(value -> new PureJson<>(BigInteger.class).toString(value))
           .thenMustBe(equalsTo(success("1"))),
 
         it.should("serialize a big decimal")
           .given(BigDecimal.ONE)
-          .when(value -> new PureJson().toString(value))
+          .when(value -> new PureJson<>(BigDecimal.class).toString(value))
           .thenMustBe(equalsTo(success("1"))),
 
         it.should("serialize a string")
           .given("asdfg")
-          .when(value -> new PureJson().toString(value))
+          .when(value -> new PureJson<>(String.class).toString(value))
           .thenMustBe(equalsTo(success("\"asdfg\""))),
 
         it.should("serialize a enum")
           .given(EnumTest.VAL1)
-          .when(value -> new PureJson().toString(value))
+          .when(value -> new PureJson<>(EnumTest.class).toString(value))
           .thenMustBe(equalsTo(success("\"VAL1\"")))
 
         ).run().assertion();
@@ -811,67 +827,67 @@ class PureJsonTest extends IOTestSpec<String> {
 
         it.should("parse null")
           .given("null")
-          .when(json -> new PureJson().fromJson(json, String.class))
+          .when(json -> new PureJson<>(String.class).fromJson(json))
           .thenMustBe(equalsTo(success(none()))),
 
         it.should("parse char")
           .given("\"A\"")
-          .when(json -> new PureJson().fromJson(json, char.class))
+          .when(json -> new PureJson<>(char.class).fromJson(json))
           .thenMustBe(equalsTo(success(some('A')))),
 
         it.should("parse unicode char")
           .given("\"Á\"")
-          .when(json -> new PureJson().fromJson(json, char.class))
+          .when(json -> new PureJson<>(char.class).fromJson(json))
           .thenMustBe(equalsTo(success(some('Á')))),
 
         it.should("parse byte")
           .given("1")
-          .when(json -> new PureJson().fromJson(json, byte.class))
+          .when(json -> new PureJson<>(byte.class).fromJson(json))
           .thenMustBe(equalsTo(success(some((byte) 1)))),
 
         it.should("parse short")
           .given("1")
-          .when(json -> new PureJson().fromJson(json, short.class))
+          .when(json -> new PureJson<>(short.class).fromJson(json))
           .thenMustBe(equalsTo(success(some((short) 1)))),
 
         it.should("parse int")
           .given("1")
-          .when(json -> new PureJson().fromJson(json, int.class))
+          .when(json -> new PureJson<>(int.class).fromJson(json))
           .thenMustBe(equalsTo(success(some(1)))),
 
         it.should("parse long")
           .given("1")
-          .when(json -> new PureJson().fromJson(json, long.class))
+          .when(json -> new PureJson<>(long.class).fromJson(json))
           .thenMustBe(equalsTo(success(some(1L)))),
 
         it.should("parse float")
           .given("1.0")
-          .when(json -> new PureJson().fromJson(json, float.class))
+          .when(json -> new PureJson<>(float.class).fromJson(json))
           .thenMustBe(equalsTo(success(some(1F)))),
 
         it.should("parse double")
           .given("1.0")
-          .when(json -> new PureJson().fromJson(json, double.class))
+          .when(json -> new PureJson<>(double.class).fromJson(json))
           .thenMustBe(equalsTo(success(some(1D)))),
 
         it.should("parse big integer")
           .given("1")
-          .when(json -> new PureJson().fromJson(json, BigInteger.class))
+          .when(json -> new PureJson<>(BigInteger.class).fromJson(json))
           .thenMustBe(equalsTo(success(some(BigInteger.ONE)))),
 
         it.should("parse big decimal")
           .given("1.0")
-          .when(json -> new PureJson().fromJson(json, BigDecimal.class))
+          .when(json -> new PureJson<>(BigDecimal.class).fromJson(json))
           .thenMustBe(equalsTo(success(some(BigDecimal.valueOf(1.0))))),
 
         it.should("parse string")
           .given("\"asdfg\"")
-          .when(json -> new PureJson().fromJson(json, String.class))
+          .when(json -> new PureJson<>(String.class).fromJson(json))
           .thenMustBe(equalsTo(success(some("asdfg")))),
 
         it.should("parse enum values")
           .given("\"VAL1\"")
-          .when(json -> new PureJson().fromJson(json, EnumTest.class))
+          .when(json -> new PureJson<>(EnumTest.class).fromJson(json))
           .thenMustBe(equalsTo(success(some(EnumTest.VAL1))))
 
         ).run().assertion();
@@ -880,39 +896,35 @@ class PureJsonTest extends IOTestSpec<String> {
   @Test
   void parsePerformance() {
     var listOfUsers = new TypeToken<List<Pojo>>() { }.getType();
-    var json1 = new PureJson();
-    var json2 = new PureJson().add(listOfUsers, JsonAdapter.adapter(listOfUsers));
-    var json3 = new PureJson().add(listOfUsers, builderPojoAdapter());
-    var json4 = new PureJson().add(listOfUsers, adhocPojoAdapter());
+    var json1 = new PureJson<>(listOfUsers);
+    var json2 = new PureJson<>(builderPojoAdapter());
+    var json3 = new PureJson<>(adhocPojoAdapter());
     var gson = new GsonBuilder().create();
 
     int times = 500;
-    var stats1 = ioPerfCase("reflection", parseTask(string -> json1.fromJson(string, listOfUsers))).run(times);
-    var stats2 = ioPerfCase("cached", parseTask(string -> json2.fromJson(string, listOfUsers))).run(times);
-    var stats3 = ioPerfCase("builder", parseTask(string -> json3.fromJson(string, listOfUsers))).run(times);
-    var stats4 = ioPerfCase("explicit", parseTask(string -> json4.fromJson(string, listOfUsers))).run(times);
-    var stats5 = ioPerfCase("gson", parseTask(string -> gson.fromJson(string, listOfUsers))).run(times);
+    var stats1 = ioPerfCase("reflection", parseTask(string -> json1.fromJson(string))).run(times);
+    var stats2 = ioPerfCase("builder", parseTask(string -> json2.fromJson(string))).run(times);
+    var stats3 = ioPerfCase("adhoc", parseTask(string -> json3.fromJson(string))).run(times);
+    var stats4 = ioPerfCase("gson", parseTask(string -> gson.fromJson(string, listOfUsers))).run(times);
 
-    runPerf("parse", listOf(stats1, stats2, stats3, stats4, stats5));
+    runPerf("parse", listOf(stats1, stats2, stats3, stats4));
   }
 
   @Test
   void serializePerformance() {
     var listOfUsers = new TypeToken<List<Pojo>>() { }.getType();
-    var json1 = new PureJson();
-    var json2 = new PureJson().add(listOfUsers, JsonAdapter.adapter(listOfUsers));
-    var json3 = new PureJson().add(listOfUsers, builderPojoAdapter());
-    var json4 = new PureJson().add(listOfUsers, adhocPojoAdapter());
+    var json1 = new PureJson<>(listOfUsers);
+    var json2 = new PureJson<>(builderPojoAdapter());
+    var json3 = new PureJson<>(adhocPojoAdapter());
     var gson = new GsonBuilder().create();
 
     int times = 500;
-    var stats1 = ioPerfCase("reflection", serializeTask(value -> json1.toString(value, listOfUsers))).run(times);
-    var stats2 = ioPerfCase("cached", serializeTask(value -> json2.toString(value, listOfUsers))).run(times);
-    var stats3 = ioPerfCase("builder", serializeTask(value -> json3.toString(value, listOfUsers))).run(times);
-    var stats4 = ioPerfCase("explicit", serializeTask(value -> json4.toString(value, listOfUsers))).run(times);
-    var stats5 = ioPerfCase("gson", serializeTask(value -> gson.toJson(value, listOfUsers))).run(times);
+    var stats1 = ioPerfCase("reflection", serializeTask(value -> json1.toString(value))).run(times);
+    var stats2 = ioPerfCase("builder", serializeTask(value -> json2.toString(value))).run(times);
+    var stats3 = ioPerfCase("adhoc", serializeTask(value -> json3.toString(value))).run(times);
+    var stats4 = ioPerfCase("gson", serializeTask(value -> gson.toJson(value, listOfUsers))).run(times);
 
-    runPerf("serialize", listOf(stats1, stats2, stats3, stats4, stats5));
+    runPerf("serialize", listOf(stats1, stats2, stats3, stats4));
   }
 
   private void runPerf(String name, Sequence<Kind<IO_, Stats>> stats) {

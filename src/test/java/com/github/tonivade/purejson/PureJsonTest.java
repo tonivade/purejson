@@ -27,8 +27,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
@@ -881,8 +880,8 @@ class PureJsonTest extends IOTestSpec<String> {
     var listOfUsers = new TypeToken<List<Pojo>>() { }.getType();
     var json1 = new PureJson();
     var json2 = new PureJson().add(listOfUsers, JsonAdapter.adapter(listOfUsers));
-    var json3 = new PureJson().add(listOfUsers, builderPojoAdapter());
-    var json4 = new PureJson().add(listOfUsers, adhocPojoAdapter());
+    var json3 = new PureJson().add(Pojo.class, builderPojoAdapter());
+    var json4 = new PureJson().add(Pojo.class, adhocPojoAdapter());
     var gson = new GsonBuilder().create();
 
     int times = 500;
@@ -897,11 +896,11 @@ class PureJsonTest extends IOTestSpec<String> {
 
   @Test
   void serializePerformance() {
-    var listOfUsers = new TypeToken<List<Pojo>>() { }.getType();
+    var listOfUsers = new TypeToken<List<Pojo>>() {}.getType();
     var json1 = new PureJson();
     var json2 = new PureJson().add(listOfUsers, JsonAdapter.adapter(listOfUsers));
-    var json3 = new PureJson().add(listOfUsers, builderPojoAdapter());
-    var json4 = new PureJson().add(listOfUsers, adhocPojoAdapter());
+    var json3 = new PureJson().add(Pojo.class, builderPojoAdapter());
+    var json4 = new PureJson().add(Pojo.class, adhocPojoAdapter());
     var gson = new GsonBuilder().create();
 
     int times = 500;

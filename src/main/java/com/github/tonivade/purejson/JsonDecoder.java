@@ -332,15 +332,15 @@ public interface JsonDecoder<T> {
 
 interface JsonDecoderModule {
   
-  JsonDecoder<String> STRING = JsonNode::getAsString;
-  JsonDecoder<Character> CHAR = JsonNode::getAsCharacter;
-  JsonDecoder<Byte> BYTE = JsonNode::getAsByte;
-  JsonDecoder<Short> SHORT = JsonNode::getAsShort;
-  JsonDecoder<Integer> INTEGER = JsonNode::getAsInt;
-  JsonDecoder<Long> LONG = JsonNode::getAsLong;
-  JsonDecoder<Float> FLOAT = JsonNode::getAsFloat;
-  JsonDecoder<Double> DOUBLE = JsonNode::getAsDouble;
-  JsonDecoder<BigInteger> BIG_INTEGER = JsonNode::getAsBigInteger;
-  JsonDecoder<BigDecimal> BIG_DECIMAL = JsonNode::getAsBigDecimal;
-  JsonDecoder<Boolean> BOOLEAN = JsonNode::getAsBoolean;
+  JsonDecoder<String> STRING = JsonNode::asString;
+  JsonDecoder<Character> CHAR = JsonNode::asCharacter;
+  JsonDecoder<Byte> BYTE = JsonNode::asByte;
+  JsonDecoder<Short> SHORT = JsonNode::asShort;
+  JsonDecoder<Integer> INTEGER = JsonNode::asInt;
+  JsonDecoder<Long> LONG = JsonNode::asLong;
+  JsonDecoder<Float> FLOAT = JsonNode::asFloat;
+  JsonDecoder<Double> DOUBLE = JsonNode::asDouble;
+  JsonDecoder<BigInteger> BIG_INTEGER = JsonNode::asBigInteger;
+  JsonDecoder<BigDecimal> BIG_DECIMAL = JsonNode::asBigDecimal;
+  JsonDecoder<Boolean> BOOLEAN = JsonNode::asBoolean;
 }

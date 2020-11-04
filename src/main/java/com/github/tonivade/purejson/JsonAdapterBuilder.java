@@ -72,7 +72,7 @@ public final class JsonAdapterBuilder<T> {
         value -> {
           var object = new JsonObject();
           for (var entry : encoders.entrySet()) {
-            object.add(entry.getKey(), entry.getValue().encode(value));
+            object.add(entry.getKey(), entry.getValue().encode(value).unwrap());
           }
           return new JsonNode.Object(object);
         },

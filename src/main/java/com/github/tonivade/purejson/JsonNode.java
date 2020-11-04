@@ -20,7 +20,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
 @SuppressWarnings("preview")
-public abstract class JsonNode extends JsonElement {
+public abstract class JsonNode {
 
   public static final JsonNode NULL = new Null();
 
@@ -46,109 +46,88 @@ public abstract class JsonNode extends JsonElement {
     return (Null) this;
   }
 
-  @Override
-  public JsonElement deepCopy() {
-    return from(element.deepCopy());
-  }
-
-  @Override
-  public boolean isJsonArray() {
+  public boolean isArray() {
     return element.isJsonArray();
   }
 
-  @Override
-  public boolean isJsonObject() {
+  public boolean isObject() {
     return element.isJsonObject();
   }
 
-  @Override
-  public boolean isJsonPrimitive() {
+  public boolean isPrimitive() {
     return element.isJsonPrimitive();
   }
 
-  @Override
-  public boolean isJsonNull() {
+  public boolean isNull() {
     return element.isJsonNull();
   }
+  
+  JsonElement unwrap() {
+    return element;
+  }
 
-  @Override
-  public JsonObject getAsJsonObject() {
+  JsonObject asJsonObject() {
     return element.getAsJsonObject();
   }
 
-  @Override
-  public JsonArray getAsJsonArray() {
+  JsonArray asJsonArray() {
     return element.getAsJsonArray();
   }
 
-  @Override
-  public JsonPrimitive getAsJsonPrimitive() {
+  JsonPrimitive asJsonPrimitive() {
     return element.getAsJsonPrimitive();
   }
 
-  @Override
-  public JsonNull getAsJsonNull() {
+  JsonNull asJsonNull() {
     return element.getAsJsonNull();
   }
 
-  @Override
-  public boolean getAsBoolean() {
+  public boolean asBoolean() {
     return element.getAsBoolean();
   }
 
-  @Override
-  public Number getAsNumber() {
+  public Number asNumber() {
     return element.getAsNumber();
   }
 
-  @Override
-  public String getAsString() {
+  public String asString() {
     return element.getAsString();
   }
 
-  @Override
-  public double getAsDouble() {
+  public double asDouble() {
     return element.getAsDouble();
   }
 
-  @Override
-  public float getAsFloat() {
+  public float asFloat() {
     return element.getAsFloat();
   }
 
-  @Override
-  public long getAsLong() {
+  public long asLong() {
     return element.getAsLong();
   }
 
-  @Override
-  public int getAsInt() {
+  public int asInt() {
     return element.getAsInt();
   }
 
-  @Override
-  public byte getAsByte() {
+  public byte asByte() {
     return element.getAsByte();
   }
 
-  @Override
   @Deprecated
-  public char getAsCharacter() {
+  public char asCharacter() {
     return element.getAsCharacter();
   }
 
-  @Override
-  public BigDecimal getAsBigDecimal() {
+  public BigDecimal asBigDecimal() {
     return element.getAsBigDecimal();
   }
 
-  @Override
-  public BigInteger getAsBigInteger() {
+  public BigInteger asBigInteger() {
     return element.getAsBigInteger();
   }
 
-  @Override
-  public short getAsShort() {
+  public short asShort() {
     return element.getAsShort();
   }
 
@@ -170,9 +149,6 @@ public abstract class JsonNode extends JsonElement {
   public static JsonNode from(JsonElement element) {
     if (element == null) {
       return NULL;
-    }
-    if (element instanceof JsonNode node) {
-      return node;
     }
     if (element instanceof JsonNull) {
       return NULL;
@@ -203,16 +179,16 @@ public abstract class JsonNode extends JsonElement {
     }
 
     public int size() {
-      return getAsJsonArray().size();
+      return asJsonArray().size();
     }
     
     @Override
     public Iterator<JsonNode> iterator() {
-      return StreamSupport.stream(getAsJsonArray().spliterator(), false).map(JsonNode::from).iterator();
+      return StreamSupport.stream(asJsonArray().spliterator(), false).map(JsonNode::from).iterator();
     }
 
     public JsonNode get(int i) {
-      return JsonNode.from(getAsJsonArray().get(i));
+      return JsonNode.from(asJsonArray().get(i));
     }
   }
 
@@ -223,12 +199,12 @@ public abstract class JsonNode extends JsonElement {
     }
 
     public JsonNode get(String name) {
-      return JsonNode.from(getAsJsonObject().get(name));
+      return JsonNode.from(asJsonObject().get(name));
     }
     
     @Override
     public Iterator<Map.Entry<String, JsonNode>> iterator() {
-      return getAsJsonObject().entrySet().stream()
+      return asJsonObject().entrySet().stream()
           .map(entry -> entry(entry.getKey(), JsonNode.from(entry.getValue()))).iterator();
     }
   }
@@ -252,15 +228,15 @@ public abstract class JsonNode extends JsonElement {
     }
 
     public boolean isString() {
-      return getAsJsonPrimitive().isString();
+      return asJsonPrimitive().isString();
     }
 
     public boolean isNumber() {
-      return getAsJsonPrimitive().isNumber();
+      return asJsonPrimitive().isNumber();
     }
 
     public boolean isBoolean() {
-      return getAsJsonPrimitive().isBoolean();
+      return asJsonPrimitive().isBoolean();
     }
   }
 }

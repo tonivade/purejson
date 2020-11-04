@@ -20,7 +20,7 @@ public final class JsonDSL {
   public static JsonNode array(Iterable<JsonNode> elements) {
     var array = new JsonArray();
     for (var node : elements) {
-      array.add(node);
+      array.add(node.unwrap());
     }
     return new JsonNode.Array(array);
   }
@@ -37,7 +37,7 @@ public final class JsonDSL {
   public static JsonNode object(Iterable<Map.Entry<String, JsonNode>> elements) {
     var object = new JsonObject();
     for (var entry : elements) {
-      object.add(entry.getKey(), entry.getValue());
+      object.add(entry.getKey(), entry.getValue().unwrap());
     }
     return new JsonNode.Object(object);
   }

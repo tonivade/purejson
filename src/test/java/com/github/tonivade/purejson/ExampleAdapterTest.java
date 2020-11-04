@@ -4,6 +4,7 @@
  */
 package com.github.tonivade.purejson;
 
+import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.google.gson.reflect.TypeToken;
@@ -49,5 +50,6 @@ public class ExampleAdapterTest {
     JsonAdapter<User> adapter = JsonAdapter.adapter(User.class);
 
     assertEquals(user, adapter.decode(adapter.encode(user)));
+    assertNull(adapter.decode(adapter.encode(null)));
   }
 }

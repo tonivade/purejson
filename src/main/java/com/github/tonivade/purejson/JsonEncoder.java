@@ -121,6 +121,10 @@ public interface JsonEncoder<T> {
   static <V> JsonEncoder<ImmutableMap<String, V>> immutableMapEncoder(JsonEncoder<V> valueEncoder) {
     return mapEncoder(valueEncoder).compose(ImmutableMap::toMap);
   }
+  
+  static <T> JsonEncoder<T> nullSafe(JsonEncoder<T> encoder) {
+    return value -> value == null ? JsonNode.NULL : encoder.encode(value);
+  }
 
   @SuppressWarnings({ "unchecked", "rawtypes" })
   private static <T> JsonEncoder<T> create(Type type) {
@@ -237,10 +241,6 @@ public interface JsonEncoder<T> {
       return (JsonEncoder<T>) JsonEncoderModule.BOOLEAN;
     }
     throw new IllegalArgumentException("a new primitive? " + type.getTypeName());
-  }
-  
-  private static <T> JsonEncoder<T> nullSafe(JsonEncoder<T> encoder) {
-    return value -> value == null ? JsonNode.NULL : encoder.encode(value);
   }
 }
 

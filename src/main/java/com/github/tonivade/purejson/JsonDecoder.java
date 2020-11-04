@@ -160,6 +160,10 @@ public interface JsonDecoder<T> {
     };
   }
   
+  static <T> JsonDecoder<T> nullSafe(JsonDecoder<T> decoder) {
+    return json -> json instanceof JsonNode.Null ? null : decoder.decode(json);
+  }
+  
   @SuppressWarnings({ "unchecked", "rawtypes" })
   private static <T> JsonDecoder<T> create(Type type) {
     if (type instanceof Class clazz) {
@@ -323,10 +327,6 @@ public interface JsonDecoder<T> {
       return ImmutableTreeMap::from;
     }
     return ImmutableMap::from;
-  }
-  
-  private static <T> JsonDecoder<T> nullSafe(JsonDecoder<T> decoder) {
-    return json -> json instanceof JsonNode.Null ? null : decoder.decode(json);
   }
 }
 

@@ -102,12 +102,12 @@ public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
     };
   }
 
-  static <E> JsonAdapter<Iterable<E>> iterableAdapter(JsonAdapter<E> itemAdapter) {
-    return of(JsonEncoder.iterableEncoder(itemAdapter), JsonDecoder.iterableDecoder(itemAdapter));
+  static <E> JsonAdapter<Iterable<E>> iterableAdapter(Type componentType) {
+    return of(JsonEncoder.iterableEncoder(componentType), JsonDecoder.iterableDecoder(componentType));
   }
 
-  static <V> JsonAdapter<Map<String, V>> mapAdapter(JsonAdapter<V> valueAdapter) {
-    return of(JsonEncoder.mapEncoder(valueAdapter), JsonDecoder.mapDecoder(valueAdapter));
+  static <V> JsonAdapter<Map<String, V>> mapAdapter(Type componentType) {
+    return of(JsonEncoder.mapEncoder(componentType), JsonDecoder.mapDecoder(componentType));
   }
   
   static <T> JsonAdapter<T> nullSafe(JsonAdapter<T> adapter) {

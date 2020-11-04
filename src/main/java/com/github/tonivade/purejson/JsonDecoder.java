@@ -66,8 +66,7 @@ public interface JsonDecoder<T> {
       if (json instanceof JsonNode.Array a) {
         var array = Array.newInstance(type, a.size());
         for (int i = 0; i < a.size(); i++) {
-          JsonNode element = a.get(i);
-          Array.set(array, i, context.decode(element, type));
+          Array.set(array, i, context.decode(a.get(i), type));
         }
         return (T[]) array;
       }
@@ -86,8 +85,7 @@ public interface JsonDecoder<T> {
         var values = new ArrayList<>();
         for (var component : type.getRecordComponents()) {
           types.add(component.getType());
-          JsonNode jsonElement = o.get(component.getName());
-          values.add(context.decode(jsonElement, component.getGenericType()));
+          values.add(context.decode(o.get(component.getName()), component.getGenericType()));
         }
         try {
           var constructor = type.getDeclaredConstructor(types.toArray(Class[]::new));
@@ -108,8 +106,7 @@ public interface JsonDecoder<T> {
           T value = type.getDeclaredConstructor().newInstance();
           for (var field : type.getDeclaredFields()) {
             if (!isStatic(field.getModifiers()) && !field.isSynthetic() && field.trySetAccessible()) {
-              JsonNode jsonElement = o.get(field.getName());
-              field.set(value, context.decode(jsonElement, field.getGenericType()));
+              field.set(value, context.decode(o.get(field.getName()), field.getGenericType()));
             }
           }
           return value;
@@ -122,12 +119,12 @@ public interface JsonDecoder<T> {
     };
   }
 
-  static <E> JsonDecoder<Iterable<E>> iterableDecoder(JsonDecoder<E> itemDecoder) {
+  static <E> JsonDecoder<Iterable<E>> iterableDecoder(Type componentType) {
     return (context, json) -> {
       if (json instanceof JsonNode.Array array) {
         var list = new ArrayList<E>();
         for (JsonNode object : array) {
-          list.add(itemDecoder.decode(context, object));
+          list.add(context.decode(object, componentType));
         }
         return unmodifiableList(list);
       }
@@ -135,12 +132,12 @@ public interface JsonDecoder<T> {
     };
   }
 
-  static <V> JsonDecoder<Map<String, V>> mapDecoder(JsonDecoder<V> itemEncoder) {
+  static <V> JsonDecoder<Map<String, V>> mapDecoder(Type componentType) {
     return (context, json) -> {
       if (json instanceof JsonNode.Object object) {
         var map = new LinkedHashMap<String, V>();
         for (Map.Entry<String, JsonNode> entry : object) {
-          map.put(entry.getKey(), itemEncoder.decode(context, entry.getValue()));
+          map.put(entry.getKey(), context.decode(entry.getValue(), componentType));
         }
         return unmodifiableMap(map);
       }
@@ -172,24 +169,20 @@ public interface JsonDecoder<T> {
   @SuppressWarnings("unchecked")
   private static <T> JsonDecoder<T> create(ParameterizedType type) {
     if (type.getRawType() instanceof Class<?> c && Collection.class.isAssignableFrom(c)) {
-      var create = decoder(type.getActualTypeArguments()[0]);
-      return (JsonDecoder<T>) iterableDecoder(create).andThen(toCollection(c));
+      return (JsonDecoder<T>) iterableDecoder(type.getActualTypeArguments()[0]).andThen(toCollection(c));
     }
     if (type.getRawType() instanceof Class<?> c && Sequence.class.isAssignableFrom(c)) {
-      var create = decoder(type.getActualTypeArguments()[0]);
-      return (JsonDecoder<T>) iterableDecoder(create).andThen(toSequence(c));
+      return (JsonDecoder<T>) iterableDecoder(type.getActualTypeArguments()[0]).andThen(toSequence(c));
     }
     if (type.getRawType() instanceof Class<?> c 
         && Map.class.isAssignableFrom(c)
         && type.getActualTypeArguments()[0].equals(String.class)) {
-      var create = decoder(type.getActualTypeArguments()[1]);
-      return (JsonDecoder<T>) mapDecoder(create);
+      return (JsonDecoder<T>) mapDecoder(type.getActualTypeArguments()[1]);
     }
     if (type.getRawType() instanceof Class<?> c 
         && ImmutableMap.class.isAssignableFrom(c)
         && type.getActualTypeArguments()[0].equals(String.class)) {
-      var create = decoder(type.getActualTypeArguments()[1]);
-      return (JsonDecoder<T>) mapDecoder(create).andThen(toImmutableMap(c));
+      return (JsonDecoder<T>) mapDecoder(type.getActualTypeArguments()[1]).andThen(toImmutableMap(c));
     }
     throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
   }

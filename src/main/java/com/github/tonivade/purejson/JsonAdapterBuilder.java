@@ -11,6 +11,7 @@ import static com.github.tonivade.purejson.JsonAdapter.iterableAdapter;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -58,8 +59,8 @@ public final class JsonAdapterBuilder<T> {
     return add(name, accessor, other);
   }
 
-  public <R> JsonAdapterBuilder<T> addIterable(String name, Function1<T, Iterable<R>> accessor, JsonAdapter<R> other) {
-    return add(name, accessor, iterableAdapter(other));
+  public <R> JsonAdapterBuilder<T> addIterable(String name, Function1<T, Iterable<R>> accessor, Type componentType) {
+    return add(name, accessor, iterableAdapter(componentType));
   }
 
   @SuppressWarnings("unchecked")

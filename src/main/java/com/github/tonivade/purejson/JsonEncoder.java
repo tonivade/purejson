@@ -86,28 +86,28 @@ public interface JsonEncoder<T> {
     };
   }
 
-  static <E> JsonEncoder<Iterable<E>> iterableEncoder(JsonEncoder<E> itemEncoder) {
+  static <E> JsonEncoder<Iterable<E>> iterableEncoder(Type componentType) {
     return (context, value) -> {
       var array = new JsonArray();
       for (E item : value) {
-        array.add(itemEncoder.encode(context, item).unwrap());
+        array.add(context.encode(item, componentType).unwrap());
       }
       return new JsonNode.Array(array);
     };
   }
 
-  static <V> JsonEncoder<Map<String, V>> mapEncoder(JsonEncoder<V> valueEncoder) {
+  static <V> JsonEncoder<Map<String, V>> mapEncoder(Type componentType) {
     return (context, value) -> {
       var object = new JsonObject();
       for (var entry : value.entrySet()) {
-        object.add(entry.getKey(), valueEncoder.encode(context, entry.getValue()).unwrap());
+        object.add(entry.getKey(), context.encode(entry.getValue(), componentType).unwrap());
       }
       return new JsonNode.Object(object);
     };
   }
 
-  static <V> JsonEncoder<ImmutableMap<String, V>> immutableMapEncoder(JsonEncoder<V> valueEncoder) {
-    return mapEncoder(valueEncoder).compose(ImmutableMap::toMap);
+  static <V> JsonEncoder<ImmutableMap<String, V>> immutableMapEncoder(Type componentType) {
+    return JsonEncoder.<V>mapEncoder(componentType).compose(ImmutableMap::toMap);
   }
   
   static <T> JsonEncoder<T> nullSafe(JsonEncoder<T> encoder) {
@@ -136,18 +136,15 @@ public interface JsonEncoder<T> {
     if (type.getRawType() instanceof Class<?> c 
         && ImmutableMap.class.isAssignableFrom(c)
         && type.getActualTypeArguments()[0].equals(String.class)) {
-      var create = encoder(type.getActualTypeArguments()[1]);
-      return (JsonEncoder<T>) immutableMapEncoder(create);
+      return (JsonEncoder<T>) immutableMapEncoder(type.getActualTypeArguments()[1]);
     }
     if (type.getRawType() instanceof Class<?> c 
         && Map.class.isAssignableFrom(c)
         && type.getActualTypeArguments()[0].equals(String.class)) {
-      var create = encoder(type.getActualTypeArguments()[1]);
-      return (JsonEncoder<T>) mapEncoder(create);
+      return (JsonEncoder<T>) mapEncoder(type.getActualTypeArguments()[1]);
     }
     if (type.getRawType() instanceof Class<?> c && Iterable.class.isAssignableFrom(c)) {
-      var create = encoder(type.getActualTypeArguments()[0]);
-      return (JsonEncoder<T>) iterableEncoder(create);
+      return (JsonEncoder<T>) iterableEncoder(type.getActualTypeArguments()[0]);
     }
     throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
   }

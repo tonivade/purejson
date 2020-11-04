@@ -21,7 +21,6 @@ import static com.github.tonivade.purefun.type.Option.some;
 import static com.github.tonivade.purefun.type.Try.success;
 import static com.github.tonivade.purejson.JsonAdapter.INTEGER;
 import static com.github.tonivade.purejson.JsonAdapter.STRING;
-import static com.github.tonivade.purejson.JsonAdapter.iterableAdapter;
 import static com.github.tonivade.purejson.JsonDSL.entry;
 import static com.github.tonivade.purejson.JsonDSL.object;
 import static java.util.Arrays.asList;
@@ -938,16 +937,15 @@ class PureJsonTest extends IOTestSpec<String> {
     return () -> parser.apply(listOfUsers);
   }
 
-  private JsonAdapter<Iterable<Pojo>> builderPojoAdapter() {
-    return iterableAdapter(
-        JsonAdapter.builder(Pojo.class)
+  private JsonAdapter<Pojo> builderPojoAdapter() {
+    return JsonAdapter.builder(Pojo.class)
           .addInteger("id", Pojo::getId)
           .addString("name", Pojo::getName)
-          .build());
+          .build();
   }
 
-  private JsonAdapter<Iterable<Pojo>> adhocPojoAdapter() {
-    return iterableAdapter(JsonAdapter.of(
+  private JsonAdapter<Pojo> adhocPojoAdapter() {
+    return JsonAdapter.of(
         (context, value) -> object(
             entry("id", INTEGER.encode(context, value.getId())),
             entry("name", STRING.encode(context, value.getName()))), 
@@ -958,7 +956,7 @@ class PureJsonTest extends IOTestSpec<String> {
                 STRING.decode(context, o.get("name")));
           }
           throw new IllegalArgumentException();
-        }));
+        });
   }
 
   private void printStats(String name, Sequence<Stats> stats) {

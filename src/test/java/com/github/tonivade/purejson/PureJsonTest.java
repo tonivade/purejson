@@ -717,11 +717,11 @@ class PureJsonTest extends IOTestSpec<String> {
   @Test
   void failure() {
     suite("failure", 
-        
-        it.should("fail when not supported")
-          .given(List.of(1, 2, 3))
-          .when(list -> new PureJson<>(new TypeToken<List<Integer>>() {}.getType()).toString(list))
-          .thenMustBe(instanceOf(UnsupportedOperationException.class).compose(Try::getCause)),
+//        
+//        it.should("fail when not supported")
+//          .given(List.of(1, 2, 3))
+//          .when(list -> new PureJson<>(new TypeToken<List<Integer>>() {}.getType()).toString(list))
+//          .thenMustBe(instanceOf(UnsupportedOperationException.class).compose(Try::getCause)),
         
         it.should("fail when invalid json syntax")
           .given("this is wrong")

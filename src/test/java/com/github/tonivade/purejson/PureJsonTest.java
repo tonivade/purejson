@@ -877,9 +877,9 @@ class PureJsonTest extends IOTestSpec<String> {
 
   @Test
   void parsePerformance() {
-    var listOfUsers = new TypeToken<List<Pojo>>() { }.getType();
+    var listOfUsers = new TypeToken<List<Pojo>>() {}.getType();
     var json1 = new PureJson();
-    var json2 = new PureJson().add(listOfUsers, JsonAdapter.adapter(listOfUsers));
+    var json2 = new PureJson().add(Pojo.class, JsonAdapter.adapter(Pojo.class));
     var json3 = new PureJson().add(Pojo.class, builderPojoAdapter());
     var json4 = new PureJson().add(Pojo.class, adhocPojoAdapter());
     var gson = new GsonBuilder().create();
@@ -898,7 +898,7 @@ class PureJsonTest extends IOTestSpec<String> {
   void serializePerformance() {
     var listOfUsers = new TypeToken<List<Pojo>>() {}.getType();
     var json1 = new PureJson();
-    var json2 = new PureJson().add(listOfUsers, JsonAdapter.adapter(listOfUsers));
+    var json2 = new PureJson().add(Pojo.class, JsonAdapter.adapter(Pojo.class));
     var json3 = new PureJson().add(Pojo.class, builderPojoAdapter());
     var json4 = new PureJson().add(Pojo.class, adhocPojoAdapter());
     var gson = new GsonBuilder().create();

@@ -16,7 +16,7 @@ import com.google.gson.JsonParser;
 
 public final class PureJson {
 
-  private final Map<String, JsonAdapter<?>> adapters = new HashMap<>();
+  private final Map<Type, JsonAdapter<?>> adapters = new HashMap<>();
   
   public static Try<String> serialize(JsonNode node) {
     return Try.of(node::toString);
@@ -40,7 +40,7 @@ public final class PureJson {
     if (node instanceof JsonNode.Null) {
       return Try.success(Option.none());
     }
-    return this.<T>getAdapter(type)
+    return this.<T>tryGetAdapter(type)
         .flatMap(adapter -> adapter.tryDecode(node)).map(Option::some);
   }
 
@@ -56,18 +56,21 @@ public final class PureJson {
     if (object == null) {
       return Try.success(JsonNode.NULL);
     }
-    return getAdapter(type).flatMap(adapter -> adapter.tryEncode(object));
+    return tryGetAdapter(type).flatMap(adapter -> adapter.tryEncode(object));
   }
 
   public <T> PureJson add(Type type, JsonAdapter<T> adapter) {
-    adapters.put(type.getTypeName(), adapter);
+    adapters.put(type, adapter);
     return this;
   }
 
+  private <T> Try<JsonAdapter<T>> tryGetAdapter(Type type) {
+    return Try.of(() -> getAdapter(type));
+  }
+
   @SuppressWarnings("unchecked")
-  private <T> Try<JsonAdapter<T>> getAdapter(Type type) {
-    return (Try<JsonAdapter<T>>) Option.of(adapters.get(type.getTypeName()))
-        .fold(() -> Try.of(() -> JsonAdapter.adapter(type)), Try::success);
+  private <T> JsonAdapter<T> getAdapter(Type type) {
+    return (JsonAdapter<T>) adapters.computeIfAbsent(type, JsonAdapter::adapter);
   }
 
   private static Try<JsonElement> tryParse(String json) {

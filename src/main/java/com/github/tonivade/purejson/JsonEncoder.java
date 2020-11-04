@@ -20,6 +20,7 @@ import java.util.Map;
 import com.github.tonivade.purefun.Function1;
 import com.github.tonivade.purefun.Tuple2;
 import com.github.tonivade.purefun.data.ImmutableMap;
+import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Try;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -29,119 +30,27 @@ import com.google.gson.internal.reflect.ReflectionAccessor;
 @SuppressWarnings("preview")
 public interface JsonEncoder<T> {
   
-  JsonEncoder<String> STRING = JsonNode.Primitive::new;
-  JsonEncoder<Character> CHAR = STRING.compose(Object::toString);
-  JsonEncoder<Byte> BYTE = JsonNode.Primitive::new;
-  JsonEncoder<Short> SHORT = JsonNode.Primitive::new;
-  JsonEncoder<Integer> INTEGER = JsonNode.Primitive::new;
-  JsonEncoder<Long> LONG = JsonNode.Primitive::new;
-  JsonEncoder<BigDecimal> BIG_DECIMAL = JsonNode.Primitive::new;
-  JsonEncoder<BigInteger> BIG_INTEGER = JsonNode.Primitive::new;
-  JsonEncoder<Float> FLOAT = JsonNode.Primitive::new;
-  JsonEncoder<Double> DOUBLE = JsonNode.Primitive::new;
-  JsonEncoder<Boolean> BOOLEAN = JsonNode.Primitive::new;
-  JsonEncoder<Enum<?>> ENUM = STRING.compose(Enum::name);
-  
   JsonNode encode(T value);
 
   default Try<JsonNode> tryEncode(T value) {
     return Try.of(() -> encode(value));
   }
   
-  default <R> JsonEncoder<R> compose(Function1<R, T> accesor) {
+  default <R> JsonEncoder<R> compose(Function1<? super R, ? extends T> accesor) {
     return value -> encode(accesor.apply(value));
   }
   
-  @SuppressWarnings({ "unchecked", "rawtypes" })
-  static <T> JsonEncoder<T> create(Type type) {
-    if (type instanceof Class clazz) {
-      return nullSafe(create(clazz));
-    }
-    if (type instanceof ParameterizedType paramType) {
-      return nullSafe(create(paramType));
-    }
-    if (type instanceof GenericArrayType arrayType) {
-      return nullSafe(create(arrayType));
-    }
-    if (type instanceof WildcardType wildcardType) {
-      return nullSafe(create(wildcardType));
-    }
-    throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
+  static <T> JsonEncoder<T> encoder(Type type) {
+    return nullSafe(JsonEncoder.<T>load(type).getOrElse(() -> create(type)));
   }
-
+  
   @SuppressWarnings("unchecked")
-  static <T> JsonEncoder<T> create(ParameterizedType type) {
-    if (type.getRawType() instanceof Class<?> c 
-        && ImmutableMap.class.isAssignableFrom(c)
-        && type.getActualTypeArguments()[0].equals(String.class)) {
-      var create = create(type.getActualTypeArguments()[1]);
-      return (JsonEncoder<T>) immutableMapEncoder(create);
-    }
-    if (type.getRawType() instanceof Class<?> c 
-        && Map.class.isAssignableFrom(c)
-        && type.getActualTypeArguments()[0].equals(String.class)) {
-      var create = create(type.getActualTypeArguments()[1]);
-      return (JsonEncoder<T>) mapEncoder(create);
-    }
-    if (type.getRawType() instanceof Class<?> c && Iterable.class.isAssignableFrom(c)) {
-      var create = create(type.getActualTypeArguments()[0]);
-      return (JsonEncoder<T>) iterableEncoder(create);
-    }
-    throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
-  }
-
-  static <T> JsonEncoder<T> create(WildcardType type) {
-    throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
-  }
-
-  @SuppressWarnings("unchecked")
-  static <T> JsonEncoder<T> create(GenericArrayType type) {
-    Type genericComponentType = type.getGenericComponentType();
-    if (genericComponentType instanceof Class<?> c) {
-      return (JsonEncoder<T>) arrayEncoder(c);
-    }
-    throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
-  }
-
-  @SuppressWarnings("unchecked")
-  static <T> JsonEncoder<T> create(Class<T> type) {
-    if (type.isPrimitive()) {
-      return primitiveEncoder(type);
-    } else if (type.equals(String.class)) {
-      return (JsonEncoder<T>) STRING;
-    } else if (type.equals(Character.class)) {
-      return (JsonEncoder<T>) CHAR;
-    } else if (type.equals(Byte.class)) {
-      return (JsonEncoder<T>) BYTE;
-    } else if (type.equals(Short.class)) {
-      return (JsonEncoder<T>) SHORT;
-    } else if (type.equals(Integer.class)) {
-      return (JsonEncoder<T>) INTEGER;
-    } else if (type.equals(Long.class)) {
-      return (JsonEncoder<T>) LONG;
-    } else if (type.equals(BigDecimal.class)) {
-      return (JsonEncoder<T>) BIG_DECIMAL;
-    } else if (type.equals(BigInteger.class)) {
-      return (JsonEncoder<T>) BIG_INTEGER;
-    } else if (type.equals(Float.class)) {
-      return (JsonEncoder<T>) FLOAT;
-    } else if (type.equals(Double.class)) {
-      return (JsonEncoder<T>) DOUBLE;
-    } else if (type.equals(Boolean.class)) {
-      return (JsonEncoder<T>) BOOLEAN;
-    } else if (type.isEnum()) {
-      return (JsonEncoder<T>) ENUM;
-    } else if (type.isArray()) {
-      return arrayEncoder(type.getComponentType());
-    } else if (type.isRecord()) {
-      return recordEncoder(type);
-    } else {
-      return pojoEncoder(type);
-    }
+  static <T> Option<JsonEncoder<T>> load(Type type) {
+    return JsonAdapter.load(type).map(e -> (JsonEncoder<T>) e);
   }
 
   static <T> JsonEncoder<T> arrayEncoder(Type type) {
-    var arrayEncoder = create(type);
+    var arrayEncoder = encoder(type);
     return value -> {
       var array = new JsonArray();
       for (var item : (Object[]) value) {
@@ -156,7 +65,7 @@ public interface JsonEncoder<T> {
         .filter(f -> !isStatic(f.getModifiers()))
         .filter(f -> !f.isSynthetic())
         .peek(f -> ReflectionAccessor.getInstance().makeAccessible(f))
-        .map(f -> Tuple2.of(f, create(f.getGenericType())))
+        .map(f -> Tuple2.of(f, encoder(f.getGenericType())))
         .collect(toList());
     return value -> {
       var object = new JsonObject();
@@ -173,7 +82,7 @@ public interface JsonEncoder<T> {
 
   static <T> JsonEncoder<T> recordEncoder(Class<T> type) {
     var fields = Arrays.stream(type.getRecordComponents())
-        .map(f -> Tuple2.of(f, create(f.getGenericType())))
+        .map(f -> Tuple2.of(f, encoder(f.getGenericType())))
         .collect(toList());
     return value -> {
       var object = new JsonObject();
@@ -212,37 +121,141 @@ public interface JsonEncoder<T> {
   static <V> JsonEncoder<ImmutableMap<String, V>> immutableMapEncoder(JsonEncoder<V> valueEncoder) {
     return mapEncoder(valueEncoder).compose(ImmutableMap::toMap);
   }
+  
+  static <T> JsonEncoder<T> nullSafe(JsonEncoder<T> encoder) {
+    return value -> value == null ? JsonNode.NULL : encoder.encode(value);
+  }
+
+  @SuppressWarnings({ "unchecked", "rawtypes" })
+  private static <T> JsonEncoder<T> create(Type type) {
+    if (type instanceof Class clazz) {
+      return create(clazz);
+    }
+    if (type instanceof ParameterizedType paramType) {
+      return create(paramType);
+    }
+    if (type instanceof GenericArrayType arrayType) {
+      return create(arrayType);
+    }
+    if (type instanceof WildcardType wildcardType) {
+      return create(wildcardType);
+    }
+    throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
+  }
+
+  @SuppressWarnings("unchecked")
+  private static <T> JsonEncoder<T> create(ParameterizedType type) {
+    if (type.getRawType() instanceof Class<?> c 
+        && ImmutableMap.class.isAssignableFrom(c)
+        && type.getActualTypeArguments()[0].equals(String.class)) {
+      var create = encoder(type.getActualTypeArguments()[1]);
+      return (JsonEncoder<T>) immutableMapEncoder(create);
+    }
+    if (type.getRawType() instanceof Class<?> c 
+        && Map.class.isAssignableFrom(c)
+        && type.getActualTypeArguments()[0].equals(String.class)) {
+      var create = encoder(type.getActualTypeArguments()[1]);
+      return (JsonEncoder<T>) mapEncoder(create);
+    }
+    if (type.getRawType() instanceof Class<?> c && Iterable.class.isAssignableFrom(c)) {
+      var create = encoder(type.getActualTypeArguments()[0]);
+      return (JsonEncoder<T>) iterableEncoder(create);
+    }
+    throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
+  }
+
+  private static <T> JsonEncoder<T> create(WildcardType type) {
+    throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
+  }
+
+  @SuppressWarnings("unchecked")
+  private static <T> JsonEncoder<T> create(GenericArrayType type) {
+    Type genericComponentType = type.getGenericComponentType();
+    if (genericComponentType instanceof Class<?> c) {
+      return (JsonEncoder<T>) arrayEncoder(c);
+    }
+    throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
+  }
+
+  @SuppressWarnings("unchecked")
+  private static <T> JsonEncoder<T> create(Class<T> type) {
+    if (type.isPrimitive()) {
+      return primitiveEncoder(type);
+    } else if (type.equals(String.class)) {
+      return (JsonEncoder<T>) JsonEncoderModule.STRING;
+    } else if (type.equals(Character.class)) {
+      return (JsonEncoder<T>) JsonEncoderModule.CHAR;
+    } else if (type.equals(Byte.class)) {
+      return (JsonEncoder<T>) JsonEncoderModule.BYTE;
+    } else if (type.equals(Short.class)) {
+      return (JsonEncoder<T>) JsonEncoderModule.SHORT;
+    } else if (type.equals(Integer.class)) {
+      return (JsonEncoder<T>) JsonEncoderModule.INTEGER;
+    } else if (type.equals(Long.class)) {
+      return (JsonEncoder<T>) JsonEncoderModule.LONG;
+    } else if (type.equals(BigDecimal.class)) {
+      return (JsonEncoder<T>) JsonEncoderModule.BIG_DECIMAL;
+    } else if (type.equals(BigInteger.class)) {
+      return (JsonEncoder<T>) JsonEncoderModule.BIG_INTEGER;
+    } else if (type.equals(Float.class)) {
+      return (JsonEncoder<T>) JsonEncoderModule.FLOAT;
+    } else if (type.equals(Double.class)) {
+      return (JsonEncoder<T>) JsonEncoderModule.DOUBLE;
+    } else if (type.equals(Boolean.class)) {
+      return (JsonEncoder<T>) JsonEncoderModule.BOOLEAN;
+    } else if (type.isEnum()) {
+      return (JsonEncoder<T>) JsonEncoderModule.ENUM;
+    } else if (type.isArray()) {
+      return arrayEncoder(type.getComponentType());
+    } else if (type.isRecord()) {
+      return recordEncoder(type);
+    } else {
+      return pojoEncoder(type);
+    }
+  }
 
   @SuppressWarnings("unchecked")
   private static <T> JsonEncoder<T> primitiveEncoder(Class<T> type) {
     if (type.equals(char.class)) {
-      return (JsonEncoder<T>) CHAR;
+      return (JsonEncoder<T>) JsonEncoderModule.CHAR;
     }
     if (type.equals(byte.class)) {
-      return (JsonEncoder<T>) BYTE;
+      return (JsonEncoder<T>) JsonEncoderModule.BYTE;
     }
     if (type.equals(short.class)) {
-      return (JsonEncoder<T>) SHORT;
+      return (JsonEncoder<T>) JsonEncoderModule.SHORT;
     }
     if (type.equals(int.class)) {
-      return (JsonEncoder<T>) INTEGER;
+      return (JsonEncoder<T>) JsonEncoderModule.INTEGER;
     }
     if (type.equals(long.class)) {
-      return (JsonEncoder<T>) LONG;
+      return (JsonEncoder<T>) JsonEncoderModule.LONG;
     }
     if (type.equals(float.class)) {
-      return (JsonEncoder<T>) FLOAT;
+      return (JsonEncoder<T>) JsonEncoderModule.FLOAT;
     }
     if (type.equals(double.class)) {
-      return (JsonEncoder<T>) DOUBLE;
+      return (JsonEncoder<T>) JsonEncoderModule.DOUBLE;
     }
     if (type.equals(boolean.class)) {
-      return (JsonEncoder<T>) BOOLEAN;
+      return (JsonEncoder<T>) JsonEncoderModule.BOOLEAN;
     }
     throw new IllegalArgumentException("a new primitive? " + type.getTypeName());
   }
+}
+
+interface JsonEncoderModule {
   
-  private static <T> JsonEncoder<T> nullSafe(JsonEncoder<T> encoder) {
-    return value -> value == null ? JsonNode.NULL : encoder.encode(value);
-  }
+  JsonEncoder<String> STRING = JsonNode.Primitive::new;
+  JsonEncoder<Character> CHAR = STRING.compose(Object::toString);
+  JsonEncoder<Byte> BYTE = JsonNode.Primitive::new;
+  JsonEncoder<Short> SHORT = JsonNode.Primitive::new;
+  JsonEncoder<Integer> INTEGER = JsonNode.Primitive::new;
+  JsonEncoder<Long> LONG = JsonNode.Primitive::new;
+  JsonEncoder<BigDecimal> BIG_DECIMAL = JsonNode.Primitive::new;
+  JsonEncoder<BigInteger> BIG_INTEGER = JsonNode.Primitive::new;
+  JsonEncoder<Float> FLOAT = JsonNode.Primitive::new;
+  JsonEncoder<Double> DOUBLE = JsonNode.Primitive::new;
+  JsonEncoder<Boolean> BOOLEAN = JsonNode.Primitive::new;
+  JsonEncoder<Enum<?>> ENUM = STRING.compose(Enum::name);
 }

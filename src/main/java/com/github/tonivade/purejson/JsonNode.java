@@ -29,6 +29,22 @@ public abstract class JsonNode extends JsonElement {
   private JsonNode(JsonElement element) {
     this.element = checkNonNull(element);
   }
+  
+  public Array asArray() {
+    return (Array) this;
+  }
+  
+  public Object asObject() {
+    return (Object) this;
+  }
+  
+  public Primitive asPrimitive() {
+    return (Primitive) this;
+  }
+  
+  public Null asNull() {
+    return (Null) this;
+  }
 
   @Override
   public JsonElement deepCopy() {
@@ -155,6 +171,9 @@ public abstract class JsonNode extends JsonElement {
     if (element == null) {
       return NULL;
     }
+    if (element instanceof JsonNode node) {
+      return node;
+    }
     if (element instanceof JsonNull) {
       return NULL;
     }
@@ -167,7 +186,7 @@ public abstract class JsonNode extends JsonElement {
     if (element instanceof JsonPrimitive p) {
       return new Primitive(p);
     }
-    throw new IllegalArgumentException();
+    throw new IllegalArgumentException(element.getClass().getName());
   }
   
   public static final class Null extends JsonNode {
@@ -183,7 +202,7 @@ public abstract class JsonNode extends JsonElement {
       super(array);
     }
 
-    int size() {
+    public int size() {
       return getAsJsonArray().size();
     }
     
@@ -192,7 +211,7 @@ public abstract class JsonNode extends JsonElement {
       return StreamSupport.stream(getAsJsonArray().spliterator(), false).map(JsonNode::from).iterator();
     }
 
-    JsonNode get(int i) {
+    public JsonNode get(int i) {
       return JsonNode.from(getAsJsonArray().get(i));
     }
   }
@@ -203,7 +222,7 @@ public abstract class JsonNode extends JsonElement {
       super(object);
     }
 
-    JsonNode get(String name) {
+    public JsonNode get(String name) {
       return JsonNode.from(getAsJsonObject().get(name));
     }
     
@@ -232,15 +251,15 @@ public abstract class JsonNode extends JsonElement {
       super(value);
     }
 
-    boolean isString() {
+    public boolean isString() {
       return getAsJsonPrimitive().isString();
     }
 
-    boolean isNumber() {
+    public boolean isNumber() {
       return getAsJsonPrimitive().isNumber();
     }
 
-    boolean isBoolean() {
+    public boolean isBoolean() {
       return getAsJsonPrimitive().isBoolean();
     }
   }

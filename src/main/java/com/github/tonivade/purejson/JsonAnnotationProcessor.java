@@ -87,6 +87,7 @@ public class JsonAnnotationProcessor extends AbstractProcessor {
           .addMethod(MethodSpec.methodBuilder("encode")
               .addAnnotation(Override.class)
               .addModifiers(Modifier.PUBLIC)
+              .addParameter(JsonContext.class, "context")
               .addParameter(TypeName.get(type), "value")
               .returns(JsonNode.class)
               .addCode(encodeMethod())
@@ -94,6 +95,7 @@ public class JsonAnnotationProcessor extends AbstractProcessor {
           .addMethod(MethodSpec.methodBuilder("decode")
               .addAnnotation(Override.class)
               .addModifiers(Modifier.PUBLIC)
+              .addParameter(JsonContext.class, "context")
               .addParameter(JsonNode.class, "node")
               .returns(TypeName.get(type))
               .addCode(decodeMethod())
@@ -118,8 +120,8 @@ public class JsonAnnotationProcessor extends AbstractProcessor {
     private CodeBlock encodeMethod() {
       var builder = CodeBlock.builder();
       for (var field : fields) {
-        builder.addStatement("var $N = $T.entry($S, $L.encode($N.$N()))",
-            field.name, JsonDSL.class, field.name, field.getAdapterName(), "value", field.accessor.getSimpleName());
+        builder.addStatement("var $N = $T.entry($S, $L.encode($N, $N.$N()))",
+            field.name, JsonDSL.class, field.name, field.getAdapterName(), "context", "value", field.accessor.getSimpleName());
       }
       String params = fields.map(Field::name).join(", ");
       return builder.addStatement("return $T.object($L)", JsonDSL.class, params).build();
@@ -129,8 +131,8 @@ public class JsonAnnotationProcessor extends AbstractProcessor {
       var builder = CodeBlock.builder();
       builder.addStatement("var $N = $N.asObject()", "object", "node");
       for (var field : fields) {
-        builder.addStatement("var $N = $L.decode($N.get($S))",
-            field.name, field.getAdapterName(), "object", field.name);
+        builder.addStatement("var $N = $L.decode($N, $N.get($S))",
+            field.name, field.getAdapterName(), "context", "object", field.name);
       }
       String params = fields.map(Field::name).join(", ");
       return builder.addStatement("return new $N($L)", name, params).build();

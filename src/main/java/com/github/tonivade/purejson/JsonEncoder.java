@@ -5,7 +5,6 @@
 package com.github.tonivade.purejson;
 
 import static java.lang.reflect.Modifier.isStatic;
-import static java.util.stream.Collectors.toList;
 
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.InvocationTargetException;
@@ -14,30 +13,27 @@ import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.Map;
 
 import com.github.tonivade.purefun.Function1;
-import com.github.tonivade.purefun.Tuple2;
 import com.github.tonivade.purefun.data.ImmutableMap;
 import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Try;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.google.gson.internal.reflect.ReflectionAccessor;
 
 @FunctionalInterface
 @SuppressWarnings("preview")
 public interface JsonEncoder<T> {
   
-  JsonNode encode(T value);
+  JsonNode encode(JsonContext context, T value);
 
-  default Try<JsonNode> tryEncode(T value) {
-    return Try.of(() -> encode(value));
+  default Try<JsonNode> tryEncode(JsonContext context, T value) {
+    return Try.of(() -> encode(context, value));
   }
   
   default <R> JsonEncoder<R> compose(Function1<? super R, ? extends T> accesor) {
-    return value -> encode(accesor.apply(value));
+    return (context, value) -> encode(context, accesor.apply(value));
   }
   
   static <T> JsonEncoder<T> encoder(Type type) {
@@ -50,30 +46,25 @@ public interface JsonEncoder<T> {
   }
 
   static <T> JsonEncoder<T> arrayEncoder(Type type) {
-    var arrayEncoder = encoder(type);
-    return value -> {
+    return (context, value) -> {
       var array = new JsonArray();
       for (var item : (Object[]) value) {
-        array.add(arrayEncoder.encode(item).unwrap());
+        array.add(context.encode(item, type).unwrap());
       }
       return new JsonNode.Array(array);
     };
   }
 
   static <T> JsonEncoder<T> pojoEncoder(Class<T> type) {
-    var fields = Arrays.stream(type.getDeclaredFields())
-        .filter(f -> !isStatic(f.getModifiers()))
-        .filter(f -> !f.isSynthetic())
-        .peek(f -> ReflectionAccessor.getInstance().makeAccessible(f))
-        .map(f -> Tuple2.of(f, encoder(f.getGenericType())))
-        .collect(toList());
-    return value -> {
+    return (context, value) -> {
       var object = new JsonObject();
-      for (var pair : fields) {
-        try {
-          object.add(pair.get1().getName(), pair.get2().encode(pair.get1().get(value)).unwrap());
-        } catch (IllegalArgumentException | IllegalAccessException e) {
-          throw new IllegalStateException(e);
+      for (var field : type.getDeclaredFields()) {
+        if (!isStatic(field.getModifiers()) && !field.isSynthetic() && field.trySetAccessible()) {
+          try {
+            object.add(field.getName(), context.encode(field.get(value), field.getGenericType()).unwrap());
+          } catch (IllegalArgumentException | IllegalAccessException e) {
+            throw new IllegalStateException(e);
+          }
         }
       }
       return new JsonNode.Object(object);
@@ -81,15 +72,12 @@ public interface JsonEncoder<T> {
   }
 
   static <T> JsonEncoder<T> recordEncoder(Class<T> type) {
-    var fields = Arrays.stream(type.getRecordComponents())
-        .map(f -> Tuple2.of(f, encoder(f.getGenericType())))
-        .collect(toList());
-    return value -> {
+    return (context, value) -> {
       var object = new JsonObject();
-      for (var pair : fields) {
+      for (var component : type.getRecordComponents()) {
         try {
-          var field = pair.get1().getAccessor().invoke(value);
-          object.add(pair.get1().getName(), pair.get2().encode(field).unwrap());
+          var field = component.getAccessor().invoke(value);
+          object.add(component.getName(), context.encode(field, component.getGenericType()).unwrap());
         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
           throw new IllegalStateException(e);
         }
@@ -99,20 +87,20 @@ public interface JsonEncoder<T> {
   }
 
   static <E> JsonEncoder<Iterable<E>> iterableEncoder(JsonEncoder<E> itemEncoder) {
-    return value -> {
+    return (context, value) -> {
       var array = new JsonArray();
       for (E item : value) {
-        array.add(itemEncoder.encode(item).unwrap());
+        array.add(itemEncoder.encode(context, item).unwrap());
       }
       return new JsonNode.Array(array);
     };
   }
 
   static <V> JsonEncoder<Map<String, V>> mapEncoder(JsonEncoder<V> valueEncoder) {
-    return value -> {
+    return (context, value) -> {
       var object = new JsonObject();
       for (var entry : value.entrySet()) {
-        object.add(entry.getKey(), valueEncoder.encode(entry.getValue()).unwrap());
+        object.add(entry.getKey(), valueEncoder.encode(context, entry.getValue()).unwrap());
       }
       return new JsonNode.Object(object);
     };
@@ -123,7 +111,7 @@ public interface JsonEncoder<T> {
   }
   
   static <T> JsonEncoder<T> nullSafe(JsonEncoder<T> encoder) {
-    return value -> value == null ? JsonNode.NULL : encoder.encode(value);
+    return (context, value) -> value == null ? JsonNode.NULL : encoder.encode(context, value);
   }
 
   @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -246,16 +234,20 @@ public interface JsonEncoder<T> {
 
 interface JsonEncoderModule {
   
-  JsonEncoder<String> STRING = JsonNode.Primitive::new;
+  JsonEncoder<String> STRING = primitive(JsonNode.Primitive::new);
   JsonEncoder<Character> CHAR = STRING.compose(Object::toString);
-  JsonEncoder<Byte> BYTE = JsonNode.Primitive::new;
-  JsonEncoder<Short> SHORT = JsonNode.Primitive::new;
-  JsonEncoder<Integer> INTEGER = JsonNode.Primitive::new;
-  JsonEncoder<Long> LONG = JsonNode.Primitive::new;
-  JsonEncoder<BigDecimal> BIG_DECIMAL = JsonNode.Primitive::new;
-  JsonEncoder<BigInteger> BIG_INTEGER = JsonNode.Primitive::new;
-  JsonEncoder<Float> FLOAT = JsonNode.Primitive::new;
-  JsonEncoder<Double> DOUBLE = JsonNode.Primitive::new;
-  JsonEncoder<Boolean> BOOLEAN = JsonNode.Primitive::new;
+  JsonEncoder<Byte> BYTE = primitive(JsonNode.Primitive::new);
+  JsonEncoder<Short> SHORT = primitive(JsonNode.Primitive::new);
+  JsonEncoder<Integer> INTEGER = primitive(JsonNode.Primitive::new);
+  JsonEncoder<Long> LONG = primitive(JsonNode.Primitive::new);
+  JsonEncoder<BigDecimal> BIG_DECIMAL = primitive(JsonNode.Primitive::new);
+  JsonEncoder<BigInteger> BIG_INTEGER = primitive(JsonNode.Primitive::new);
+  JsonEncoder<Float> FLOAT = primitive(JsonNode.Primitive::new);
+  JsonEncoder<Double> DOUBLE = primitive(JsonNode.Primitive::new);
+  JsonEncoder<Boolean> BOOLEAN = primitive(JsonNode.Primitive::new);
   JsonEncoder<Enum<?>> ENUM = STRING.compose(Enum::name);
+  
+  static <T> JsonEncoder<T> primitive(Function1<T, JsonNode> method) {
+    return (context, value) -> method.apply(value);
+  }
 }

@@ -31,6 +31,7 @@ class JsonAnnotationProcessorTest {
             package test;
 
             import com.github.tonivade.purejson.JsonAdapter;
+            import com.github.tonivade.purejson.JsonContext;
             import com.github.tonivade.purejson.JsonDSL;
             import com.github.tonivade.purejson.JsonNode;
             import com.google.gson.reflect.TypeToken;
@@ -48,19 +49,19 @@ class JsonAnnotationProcessorTest {
               private static final JsonAdapter<List<String>> ROLES_ADAPTER = JsonAdapter.adapter(new TypeToken<List<String>>(){}.getType());
 
               @Override
-              public JsonNode encode(User value) {
-                var id = JsonDSL.entry("id", ID_ADAPTER.encode(value.id()));
-                var name = JsonDSL.entry("name", NAME_ADAPTER.encode(value.name()));
-                var roles = JsonDSL.entry("roles", ROLES_ADAPTER.encode(value.roles()));
+              public JsonNode encode(JsonContext context, User value) {
+                var id = JsonDSL.entry("id", ID_ADAPTER.encode(context, value.id()));
+                var name = JsonDSL.entry("name", NAME_ADAPTER.encode(context, value.name()));
+                var roles = JsonDSL.entry("roles", ROLES_ADAPTER.encode(context, value.roles()));
                 return JsonDSL.object(id, name, roles);
               }
 
               @Override
-              public User decode(JsonNode node) {
+              public User decode(JsonContext context, JsonNode node) {
                 var object = node.asObject();
-                var id = ID_ADAPTER.decode(object.get("id"));
-                var name = NAME_ADAPTER.decode(object.get("name"));
-                var roles = ROLES_ADAPTER.decode(object.get("roles"));
+                var id = ID_ADAPTER.decode(context, object.get("id"));
+                var name = NAME_ADAPTER.decode(context, object.get("name"));
+                var roles = ROLES_ADAPTER.decode(context, object.get("roles"));
                 return new User(id, name, roles);
               }
             }""");
@@ -105,6 +106,7 @@ class JsonAnnotationProcessorTest {
             package test;
 
             import com.github.tonivade.purejson.JsonAdapter;
+            import com.github.tonivade.purejson.JsonContext;
             import com.github.tonivade.purejson.JsonDSL;
             import com.github.tonivade.purejson.JsonNode;
             import com.google.gson.reflect.TypeToken;
@@ -122,19 +124,19 @@ class JsonAnnotationProcessorTest {
               private static final JsonAdapter<List<String>> ROLES_ADAPTER = JsonAdapter.adapter(new TypeToken<List<String>>(){}.getType());
 
               @Override
-              public JsonNode encode(User value) {
-                var id = JsonDSL.entry("id", ID_ADAPTER.encode(value.getId()));
-                var name = JsonDSL.entry("name", NAME_ADAPTER.encode(value.getName()));
-                var roles = JsonDSL.entry("roles", ROLES_ADAPTER.encode(value.getRoles()));
+              public JsonNode encode(JsonContext context, User value) {
+                var id = JsonDSL.entry("id", ID_ADAPTER.encode(context, value.getId()));
+                var name = JsonDSL.entry("name", NAME_ADAPTER.encode(context, value.getName()));
+                var roles = JsonDSL.entry("roles", ROLES_ADAPTER.encode(context, value.getRoles()));
                 return JsonDSL.object(id, name, roles);
               }
 
               @Override
-              public User decode(JsonNode node) {
+              public User decode(JsonContext context, JsonNode node) {
                 var object = node.asObject();
-                var id = ID_ADAPTER.decode(object.get("id"));
-                var name = NAME_ADAPTER.decode(object.get("name"));
-                var roles = ROLES_ADAPTER.decode(object.get("roles"));
+                var id = ID_ADAPTER.decode(context, object.get("id"));
+                var name = NAME_ADAPTER.decode(context, object.get("name"));
+                var roles = ROLES_ADAPTER.decode(context, object.get("roles"));
                 return new User(id, name, roles);
               }
             }""");

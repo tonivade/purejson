@@ -948,14 +948,14 @@ class PureJsonTest extends IOTestSpec<String> {
 
   private JsonAdapter<Iterable<Pojo>> adhocPojoAdapter() {
     return iterableAdapter(JsonAdapter.of(
-        value -> object(
-            entry("id", INTEGER.encode(value.getId())),
-            entry("name", STRING.encode(value.getName()))), 
-        json -> {
+        (context, value) -> object(
+            entry("id", INTEGER.encode(context, value.getId())),
+            entry("name", STRING.encode(context, value.getName()))), 
+        (context, json) -> {
           if (json instanceof JsonNode.Object o) {
             return new Pojo(
-                INTEGER.decode(o.get("id")),
-                STRING.decode(o.get("name")));
+                INTEGER.decode(context, o.get("id")),
+                STRING.decode(context, o.get("name")));
           }
           throw new IllegalArgumentException();
         }));

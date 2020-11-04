@@ -69,21 +69,21 @@ public final class JsonAdapterBuilder<T> {
         .getOrElseThrow();
     return JsonAdapter.of(
 
-        value -> {
+        (context, value) -> {
           var object = new JsonObject();
           for (var entry : encoders.entrySet()) {
-            object.add(entry.getKey(), entry.getValue().encode(value).unwrap());
+            object.add(entry.getKey(), entry.getValue().encode(context, value).unwrap());
           }
           return new JsonNode.Object(object);
         },
 
-        json -> {
+        (context, json) -> {
           if (json instanceof JsonNode.Object o) {
             var params = new ArrayList<>();
             for (var entry : decoders.entrySet()) {
               JsonNode element = o.get(entry.getKey());
               
-              params.add(entry.getValue().decode(element));
+              params.add(entry.getValue().decode(context, element));
             }
 
             try {

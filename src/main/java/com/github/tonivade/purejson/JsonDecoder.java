@@ -7,7 +7,6 @@ package com.github.tonivade.purejson;
 import static java.lang.reflect.Modifier.isStatic;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
-import static java.util.stream.Collectors.toList;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.GenericArrayType;
@@ -18,7 +17,6 @@ import java.lang.reflect.WildcardType;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.LinkedHashMap;
@@ -29,7 +27,6 @@ import java.util.Queue;
 import java.util.Set;
 
 import com.github.tonivade.purefun.Function1;
-import com.github.tonivade.purefun.Tuple2;
 import com.github.tonivade.purefun.data.ImmutableArray;
 import com.github.tonivade.purefun.data.ImmutableList;
 import com.github.tonivade.purefun.data.ImmutableMap;
@@ -39,20 +36,19 @@ import com.github.tonivade.purefun.data.ImmutableTreeMap;
 import com.github.tonivade.purefun.data.Sequence;
 import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Try;
-import com.google.gson.internal.reflect.ReflectionAccessor;
 
 @FunctionalInterface
 @SuppressWarnings("preview")
 public interface JsonDecoder<T> {
 
-  T decode(JsonNode json);
+  T decode(JsonContext context, JsonNode json);
 
-  default Try<T> tryDecode(JsonNode json) {
-    return Try.of(() -> decode(json));
+  default Try<T> tryDecode(JsonContext context, JsonNode json) {
+    return Try.of(() -> decode(context, json));
   }
   
   default <R> JsonDecoder<R> andThen(Function1<? super T, ? extends R> next) {
-    return json -> next.apply(decode(json));
+    return (context, json) -> next.apply(decode(context, json));
   }
   
   static <T> JsonDecoder<T> decoder(Type type) {
@@ -66,13 +62,12 @@ public interface JsonDecoder<T> {
 
   @SuppressWarnings("unchecked")
   static <T> JsonDecoder<T[]> arrayDecoder(Class<T> type) {
-    var itemDecoder = decoder((Type) type);
-    return json -> {
+    return (context, json) -> {
       if (json instanceof JsonNode.Array a) {
         var array = Array.newInstance(type, a.size());
         for (int i = 0; i < a.size(); i++) {
           JsonNode element = a.get(i);
-          Array.set(array, i, itemDecoder.decode(element));
+          Array.set(array, i, context.decode(element, type));
         }
         return (T[]) array;
       }
@@ -85,17 +80,14 @@ public interface JsonDecoder<T> {
   }
 
   static <T> JsonDecoder<T> recordDecoder(Class<T> type) {
-    var fields = Arrays.stream(type.getRecordComponents())
-        .map(f -> Tuple2.of(f, decoder(f.getGenericType())))
-        .collect(toList());
-    return json -> {
+    return (context, json) -> {
       if (json instanceof JsonNode.Object o) {
         var types = new ArrayList<Class<?>>();
         var values = new ArrayList<>();
-        for (var pair : fields) {
-          types.add(pair.get1().getType());
-          JsonNode jsonElement = o.get(pair.get1().getName());
-          values.add(pair.get2().decode(jsonElement));
+        for (var component : type.getRecordComponents()) {
+          types.add(component.getType());
+          JsonNode jsonElement = o.get(component.getName());
+          values.add(context.decode(jsonElement, component.getGenericType()));
         }
         try {
           var constructor = type.getDeclaredConstructor(types.toArray(Class[]::new));
@@ -110,19 +102,15 @@ public interface JsonDecoder<T> {
   }
 
   static <T> JsonDecoder<T> pojoDecoder(Class<T> type) {
-    var fields = Arrays.stream(type.getDeclaredFields())
-        .filter(f -> !isStatic(f.getModifiers()))
-        .filter(f -> !f.isSynthetic())
-        .peek(f -> ReflectionAccessor.getInstance().makeAccessible(f))
-        .map(f -> Tuple2.of(f, decoder(f.getGenericType())))
-        .collect(toList());
-    return json -> {
+    return (context, json) -> {
       if (json instanceof JsonNode.Object o) {
         try {
           T value = type.getDeclaredConstructor().newInstance();
-          for (var pair : fields) {
-            JsonNode jsonElement = o.get(pair.get1().getName());
-            pair.get1().set(value, pair.get2().decode(jsonElement));
+          for (var field : type.getDeclaredFields()) {
+            if (!isStatic(field.getModifiers()) && !field.isSynthetic() && field.trySetAccessible()) {
+              JsonNode jsonElement = o.get(field.getName());
+              field.set(value, context.decode(jsonElement, field.getGenericType()));
+            }
           }
           return value;
         } catch (IllegalArgumentException | IllegalAccessException | InstantiationException 
@@ -135,11 +123,11 @@ public interface JsonDecoder<T> {
   }
 
   static <E> JsonDecoder<Iterable<E>> iterableDecoder(JsonDecoder<E> itemDecoder) {
-    return json -> {
+    return (context, json) -> {
       if (json instanceof JsonNode.Array array) {
         var list = new ArrayList<E>();
         for (JsonNode object : array) {
-          list.add(itemDecoder.decode(object));
+          list.add(itemDecoder.decode(context, object));
         }
         return unmodifiableList(list);
       }
@@ -148,11 +136,11 @@ public interface JsonDecoder<T> {
   }
 
   static <V> JsonDecoder<Map<String, V>> mapDecoder(JsonDecoder<V> itemEncoder) {
-    return json -> {
+    return (context, json) -> {
       if (json instanceof JsonNode.Object object) {
         var map = new LinkedHashMap<String, V>();
         for (Map.Entry<String, JsonNode> entry : object) {
-          map.put(entry.getKey(), itemEncoder.decode(entry.getValue()));
+          map.put(entry.getKey(), itemEncoder.decode(context, entry.getValue()));
         }
         return unmodifiableMap(map);
       }
@@ -161,7 +149,7 @@ public interface JsonDecoder<T> {
   }
   
   static <T> JsonDecoder<T> nullSafe(JsonDecoder<T> decoder) {
-    return json -> json instanceof JsonNode.Null ? null : decoder.decode(json);
+    return (context, json) -> json instanceof JsonNode.Null ? null : decoder.decode(context, json);
   }
   
   @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -332,15 +320,19 @@ public interface JsonDecoder<T> {
 
 interface JsonDecoderModule {
   
-  JsonDecoder<String> STRING = JsonNode::asString;
-  JsonDecoder<Character> CHAR = JsonNode::asCharacter;
-  JsonDecoder<Byte> BYTE = JsonNode::asByte;
-  JsonDecoder<Short> SHORT = JsonNode::asShort;
-  JsonDecoder<Integer> INTEGER = JsonNode::asInt;
-  JsonDecoder<Long> LONG = JsonNode::asLong;
-  JsonDecoder<Float> FLOAT = JsonNode::asFloat;
-  JsonDecoder<Double> DOUBLE = JsonNode::asDouble;
-  JsonDecoder<BigInteger> BIG_INTEGER = JsonNode::asBigInteger;
-  JsonDecoder<BigDecimal> BIG_DECIMAL = JsonNode::asBigDecimal;
-  JsonDecoder<Boolean> BOOLEAN = JsonNode::asBoolean;
+  JsonDecoder<String> STRING = primitive(JsonNode::asString);
+  JsonDecoder<Character> CHAR = primitive(JsonNode::asCharacter);
+  JsonDecoder<Byte> BYTE = primitive(JsonNode::asByte);
+  JsonDecoder<Short> SHORT = primitive(JsonNode::asShort);
+  JsonDecoder<Integer> INTEGER = primitive(JsonNode::asInt);
+  JsonDecoder<Long> LONG = primitive(JsonNode::asLong);
+  JsonDecoder<Float> FLOAT = primitive(JsonNode::asFloat);
+  JsonDecoder<Double> DOUBLE = primitive(JsonNode::asDouble);
+  JsonDecoder<BigInteger> BIG_INTEGER = primitive(JsonNode::asBigInteger);
+  JsonDecoder<BigDecimal> BIG_DECIMAL = primitive(JsonNode::asBigDecimal);
+  JsonDecoder<Boolean> BOOLEAN = primitive(JsonNode::asBoolean);
+  
+  static <T> JsonDecoder<T> primitive(Function1<JsonNode, T> method) {
+    return (context, json) -> method.apply(json);
+  }
 }

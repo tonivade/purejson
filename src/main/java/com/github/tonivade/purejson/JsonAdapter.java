@@ -29,6 +29,13 @@ public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
   JsonAdapter<Double> DOUBLE = adapter(Double.class);
   JsonAdapter<Boolean> BOOLEAN = adapter(Boolean.class);
 
+  /**
+   * It creates a builder to define an adapter for a concrete class
+   *
+   * @param target
+   * @param <T>
+   * @return
+   */
   static <T> JsonAdapterBuilder<T> builder(Class<T> target) {
     return new JsonAdapterBuilder<>(target);
   }
@@ -59,9 +66,9 @@ public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
    * @param type
    * @return
    */
-  @SuppressWarnings({ "unchecked", "preview" })
+  @SuppressWarnings("unchecked")
   static <T> Option<JsonAdapter<T>> load(Type type) {
-    if (type instanceof Class<?> c && !c.isAnnotationPresent(Json.class)) {
+    if (!(type instanceof Class<?>)) {
       return Option.none();
     }
     return Try.of(() -> Class.forName(type.getTypeName() + "Adapter"))
@@ -84,13 +91,13 @@ public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
     return new JsonAdapter<>() {
 
       @Override
-      public JsonNode encode(T value) {
-        return encoder.encode(value);
+      public JsonNode encode(JsonContext context, T value) {
+        return encoder.encode(context, value);
       }
       
       @Override
-      public T decode(JsonNode json) {
-        return decoder.decode(json);
+      public T decode(JsonContext context, JsonNode json) {
+        return decoder.decode(context, json);
       }
     };
   }

@@ -14,7 +14,7 @@ import com.github.tonivade.purefun.type.Try;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 
-public final class PureJson {
+public final class PureJson implements JsonContext {
 
   private final Map<Type, JsonAdapter<?>> adapters = new HashMap<>();
   
@@ -41,7 +41,7 @@ public final class PureJson {
       return Try.success(Option.none());
     }
     return this.<T>tryGetAdapter(type)
-        .flatMap(adapter -> adapter.tryDecode(node)).map(Option::some);
+        .flatMap(adapter -> adapter.tryDecode(this, node)).map(Option::some);
   }
 
   public Try<String> toString(Object object) {
@@ -56,7 +56,7 @@ public final class PureJson {
     if (object == null) {
       return Try.success(JsonNode.NULL);
     }
-    return tryGetAdapter(type).flatMap(adapter -> adapter.tryEncode(object));
+    return tryGetAdapter(type).flatMap(adapter -> adapter.tryEncode(this, object));
   }
 
   public <T> PureJson add(Type type, JsonAdapter<T> adapter) {
@@ -64,13 +64,14 @@ public final class PureJson {
     return this;
   }
 
-  private <T> Try<JsonAdapter<T>> tryGetAdapter(Type type) {
-    return Try.of(() -> getAdapter(type));
+  @SuppressWarnings("unchecked")
+  @Override
+  public <T> JsonAdapter<T> getAdapter(Type type) {
+    return (JsonAdapter<T>) adapters.computeIfAbsent(type, JsonAdapter::adapter);
   }
 
-  @SuppressWarnings("unchecked")
-  private <T> JsonAdapter<T> getAdapter(Type type) {
-    return (JsonAdapter<T>) adapters.computeIfAbsent(type, JsonAdapter::adapter);
+  private <T> Try<JsonAdapter<T>> tryGetAdapter(Type type) {
+    return Try.of(() -> getAdapter(type));
   }
 
   private static Try<JsonElement> tryParse(String json) {

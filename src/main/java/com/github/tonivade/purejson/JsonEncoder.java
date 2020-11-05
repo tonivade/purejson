@@ -172,7 +172,7 @@ public interface JsonEncoder<T> {
   private static <T> JsonEncoder<T> create(GenericArrayType type) {
     Type genericComponentType = type.getGenericComponentType();
     if (genericComponentType instanceof Class<?> c) {
-      return (JsonEncoder<T>) arrayEncoder(c);
+      return arrayEncoder(c);
     }
     throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
   }

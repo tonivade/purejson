@@ -66,13 +66,12 @@ public interface JsonDecoder<T> {
 
   @SuppressWarnings("unchecked")
   static <T> JsonDecoder<T[]> arrayDecoder(Class<T> type) {
-    var itemDecoder = decoder((Type) type);
+    var itemDecoder = decoder(type);
     return json -> {
       if (json instanceof JsonNode.Array a) {
         var array = Array.newInstance(type, a.size());
         for (int i = 0; i < a.size(); i++) {
-          JsonNode element = a.get(i);
-          Array.set(array, i, itemDecoder.decode(element));
+          Array.set(array, i, itemDecoder.decode(a.get(i)));
         }
         return (T[]) array;
       }
@@ -121,8 +120,8 @@ public interface JsonDecoder<T> {
         try {
           T value = type.getDeclaredConstructor().newInstance();
           for (var pair : fields) {
-            JsonNode jsonElement = o.get(pair.get1().getName());
-            pair.get1().set(value, pair.get2().decode(jsonElement));
+            var node = o.get(pair.get1().getName());
+            pair.get1().set(value, pair.get2().decode(node));
           }
           return value;
         } catch (IllegalArgumentException | IllegalAccessException | InstantiationException 
@@ -138,7 +137,7 @@ public interface JsonDecoder<T> {
     return json -> {
       if (json instanceof JsonNode.Array array) {
         var list = new ArrayList<E>();
-        for (JsonNode object : array) {
+        for (var object : array) {
           list.add(itemDecoder.decode(object));
         }
         return unmodifiableList(list);
@@ -216,7 +215,7 @@ public interface JsonDecoder<T> {
   }
 
   private static <T> JsonDecoder<T> create(WildcardType type) {
-    throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
+    throw new UnsupportedOperationException("wildcard types are not supported: " + type.getTypeName());
   }
 
   @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -246,11 +245,9 @@ public interface JsonDecoder<T> {
     } else if (type.equals(Boolean.class)) {
       return (JsonDecoder<T>) JsonDecoderModule.BOOLEAN;
     } else if (type.isEnum()) {
-      Class enumType = type;
-      return enumDecoder(enumType);
+      return enumDecoder((Class) type);
     } else if (type.isArray()) {
-      Class componentType = type.getComponentType();
-      return arrayDecoder(componentType);
+      return arrayDecoder((Class) type.getComponentType());
     } else if (type.isRecord()) {
       return recordDecoder(type);
     } else {

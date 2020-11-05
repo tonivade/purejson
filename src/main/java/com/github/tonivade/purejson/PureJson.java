@@ -41,7 +41,7 @@ public final class PureJson<T> {
   }
 
   public Try<Option<T>> fromJson(String json) {
-    return parse(json).flatMap(node -> fromJson(node));
+    return parse(json).flatMap(this::fromJson);
   }
 
   public Try<Option<T>> fromJson(JsonNode node) {

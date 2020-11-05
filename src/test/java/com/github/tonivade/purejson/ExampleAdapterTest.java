@@ -15,8 +15,26 @@ import java.util.List;
 @SuppressWarnings("preview")
 public class ExampleAdapterTest {
   
+  @Json
   record Role(String name) {}
+  @Json
   record User(int id, String name, List<Role> roles) {}
+  
+  public enum RoleAdapter implements JsonAdapter<Role> {
+    INSTANCE;
+
+    private static final JsonAdapter<String> NAME_ADAPTER = JsonAdapter.adapter(String.class);
+    
+    @Override
+    public JsonNode encode(Role value) {
+      return NAME_ADAPTER.encode(value.name());
+    }
+    
+    @Override
+    public Role decode(JsonNode json) {
+      return new Role(NAME_ADAPTER.decode(json));
+    }
+  }
 
   public enum UserAdapter implements JsonAdapter<User> {
     INSTANCE;

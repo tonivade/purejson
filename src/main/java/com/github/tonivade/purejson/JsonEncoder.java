@@ -168,7 +168,6 @@ public interface JsonEncoder<T> {
     throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
   }
 
-  @SuppressWarnings("unchecked")
   private static <T> JsonEncoder<T> create(GenericArrayType type) {
     Type genericComponentType = type.getGenericComponentType();
     if (genericComponentType instanceof Class<?> c) {

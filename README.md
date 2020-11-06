@@ -28,18 +28,18 @@ library.
 
 ```
 Performance parse
-name  tot min max mean  p50 p90 p95 p99
-refl  11680 14  510 23  15  38  38  204
-buil  7982  13  102 15  14  18  18  62
-adho  6630  12  22  13  12  13  13  21
-gson  4016  6 99  8 7 9 9 21
+name  tot  min  max mean  p50 p90 p95  p99
+refl  11680 14  510   23   15  38  38  204
+buil  7982  13  102   15   14  18  18   62
+adho  6630  12   22   13   12  13  13   21
+gson  4016   6   99    8   7    9   9   21
 ```
 
 ```
 Performance serialize
-name  tot min max mean  p50 p90 p95 p99
-refl  9793  13  265 19  14  21  21  111
-buil  7210  13  37  14  13  14  14  23
-adho  6940  13  46  13  13  13  13  19
-gson  4853  8 72  9 9 9 9 26
+name  tot  min  max mean  p50 p90 p95  p99
+refl  9793  13  265   19   14  21  21  111
+buil  7210  13   37   14   13  14  14   23
+adho  6940  13   46   13   13  13  13   19
+gson  4853   8   72    9    9   9   9   26
 ```

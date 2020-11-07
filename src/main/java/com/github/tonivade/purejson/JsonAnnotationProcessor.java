@@ -34,6 +34,7 @@ import com.github.tonivade.purefun.Tuple2;
 import com.github.tonivade.purefun.data.ImmutableList;
 import com.github.tonivade.purefun.data.ImmutableMap;
 import com.github.tonivade.purefun.data.Sequence;
+import com.github.tonivade.purefun.type.Option;
 import com.google.gson.reflect.TypeToken;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
@@ -175,7 +176,7 @@ public class JsonAnnotationProcessor extends AbstractProcessor {
     return processingEnv.getFiler().createSourceFile(qualifiedName);
   }
 
-  private static Model modelForPojo(TypeElement element) {
+  private Model modelForPojo(TypeElement element) {
     ImmutableList<VariableElement> fields = element.getEnclosedElements().stream()
         .filter(e -> e.getKind() == ElementKind.FIELD)
         .map(e -> (VariableElement) e)
@@ -185,7 +186,10 @@ public class JsonAnnotationProcessor extends AbstractProcessor {
         .filter(e -> e.getKind() == ElementKind.CONSTRUCTOR)
         .map(e -> (ExecutableElement) e)
         .filter(c -> c.getParameters().size() == fields.size())
-        .findFirst().orElseThrow();
+        .findFirst().map(Option::some).orElseGet(Option::none)
+        .ifEmpty(() -> processingEnv.getMessager()
+            .printMessage(Kind.ERROR, "no proper constructor found: " + element.getSimpleName()
+                + fields.map(VariableElement::asType).join(",", "(", ")")));
 
     ImmutableMap<String, ExecutableElement> methods = element.getEnclosedElements().stream()
         .filter(e -> e.getKind() == ElementKind.METHOD)
@@ -211,7 +215,7 @@ public class JsonAnnotationProcessor extends AbstractProcessor {
         .collect(toImmutableList()));
   }
 
-  private static Model modelForRecord(TypeElement element) {
+  private Model modelForRecord(TypeElement element) {
     ImmutableList<RecordComponentElement> fields = element.getEnclosedElements().stream()
         .filter(e -> e.getKind() == ElementKind.RECORD_COMPONENT)
         .map(e -> (RecordComponentElement) e)
@@ -220,7 +224,10 @@ public class JsonAnnotationProcessor extends AbstractProcessor {
     element.getEnclosedElements().stream()
         .filter(e -> e.getKind() == ElementKind.CONSTRUCTOR)
         .map(e -> (ExecutableElement) e)
-        .filter(c -> c.getParameters().size() == fields.size()).findFirst().orElseThrow();
+        .findFirst().map(Option::some).orElseGet(Option::none)
+        .ifEmpty(() -> processingEnv.getMessager()
+            .printMessage(Kind.ERROR, "no proper constructor found: " + element.getSimpleName()
+                + fields.map(RecordComponentElement::asType).join(",", "(", ")")));
 
     String qualifiedName = element.getQualifiedName().toString();
     String packageName = qualifiedName.substring(0, qualifiedName.lastIndexOf('.'));

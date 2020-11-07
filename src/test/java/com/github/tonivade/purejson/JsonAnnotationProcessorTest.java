@@ -146,6 +146,37 @@ class JsonAnnotationProcessorTest {
   }
 
   @Test
+  void pojoTestError() {
+    JavaFileObject file = forSourceLines("test.User",
+        """
+            package test;
+
+            import com.github.tonivade.purejson.Json;
+            import java.util.List;
+
+            @Json
+            public final class User {
+
+              private final int id;
+              private final String name;
+              private final List<String> roles;
+
+              public User() { }
+
+              public int getId() { return id; }
+
+              public String getName() { return name; }       
+              
+              public List<String> getRoles() { return roles; }       
+            }""");
+
+    assert_().about(javaSource()).that(file)
+        .withCompilerOptions("--enable-preview", "-source", "15")
+        .processedWith(new JsonAnnotationProcessor())
+        .failsToCompile();
+  }
+
+  @Test
   void notSupported() {
     JavaFileObject file = forSourceLines("test.User",
         """

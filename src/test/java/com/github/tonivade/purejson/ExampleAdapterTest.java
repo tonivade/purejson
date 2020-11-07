@@ -6,6 +6,7 @@ package com.github.tonivade.purejson;
 
 import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static com.github.tonivade.purejson.JsonAdapter.adapter;
 
 import com.google.gson.reflect.TypeToken;
 import org.junit.jupiter.api.Test;
@@ -23,7 +24,7 @@ public class ExampleAdapterTest {
   public enum RoleAdapter implements JsonAdapter<Role> {
     INSTANCE;
 
-    private static final JsonAdapter<String> NAME_ADAPTER = JsonAdapter.adapter(String.class);
+    private static final JsonAdapter<String> NAME_ADAPTER = adapter(String.class);
     
     @Override
     public JsonNode encode(Role value) {
@@ -39,9 +40,9 @@ public class ExampleAdapterTest {
   public enum UserAdapter implements JsonAdapter<User> {
     INSTANCE;
 
-    private static final JsonAdapter<Integer> ID_ADAPTER = JsonAdapter.adapter(int.class);
-    private static final JsonAdapter<String> NAME_ADAPTER = JsonAdapter.adapter(String.class);
-    private static final JsonAdapter<List<Role>> ROLES_ADAPTER = JsonAdapter.adapter(new TypeToken<List<Role>>(){}.getType());
+    private static final JsonAdapter<Integer> ID_ADAPTER = adapter(int.class);
+    private static final JsonAdapter<String> NAME_ADAPTER = adapter(String.class);
+    private static final JsonAdapter<List<Role>> ROLES_ADAPTER = adapter(new TypeToken<List<Role>>(){}.getType());
 
     @Override
     public JsonNode encode(User value) {

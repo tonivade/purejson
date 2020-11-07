@@ -12,8 +12,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Map;
 
+import com.github.tonivade.purefun.Matcher1;
 import com.github.tonivade.purefun.type.Option;
-import com.github.tonivade.purefun.type.Try;
 
 public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
 
@@ -61,12 +61,16 @@ public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
    */
   @SuppressWarnings({ "unchecked", "preview" })
   static <T> Option<JsonAdapter<T>> load(Type type) {
-    if (type instanceof Class<?> clazz && !clazz.isPrimitive()) {
-      return Try.of(() -> Class.forName(type.getTypeName() + "Adapter"))
+    if (type instanceof Class<?> clazz && clazz.isAnnotationPresent(Json.class)) {
+      return Option.<Class<?>>of(() -> clazz.getAnnotation(Json.class).adapter())
+          .filterNot(Matcher1.is(Void.class))
+          .toTry()
+          .recover(error -> Class.forName(type.getTypeName() + "Adapter"))
           .filter(Class::isEnum)
           .map(c -> c.getEnumConstants()[0])
           .map(e -> (JsonAdapter<T>) e)
           .map(JsonAdapter::nullSafe)
+          .onSuccess(x -> System.out.println("loaded for class " + type.getTypeName()))
           .toOption();
     }
     return Option.none();

@@ -59,14 +59,13 @@ public class JsonAnnotationProcessor extends AbstractProcessor {
     for (TypeElement annotation : annotations) {
       for (Element element : roundEnv.getElementsAnnotatedWith(annotation)) {
         if (element.getKind() == ElementKind.RECORD) {
-          processingEnv.getMessager().printMessage(Kind.NOTE, element.getSimpleName() + " record found");
+          printNote(element.getSimpleName() + " record found");
           saveFile(modelForRecord((TypeElement) element));
         } else if (element.getKind() == ElementKind.CLASS) {
-          processingEnv.getMessager().printMessage(Kind.NOTE, element.getSimpleName() + " pojo found");
+          printNote(element.getSimpleName() + " pojo found");
           saveFile(modelForPojo((TypeElement) element));
         } else {
-          processingEnv.getMessager().printMessage(
-              Kind.ERROR, element.getSimpleName() + " is not supported: " + element.getKind());
+          printError(element.getSimpleName() + " is not supported: " + element.getKind());
         }
       }
     }
@@ -182,18 +181,10 @@ public class JsonAnnotationProcessor extends AbstractProcessor {
         .map(e -> (VariableElement) e)
         .collect(toImmutableList());
 
-    element.getEnclosedElements().stream()
-        .filter(e -> e.getKind() == ElementKind.CONSTRUCTOR)
-        .map(e -> (ExecutableElement) e)
-        .filter(c -> c.getParameters().size() == fields.size())
-        .findFirst().map(Option::some).orElseGet(Option::none)
-        .ifEmpty(() -> processingEnv.getMessager()
-            .printMessage(Kind.ERROR, "no proper constructor found: " + element.getSimpleName()
-                + fields.map(VariableElement::asType).join(",", "(", ")")));
+    findConstructor(element, fields);
 
     ImmutableMap<String, ExecutableElement> methods = element.getEnclosedElements().stream()
         .filter(e -> e.getKind() == ElementKind.METHOD)
-        .filter(e -> e.getSimpleName().toString().startsWith("get"))
         .map(e -> (ExecutableElement) e)
         .map(e -> Tuple.of(e.getSimpleName().toString(), e))
         .collect(toImmutableMap(Tuple2::get1, Tuple2::get2));
@@ -202,15 +193,13 @@ public class JsonAnnotationProcessor extends AbstractProcessor {
     String packageName = qualifiedName.substring(0, qualifiedName.lastIndexOf('.'));
     String simpleName = element.getSimpleName().toString();
 
-    return new Model(packageName, simpleName, element.asType(), fields.stream().map(
+    return new Model(packageName, simpleName, element.asType(), fields.stream().flatMap(
         f -> {
           var name = f.getSimpleName().toString();
           var key = "get" + name.substring(0, 1).toUpperCase() + name.substring(1);
-          var accessor = methods.get(key).getOrElseThrow();
-          return new Field(
-              f.getSimpleName().toString(),
-              accessor.getReturnType(),
-              accessor);
+          var accessor = methods.get(key).orElse(methods.get(name))
+              .ifEmpty(() -> printError("not accessor found for field " + name + " of type " + element.getSimpleName()));
+          return accessor.map(a -> new Field(f.getSimpleName().toString(), a.getReturnType(), a)).stream();
         })
         .collect(toImmutableList()));
   }
@@ -221,13 +210,7 @@ public class JsonAnnotationProcessor extends AbstractProcessor {
         .map(e -> (RecordComponentElement) e)
         .collect(toImmutableList());
 
-    element.getEnclosedElements().stream()
-        .filter(e -> e.getKind() == ElementKind.CONSTRUCTOR)
-        .map(e -> (ExecutableElement) e)
-        .findFirst().map(Option::some).orElseGet(Option::none)
-        .ifEmpty(() -> processingEnv.getMessager()
-            .printMessage(Kind.ERROR, "no proper constructor found: " + element.getSimpleName()
-                + fields.map(RecordComponentElement::asType).join(",", "(", ")")));
+    findConstructor(element, fields);
 
     String qualifiedName = element.getQualifiedName().toString();
     String packageName = qualifiedName.substring(0, qualifiedName.lastIndexOf('.'));
@@ -239,5 +222,23 @@ public class JsonAnnotationProcessor extends AbstractProcessor {
             f.getAccessor().getReturnType(),
             f.getAccessor()))
         .collect(toImmutableList()));
+  }
+
+  private <T extends Element>void findConstructor(TypeElement element, ImmutableList<T> fields) {
+    element.getEnclosedElements().stream()
+        .filter(e -> e.getKind() == ElementKind.CONSTRUCTOR)
+        .map(e -> (ExecutableElement) e)
+        .filter(c -> c.getParameters().size() == fields.size())
+        .findFirst().map(Option::some).orElseGet(Option::none)
+        .ifEmpty(() -> printError("no proper constructor found: " + element.getSimpleName()
+                + fields.map(Element::asType).join(",", "(", ")")));
+  }
+
+  private void printNote(String msg) {
+    processingEnv.getMessager().printMessage(Kind.NOTE, msg);
+  }
+
+  private void printError(String msg) {
+    processingEnv.getMessager().printMessage(Kind.ERROR, msg);
   }
 }

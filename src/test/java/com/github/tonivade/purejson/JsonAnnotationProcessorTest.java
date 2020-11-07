@@ -95,9 +95,9 @@ class JsonAnnotationProcessorTest {
 
               public int getId() { return id; }
 
-              public String getName() { return name; }       
+              public String getName() { return name; }
               
-              public List<String> getRoles() { return roles; }       
+              public List<String> getRoles() { return roles; }
             }""");
     
     JavaFileObject expected = forSourceLines("test.UserAdapter",
@@ -146,7 +146,7 @@ class JsonAnnotationProcessorTest {
   }
 
   @Test
-  void pojoTestError() {
+  void pojoTestNoConstructor() {
     JavaFileObject file = forSourceLines("test.User",
         """
             package test;
@@ -165,15 +165,44 @@ class JsonAnnotationProcessorTest {
 
               public int getId() { return id; }
 
-              public String getName() { return name; }       
+              public String getName() { return name; }
               
-              public List<String> getRoles() { return roles; }       
+              public List<String> getRoles() { return roles; }
             }""");
 
     assert_().about(javaSource()).that(file)
         .withCompilerOptions("--enable-preview", "-source", "15")
         .processedWith(new JsonAnnotationProcessor())
         .failsToCompile();
+  }
+
+  @Test
+  void pojoTestNoAccessor() {
+    JavaFileObject file = forSourceLines("test.User",
+        """
+            package test;
+
+            import com.github.tonivade.purejson.Json;
+            import java.util.List;
+
+            @Json
+            public final class User {
+
+              private final int id;
+              private final String name;
+              private final List<String> roles;
+
+              public User(int id, String name, List<String> roles) {
+                this.id = id;
+                this.name = name;
+                this.roles = roles;
+              }
+            }""");
+
+    assert_().about(javaSource()).that(file)
+        .withCompilerOptions("--enable-preview", "-source", "15")
+        .processedWith(new JsonAnnotationProcessor())
+        .compilesWithoutError();
   }
 
   @Test

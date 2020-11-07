@@ -202,7 +202,7 @@ class JsonAnnotationProcessorTest {
     assert_().about(javaSource()).that(file)
         .withCompilerOptions("--enable-preview", "-source", "15")
         .processedWith(new JsonAnnotationProcessor())
-        .compilesWithoutError();
+        .failsToCompile();
   }
 
   @Test

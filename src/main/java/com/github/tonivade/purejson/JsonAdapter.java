@@ -128,8 +128,8 @@ public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
   /**
    * It creates an adapter for a {@code Map}
    * 
-   * @param <E>
-   * @param itemAdapter the adapter for the value type
+   * @param <V>
+   * @param valueAdapter the adapter for the value type
    * @return
    */
   static <V> JsonAdapter<Map<String, V>> mapAdapter(JsonAdapter<V> valueAdapter) {

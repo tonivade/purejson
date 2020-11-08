@@ -72,6 +72,26 @@ class JsonAnnotationProcessorTest {
   }
 
   @Test
+  void withCustomAdapter() {
+    JavaFileObject file = forSourceLines("test.User",
+        """
+            package test;
+
+            import com.github.tonivade.purejson.Json;
+            import java.util.List;
+
+            @Json(adapter = UserAdapter.class)
+            public record User(int id, String name, List<String> roles) {}
+            
+            class UserAdapter {}""");
+
+    assert_().about(javaSource()).that(file)
+        .withCompilerOptions("--enable-preview", "-source", "15")
+        .processedWith(new JsonAnnotationProcessor())
+        .compilesWithoutError();
+  }
+
+  @Test
   void pojoTest() {
     JavaFileObject file = forSourceLines("test.User",
         """

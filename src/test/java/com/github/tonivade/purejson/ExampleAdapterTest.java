@@ -16,9 +16,9 @@ import java.util.List;
 @SuppressWarnings("preview")
 public class ExampleAdapterTest {
   
-  @Json
+  @Json(adapter = RoleAdapter.class)
   record Role(String name) {}
-  @Json
+  @Json(adapter = UserAdapter.class)
   record User(int id, String name, List<Role> roles) {}
   
   public enum RoleAdapter implements JsonAdapter<Role> {

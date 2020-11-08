@@ -29,10 +29,25 @@ public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
   JsonAdapter<Double> DOUBLE = adapter(Double.class);
   JsonAdapter<Boolean> BOOLEAN = adapter(Boolean.class);
 
+  /**
+   * It creates an adapter builder. You can define each field step by step with it's proper 
+   * accessor and create an adapter.
+   * 
+   * @param <T>
+   * @param target
+   * @return
+   */
   static <T> JsonAdapterBuilder<T> builder(Class<T> target) {
     return new JsonAdapterBuilder<>(target);
   }
 
+  /**
+   * Alias for {@link #adapter(Type)} but, for {@code Class<T>} in order to help type inference.
+   * 
+   * @param <T>
+   * @param type
+   * @return
+   */
   static <T> JsonAdapter<T> adapter(Class<T> type) {
     return adapter((Type) type);
   }
@@ -70,14 +85,13 @@ public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
           .map(c -> c.getEnumConstants()[0])
           .map(e -> (JsonAdapter<T>) e)
           .map(JsonAdapter::nullSafe)
-          .onSuccess(x -> System.out.println("loaded for class " + type.getTypeName()))
           .toOption();
     }
     return Option.none();
   }
 
   /**
-   * It will create an adapter with the given encoder and decoder
+   * It creates an adapter with the given encoder and decoder.
    * 
    * @param <T>
    * @param encoder
@@ -99,14 +113,37 @@ public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
     };
   }
 
+  /**
+   * It creates an adapter for any class that implements {@link java.lang.Iterable}.
+   * 
+   * @param <E>
+   * @param itemAdapter the adapter for the item type
+   * @return
+   */
   static <E> JsonAdapter<Iterable<E>> iterableAdapter(JsonAdapter<E> itemAdapter) {
     return of(JsonEncoder.iterableEncoder(itemAdapter), JsonDecoder.iterableDecoder(itemAdapter));
   }
 
+
+  /**
+   * It creates an adapter for a {@code Map}
+   * 
+   * @param <E>
+   * @param itemAdapter the adapter for the value type
+   * @return
+   */
   static <V> JsonAdapter<Map<String, V>> mapAdapter(JsonAdapter<V> valueAdapter) {
     return of(JsonEncoder.mapEncoder(valueAdapter), JsonDecoder.mapDecoder(valueAdapter));
   }
   
+  /**
+   * Helper function to convert any adapter to null safe, in case of receive a null value it will
+   * generate a correct ADT value.
+   * 
+   * @param <T>
+   * @param adapter
+   * @return
+   */
   static <T> JsonAdapter<T> nullSafe(JsonAdapter<T> adapter) {
     return of(JsonEncoder.nullSafe(adapter), JsonDecoder.nullSafe(adapter));
   }

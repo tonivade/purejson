@@ -12,6 +12,7 @@ import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -58,14 +59,26 @@ public class JsonAnnotationProcessor extends AbstractProcessor {
   public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
     for (TypeElement annotation : annotations) {
       for (Element element : roundEnv.getElementsAnnotatedWith(annotation)) {
-        if (element.getKind() == ElementKind.RECORD) {
-          printNote(element.getSimpleName() + " record found");
-          saveFile(modelForRecord((TypeElement) element));
-        } else if (element.getKind() == ElementKind.CLASS) {
-          printNote(element.getSimpleName() + " pojo found");
-          saveFile(modelForPojo((TypeElement) element));
+        var json = element.getAnnotationMirrors().stream()
+            .filter(am -> am.getAnnotationType().equals(annotation.asType()))
+            .findFirst().orElseThrow();
+
+        var adapter = json.getElementValues().entrySet().stream()
+          .filter(entry -> entry.getKey().getSimpleName().toString().equals("adapter"))
+          .map(Map.Entry::getValue).findFirst();
+
+        if (adapter.isEmpty()) {
+          if (element.getKind() == ElementKind.RECORD) {
+            printNote(element.getSimpleName() + " record found");
+            saveFile(modelForRecord((TypeElement) element));
+          } else if (element.getKind() == ElementKind.CLASS) {
+            printNote(element.getSimpleName() + " pojo found");
+            saveFile(modelForPojo((TypeElement) element));
+          } else {
+            printError(element.getSimpleName() + " is not supported: " + element.getKind());
+          }
         } else {
-          printError(element.getSimpleName() + " is not supported: " + element.getKind());
+          printNote(element.getSimpleName() + " pojo found with adapter: " + adapter.get().getValue());
         }
       }
     }

@@ -49,15 +49,15 @@ javadoc.options {
 }
 
 dependencies {
-  api 'com.github.tonivade:purefun-core:2.2-SNAPSHOT'
+  api 'com.github.tonivade:purefun-core:2.2'
   api 'com.google.code.gson:gson:2.8.6'
   implementation 'com.squareup:javapoet:1.12.1'
   testImplementation 'com.google.testing.compile:compile-testing:0.19'
   testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
   testImplementation 'org.junit.platform:junit-platform-runner:1.7.0'
   testImplementation 'com.github.tonivade:purecheck:0.1.0-SNAPSHOT'
-  testImplementation 'com.github.tonivade:purefun-monad:2.2-SNAPSHOT'
-  testImplementation 'com.github.tonivade:purefun-instances:2.2-SNAPSHOT'
+  testImplementation 'com.github.tonivade:purefun-monad:2.2'
+  testImplementation 'com.github.tonivade:purefun-instances:2.2'
 }
 
 modifyPom {

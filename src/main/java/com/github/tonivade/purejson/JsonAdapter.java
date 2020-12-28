@@ -4,6 +4,7 @@
  */
 package com.github.tonivade.purejson;
 
+import static com.github.tonivade.purefun.Matcher1.is;
 import static com.github.tonivade.purejson.JsonDecoder.decoder;
 import static com.github.tonivade.purejson.JsonEncoder.encoder;
 
@@ -12,7 +13,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Map;
 
-import com.github.tonivade.purefun.Matcher1;
 import com.github.tonivade.purefun.type.Option;
 
 public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
@@ -78,12 +78,12 @@ public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
   static <T> Option<JsonAdapter<T>> load(Type type) {
     if (type instanceof Class<?> clazz && clazz.isAnnotationPresent(Json.class)) {
       return Option.<Class<?>>of(() -> clazz.getAnnotation(Json.class).adapter())
-          .filterNot(Matcher1.is(Void.class))
+          .filterNot(is(Void.class))
           .toTry()
           .recover(error -> Class.forName(type.getTypeName() + "Adapter"))
           .filter(Class::isEnum)
           .map(c -> c.getEnumConstants()[0])
-          .map(e -> (JsonAdapter<T>) e)
+          .map(JsonAdapter.class::cast)
           .map(JsonAdapter::nullSafe)
           .toOption();
     }

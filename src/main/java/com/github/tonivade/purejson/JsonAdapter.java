@@ -83,7 +83,7 @@ public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
           .recover(error -> Class.forName(type.getTypeName() + "Adapter"))
           .filter(Class::isEnum)
           .map(c -> c.getEnumConstants()[0])
-          .map(JsonAdapter.class::cast)
+          .map(e -> (JsonAdapter<T>) e)
           .map(JsonAdapter::nullSafe)
           .toOption();
     }

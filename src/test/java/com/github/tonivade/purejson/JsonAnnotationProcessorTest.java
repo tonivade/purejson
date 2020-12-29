@@ -33,7 +33,7 @@ class JsonAnnotationProcessorTest {
             import com.github.tonivade.purejson.JsonAdapter;
             import com.github.tonivade.purejson.JsonDSL;
             import com.github.tonivade.purejson.JsonNode;
-            import com.google.gson.reflect.TypeToken;
+            import com.github.tonivade.purejson.TypeToken;
             import java.lang.Integer;
             import java.lang.Override;
             import java.lang.String;
@@ -127,7 +127,7 @@ class JsonAnnotationProcessorTest {
             import com.github.tonivade.purejson.JsonAdapter;
             import com.github.tonivade.purejson.JsonDSL;
             import com.github.tonivade.purejson.JsonNode;
-            import com.google.gson.reflect.TypeToken;
+            import com.github.tonivade.purejson.TypeToken;
             import java.lang.Integer;
             import java.lang.Override;
             import java.lang.String;

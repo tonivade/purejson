@@ -44,6 +44,7 @@ import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
 
+import com.eclipsesource.json.ParseException;
 import com.github.tonivade.purecheck.PerfCase.Stats;
 import com.github.tonivade.purecheck.spec.IOTestSpec;
 import com.github.tonivade.purefun.Equal;
@@ -62,8 +63,6 @@ import com.github.tonivade.purefun.monad.IO_;
 import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Try;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonSyntaxException;
-import com.google.gson.reflect.TypeToken;
 
 @SuppressWarnings("preview")
 class PureJsonTest extends IOTestSpec<String> {
@@ -726,12 +725,12 @@ class PureJsonTest extends IOTestSpec<String> {
         it.should("fail when invalid json syntax")
           .given("this is wrong")
           .when(json -> new PureJson<>(User.class).fromJson(json))
-          .thenMustBe(instanceOf(JsonSyntaxException.class).compose(Try::getCause)),
+          .thenMustBe(instanceOf(ParseException.class).compose(Try::getCause)),
         
-        it.should("be none when empty string")
+        it.should("fail when empty string")
           .given("")
           .when(json -> new PureJson<>(User.class).fromJson(json))
-          .thenMustBe(equalsTo(success(none()))),
+          .thenMustBe(instanceOf(ParseException.class).compose(Try::getCause)),
         
         it.should("fail when null string")
           .<String>givenNull()
@@ -746,7 +745,6 @@ class PureJsonTest extends IOTestSpec<String> {
           .thenMustBe(instanceOf(IllegalArgumentException.class).compose(Try::getCause))
         
         ).run().assertion();
-    
   }
   
   @Test
@@ -789,14 +787,14 @@ class PureJsonTest extends IOTestSpec<String> {
           .thenMustBe(equalsTo(success("1"))),
 
         it.should("serialize a float")
-          .given(1F)
+          .given(1.1F)
           .when(value -> new PureJson<>(Float.class).toString(value))
-          .thenMustBe(equalsTo(success("1.0"))),
+          .thenMustBe(equalsTo(success("1.1"))),
 
         it.should("serialize a double")
-          .given(1D)
+          .given(1.1D)
           .when(value -> new PureJson<>(Double.class).toString(value))
-          .thenMustBe(equalsTo(success("1.0"))),
+          .thenMustBe(equalsTo(success("1.1"))),
 
         it.should("serialize a big integer")
           .given(BigInteger.ONE)

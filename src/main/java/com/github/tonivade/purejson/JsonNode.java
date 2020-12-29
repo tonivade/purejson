@@ -11,22 +11,22 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonNull;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
+import com.eclipsesource.json.Json;
+import com.eclipsesource.json.JsonArray;
+import com.eclipsesource.json.JsonObject;
+import com.eclipsesource.json.JsonObject.Member;
+import com.eclipsesource.json.JsonValue;
 
-@SuppressWarnings("preview")
 public abstract class JsonNode {
 
   public static final JsonNode NULL = new Null();
 
-  private final JsonElement element;
+  private final JsonValue element;
 
-  private JsonNode(JsonElement element) {
+  private JsonNode(JsonValue element) {
     this.element = checkNonNull(element);
   }
   
@@ -47,88 +47,93 @@ public abstract class JsonNode {
   }
 
   public boolean isArray() {
-    return element.isJsonArray();
+    return element.isArray();
   }
 
   public boolean isObject() {
-    return element.isJsonObject();
+    return element.isObject();
   }
 
   public boolean isPrimitive() {
-    return element.isJsonPrimitive();
+    return element.isBoolean() || element.isNumber() || element.isString();
+  }
+
+  public boolean isString() {
+    return element.isString();
+  }
+
+  public boolean isNumber() {
+    return element.isNumber();
+  }
+
+  public boolean isBoolean() {
+    return element.isBoolean();
   }
 
   public boolean isNull() {
-    return element.isJsonNull();
+    return element.isNull();
   }
   
-  JsonElement unwrap() {
+  JsonValue unwrap() {
     return element;
   }
 
   JsonObject asJsonObject() {
-    return element.getAsJsonObject();
+    return element.asObject();
   }
 
   JsonArray asJsonArray() {
-    return element.getAsJsonArray();
-  }
-
-  JsonPrimitive asJsonPrimitive() {
-    return element.getAsJsonPrimitive();
-  }
-
-  JsonNull asJsonNull() {
-    return element.getAsJsonNull();
+    return element.asArray();
   }
 
   public boolean asBoolean() {
-    return element.getAsBoolean();
+    return element.asBoolean();
   }
 
   public Number asNumber() {
-    return element.getAsNumber();
+    // TODO
+    throw new UnsupportedOperationException();
   }
 
   public String asString() {
-    return element.getAsString();
+    return element.asString();
   }
 
   public double asDouble() {
-    return element.getAsDouble();
+    return element.asDouble();
   }
 
   public float asFloat() {
-    return element.getAsFloat();
+    return element.asFloat();
   }
 
   public long asLong() {
-    return element.getAsLong();
+    return element.asLong();
   }
 
   public int asInt() {
-    return element.getAsInt();
+    return element.asInt();
   }
 
   public byte asByte() {
-    return element.getAsByte();
+    return (byte) element.asInt();
   }
 
   @Deprecated
   public char asCharacter() {
-    return element.getAsCharacter();
+    return element.asString().charAt(0);
   }
 
   public BigDecimal asBigDecimal() {
-    return element.getAsBigDecimal();
+    return BigDecimal.valueOf(element.asDouble());
   }
 
   public BigInteger asBigInteger() {
-    return element.getAsBigInteger();
+    return BigInteger.valueOf(element.asLong());
   }
 
   public short asShort() {
-    return element.getAsShort();
+    return (short) element.asInt();
   }
 
   @Override
@@ -146,21 +151,27 @@ public abstract class JsonNode {
     return element.toString();
   }
 
-  public static JsonNode from(JsonElement element) {
+  public static JsonNode from(JsonValue element) {
     if (element == null) {
       return NULL;
     }
-    if (element instanceof JsonNull) {
+    if (element.isNull()) {
       return NULL;
     }
-    if (element instanceof JsonArray a) {
-      return new Array(a);
+    if (element.isArray()) {
+      return new Array(element.asArray());
     }
-    if (element instanceof JsonObject o) {
-      return new Object(o);
+    if (element.isObject()) {
+      return new Object(element.asObject());
     }
-    if (element instanceof JsonPrimitive p) {
-      return new Primitive(p);
+    if (element.isBoolean()) {
+      return new Primitive(element);
+    }
+    if (element.isNumber()) {
+      return new Primitive(element);
+    }
+    if (element.isString()) {
+      return new Primitive(element);
     }
     throw new IllegalArgumentException(element.getClass().getName());
   }
@@ -168,7 +179,7 @@ public abstract class JsonNode {
   public static final class Null extends JsonNode {
 
     private Null() {
-      super(JsonNull.INSTANCE);
+      super(Json.NULL);
     }
   }
 
@@ -204,39 +215,39 @@ public abstract class JsonNode {
     
     @Override
     public Iterator<Map.Entry<String, JsonNode>> iterator() {
-      return asJsonObject().entrySet().stream()
-          .map(entry -> entry(entry.getKey(), JsonNode.from(entry.getValue()))).iterator();
+      Stream<Member> stream = StreamSupport.stream(asJsonObject().spliterator(), false);
+      return stream.map(member -> entry(member.getName(), JsonNode.from(member.getValue()))).iterator();
     }
   }
   
   public static final class Primitive extends JsonNode {
-    
+
     public Primitive(String value) {
-      this(new JsonPrimitive(value));
-    }
-    
-    public Primitive(Boolean value) {
-      this(new JsonPrimitive(value));
-    }
-    
-    public Primitive(Number value) {
-      this(new JsonPrimitive(value));
+      super(Json.value(value));
     }
 
-    private Primitive(JsonPrimitive value) {
+    public Primitive(boolean value) {
+      super(Json.value(value));
+    }
+
+    public Primitive(int value) {
+      super(Json.value(value));
+    }
+
+    public Primitive(long value) {
+      super(Json.value(value));
+    }
+
+    public Primitive(float value) {
+      super(Json.value(value));
+    }
+
+    public Primitive(double value) {
+      super(Json.value(value));
+    }
+
+    private Primitive(JsonValue value) {
       super(value);
-    }
-
-    public boolean isString() {
-      return asJsonPrimitive().isString();
-    }
-
-    public boolean isNumber() {
-      return asJsonPrimitive().isNumber();
-    }
-
-    public boolean isBoolean() {
-      return asJsonPrimitive().isBoolean();
     }
   }
 }

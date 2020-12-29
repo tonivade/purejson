@@ -2,7 +2,7 @@
 
 Pure Functional Json Parser Library.
 
-Built on top of Gson parser, it defines an alternative encoder/decoder machinery.
+Built on top of ~~Gson~~ minimal-json parser, it defines an encoder/decoder machinery.
 
 It supports java records, so the minimum required version is Java 15. (currently gson
 doesn't work with records in java 15).

@@ -4,14 +4,13 @@
  */
 package com.github.tonivade.purejson;
 
+import static com.github.tonivade.purejson.JsonAdapter.adapter;
 import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static com.github.tonivade.purejson.JsonAdapter.adapter;
-
-import com.google.gson.reflect.TypeToken;
-import org.junit.jupiter.api.Test;
 
 import java.util.List;
+
+import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("preview")
 public class ExampleAdapterTest {

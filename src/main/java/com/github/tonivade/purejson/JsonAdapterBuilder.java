@@ -15,8 +15,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.eclipsesource.json.JsonObject;
 import com.github.tonivade.purefun.Function1;
-import com.google.gson.JsonObject;
 
 @SuppressWarnings("preview")
 public final class JsonAdapterBuilder<T> {

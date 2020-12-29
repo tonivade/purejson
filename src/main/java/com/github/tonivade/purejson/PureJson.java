@@ -9,10 +9,10 @@ import static com.github.tonivade.purejson.JsonAdapter.adapter;
 
 import java.lang.reflect.Type;
 
+import com.eclipsesource.json.Json;
+import com.eclipsesource.json.JsonValue;
 import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Try;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 
 public final class PureJson<T> {
 
@@ -62,7 +62,7 @@ public final class PureJson<T> {
     return adapter.tryEncode(object);
   }
 
-  private static Try<JsonElement> tryParse(String json) {
-    return Try.of(() -> JsonParser.parseString(json));
+  private static Try<JsonValue> tryParse(String json) {
+    return Try.of(() -> Json.parse(json));
   }
 }

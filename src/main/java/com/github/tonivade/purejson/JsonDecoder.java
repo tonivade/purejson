@@ -10,6 +10,7 @@ import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.toList;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
@@ -39,7 +40,6 @@ import com.github.tonivade.purefun.data.ImmutableTreeMap;
 import com.github.tonivade.purefun.data.Sequence;
 import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Try;
-import com.google.gson.internal.reflect.ReflectionAccessor;
 
 @FunctionalInterface
 @SuppressWarnings("preview")
@@ -112,7 +112,7 @@ public interface JsonDecoder<T> {
     var fields = Arrays.stream(type.getDeclaredFields())
         .filter(f -> !isStatic(f.getModifiers()))
         .filter(f -> !f.isSynthetic())
-        .peek(f -> ReflectionAccessor.getInstance().makeAccessible(f))
+        .peek(Field::trySetAccessible)
         .map(f -> Tuple2.of(f, decoder(f.getGenericType())))
         .collect(toList());
     return json -> {

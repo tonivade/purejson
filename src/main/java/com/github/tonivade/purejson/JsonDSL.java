@@ -8,8 +8,8 @@ import java.util.AbstractMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+import com.eclipsesource.json.JsonArray;
+import com.eclipsesource.json.JsonObject;
 
 public final class JsonDSL {
   
@@ -50,11 +50,23 @@ public final class JsonDSL {
     return new JsonNode.Primitive(value);
   }
 
-  public static JsonNode number(Number value) {
+  public static JsonNode number(int value) {
     return new JsonNode.Primitive(value);
   }
 
-  public static JsonNode bool(Boolean value) {
+  public static JsonNode number(long value) {
+    return new JsonNode.Primitive(value);
+  }
+
+  public static JsonNode number(float value) {
+    return new JsonNode.Primitive(value);
+  }
+
+  public static JsonNode number(double value) {
+    return new JsonNode.Primitive(value);
+  }
+
+  public static JsonNode bool(boolean value) {
     return new JsonNode.Primitive(value);
   }
 }

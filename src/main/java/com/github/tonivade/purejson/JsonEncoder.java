@@ -7,6 +7,7 @@ package com.github.tonivade.purejson;
 import static java.lang.reflect.Modifier.isStatic;
 import static java.util.stream.Collectors.toList;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
@@ -17,14 +18,13 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Map;
 
+import com.eclipsesource.json.JsonArray;
+import com.eclipsesource.json.JsonObject;
 import com.github.tonivade.purefun.Function1;
 import com.github.tonivade.purefun.Tuple2;
 import com.github.tonivade.purefun.data.ImmutableMap;
 import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Try;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.internal.reflect.ReflectionAccessor;
 
 @FunctionalInterface
 @SuppressWarnings("preview")
@@ -64,7 +64,7 @@ public interface JsonEncoder<T> {
     var fields = Arrays.stream(type.getDeclaredFields())
         .filter(f -> !isStatic(f.getModifiers()))
         .filter(f -> !f.isSynthetic())
-        .peek(f -> ReflectionAccessor.getInstance().makeAccessible(f))
+        .peek(Field::trySetAccessible)
         .map(f -> Tuple2.of(f, encoder(f.getGenericType())))
         .collect(toList());
     return value -> {
@@ -245,16 +245,16 @@ public interface JsonEncoder<T> {
 
 interface JsonEncoderModule {
   
-  JsonEncoder<String> STRING = JsonNode.Primitive::new;
+  JsonEncoder<String> STRING = JsonDSL::string;
   JsonEncoder<Character> CHAR = STRING.compose(Object::toString);
-  JsonEncoder<Byte> BYTE = JsonNode.Primitive::new;
-  JsonEncoder<Short> SHORT = JsonNode.Primitive::new;
-  JsonEncoder<Integer> INTEGER = JsonNode.Primitive::new;
-  JsonEncoder<Long> LONG = JsonNode.Primitive::new;
-  JsonEncoder<BigDecimal> BIG_DECIMAL = JsonNode.Primitive::new;
-  JsonEncoder<BigInteger> BIG_INTEGER = JsonNode.Primitive::new;
-  JsonEncoder<Float> FLOAT = JsonNode.Primitive::new;
-  JsonEncoder<Double> DOUBLE = JsonNode.Primitive::new;
-  JsonEncoder<Boolean> BOOLEAN = JsonNode.Primitive::new;
+  JsonEncoder<Byte> BYTE = JsonDSL::number;
+  JsonEncoder<Short> SHORT = JsonDSL::number;
+  JsonEncoder<Integer> INTEGER = JsonDSL::number;
+  JsonEncoder<Long> LONG = JsonDSL::number;
+  JsonEncoder<Float> FLOAT = JsonDSL::number;
+  JsonEncoder<Double> DOUBLE = JsonDSL::number;
+  JsonEncoder<Boolean> BOOLEAN = JsonDSL::bool;
   JsonEncoder<Enum<?>> ENUM = STRING.compose(Enum::name);
+  JsonEncoder<BigDecimal> BIG_DECIMAL = DOUBLE.compose(BigDecimal::doubleValue);
+  JsonEncoder<BigInteger> BIG_INTEGER = LONG.compose(BigInteger::longValue);
 }

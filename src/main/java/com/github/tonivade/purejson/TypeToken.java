@@ -7,7 +7,7 @@ package com.github.tonivade.purejson;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "preview"})
 public class TypeToken<T> {
   
   private final Class<?> rawType;
@@ -28,19 +28,18 @@ public class TypeToken<T> {
   }
   
   private static Type genericType(Type type) {
-    if (type instanceof ParameterizedType) {
-      ParameterizedType parameterizedType = (ParameterizedType) type;
-      return parameterizedType.getActualTypeArguments()[0];
+    if (type instanceof ParameterizedType p) {
+      return p.getActualTypeArguments()[0];
     }
     throw new UnsupportedOperationException("not supported " + type.getTypeName());
   }
 
   private static Class<?> rawType(Type type) {
-    if (type instanceof ParameterizedType) {
-      return (Class<?>) ((ParameterizedType) type).getRawType();
+    if (type instanceof ParameterizedType p) {
+      return rawType(p.getRawType());
     }
-    if (type instanceof Class<?>) {
-      return (Class<?>) type;
+    if (type instanceof Class<?> c) {
+      return c;
     }
     throw new UnsupportedOperationException("not supported " + type.getTypeName());
   }

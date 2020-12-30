@@ -900,10 +900,11 @@ class PureJsonTest extends IOTestSpec<String> {
     var gson = new GsonBuilder().create();
 
     int times = 500;
-    var stats1 = ioPerfCase("reflection", parseTask(string -> json1.fromJson(string))).run(times);
-    var stats2 = ioPerfCase("builder", parseTask(string -> json2.fromJson(string))).run(times);
-    var stats3 = ioPerfCase("adhoc", parseTask(string -> json3.fromJson(string))).run(times);
-    var stats4 = ioPerfCase("gson", parseTask(string -> gson.fromJson(string, listOfUsers))).run(times);
+    int warmup = 10;
+    var stats1 = ioPerfCase("reflection", parseTask(string -> json1.fromJson(string))).warmup(warmup).run(times);
+    var stats2 = ioPerfCase("builder", parseTask(string -> json2.fromJson(string))).warmup(warmup).run(times);
+    var stats3 = ioPerfCase("adhoc", parseTask(string -> json3.fromJson(string))).warmup(warmup).run(times);
+    var stats4 = ioPerfCase("gson", parseTask(string -> gson.fromJson(string, listOfUsers))).warmup(warmup).run(times);
 
     runPerf("parse", listOf(stats1, stats2, stats3, stats4));
   }
@@ -917,10 +918,11 @@ class PureJsonTest extends IOTestSpec<String> {
     var gson = new GsonBuilder().create();
 
     int times = 500;
-    var stats1 = ioPerfCase("reflection", serializeTask(value -> json1.toString(value))).run(times);
-    var stats2 = ioPerfCase("builder", serializeTask(value -> json2.toString(value))).run(times);
-    var stats3 = ioPerfCase("adhoc", serializeTask(value -> json3.toString(value))).run(times);
-    var stats4 = ioPerfCase("gson", serializeTask(value -> gson.toJson(value, listOfUsers))).run(times);
+    int warmup = 10;
+    var stats1 = ioPerfCase("reflection", serializeTask(value -> json1.toString(value))).warmup(warmup).run(times);
+    var stats2 = ioPerfCase("builder", serializeTask(value -> json2.toString(value))).warmup(warmup).run(times);
+    var stats3 = ioPerfCase("adhoc", serializeTask(value -> json3.toString(value))).warmup(warmup).run(times);
+    var stats4 = ioPerfCase("gson", serializeTask(value -> gson.toJson(value, listOfUsers))).warmup(warmup).run(times);
 
     runPerf("serialize", listOf(stats1, stats2, stats3, stats4));
   }
@@ -981,10 +983,10 @@ class PureJsonTest extends IOTestSpec<String> {
           s.getMin().toMillis(),
           s.getMax().toMillis(),
           s.getMean().toMillis(),
-          s.getP50().toMillis(),
-          s.getP90().toMillis(),
-          s.getP95().toMillis(),
-          s.getP99().toMillis());
+          s.getPercentile(50).getOrElseThrow().toMillis(),
+          s.getPercentile(90).getOrElseThrow().toMillis(),
+          s.getPercentile(95).getOrElseThrow().toMillis(),
+          s.getPercentile(99).getOrElseThrow().toMillis());
     }
   }
 

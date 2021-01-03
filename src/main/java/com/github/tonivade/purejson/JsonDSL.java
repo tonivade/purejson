@@ -13,6 +13,8 @@ import com.eclipsesource.json.JsonObject;
 
 public final class JsonDSL {
   
+  private JsonDSL() {}
+  
   public static JsonNode array(JsonNode... elements) {
     return array(List.of(elements));
   }

@@ -13,7 +13,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("preview")
-public class ExampleAdapterTest {
+class ExampleAdapterTest {
   
   @Json(adapter = RoleAdapter.class)
   record Role(String name) {}

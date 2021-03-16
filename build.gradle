@@ -1,14 +1,14 @@
 apply plugin: 'java'
 apply plugin: 'java-library'
 apply plugin: 'jacoco'
-apply plugin: 'com.bmuschko.nexus'
+//apply plugin: 'com.bmuschko.nexus'
 
 group = 'com.github.tonivade'
 archivesBaseName = 'purejson'
 version = '0.2-SNAPSHOT'
 
-sourceCompatibility = 15
-targetCompatibility = 15
+sourceCompatibility = 16
+targetCompatibility = 16
 
 buildscript {
   repositories {
@@ -35,10 +35,10 @@ repositories {
 
 test {
   useJUnitPlatform()
-  
-  jvmArgs(['--enable-preview'])
+
+  jvmArgs(['--enable-preview', "--illegal-access=permit"])
 }
-  
+
 tasks.withType(JavaCompile).each {
   it.options.compilerArgs.addAll('--enable-preview')
 }
@@ -61,6 +61,7 @@ dependencies {
   testImplementation 'com.google.code.gson:gson:2.8.6'
 }
 
+/*
 modifyPom {
   project {
     name 'PureJson'
@@ -103,3 +104,4 @@ nexus {
   repositoryUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
   snapshotRepositoryUrl = 'https://oss.sonatype.org/content/repositories/snapshots'
 }
+*/

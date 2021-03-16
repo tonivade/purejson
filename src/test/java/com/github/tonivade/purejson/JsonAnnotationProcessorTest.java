@@ -25,7 +25,7 @@ class JsonAnnotationProcessorTest {
 
             @Json
             public record User(int id, String name, List<String> roles) {}""");
-    
+
     JavaFileObject expected = forSourceLines("test.UserAdapter",
         """
             package test;
@@ -66,7 +66,7 @@ class JsonAnnotationProcessorTest {
             }""");
 
     assert_().about(javaSource()).that(file)
-        .withCompilerOptions("--enable-preview", "-source", "15")
+        .withCompilerOptions("--enable-preview", "-source", "16")
         .processedWith(new JsonAnnotationProcessor())
         .compilesWithoutError().and().generatesSources(expected);
   }
@@ -82,11 +82,11 @@ class JsonAnnotationProcessorTest {
 
             @Json(adapter = UserAdapter.class)
             public record User(int id, String name, List<String> roles) {}
-            
+
             class UserAdapter {}""");
 
     assert_().about(javaSource()).that(file)
-        .withCompilerOptions("--enable-preview", "-source", "15")
+        .withCompilerOptions("--enable-preview", "-source", "16")
         .processedWith(new JsonAnnotationProcessor())
         .compilesWithoutError();
   }
@@ -116,10 +116,10 @@ class JsonAnnotationProcessorTest {
               public int getId() { return id; }
 
               public String getName() { return name; }
-              
+
               public List<String> getRoles() { return roles; }
             }""");
-    
+
     JavaFileObject expected = forSourceLines("test.UserAdapter",
         """
             package test;
@@ -160,7 +160,7 @@ class JsonAnnotationProcessorTest {
             }""");
 
     assert_().about(javaSource()).that(file)
-        .withCompilerOptions("--enable-preview", "-source", "15")
+        .withCompilerOptions("--enable-preview", "-source", "16")
         .processedWith(new JsonAnnotationProcessor())
         .compilesWithoutError().and().generatesSources(expected);
   }
@@ -186,12 +186,12 @@ class JsonAnnotationProcessorTest {
               public int getId() { return id; }
 
               public String getName() { return name; }
-              
+
               public List<String> getRoles() { return roles; }
             }""");
 
     assert_().about(javaSource()).that(file)
-        .withCompilerOptions("--enable-preview", "-source", "15")
+        .withCompilerOptions("--enable-preview", "-source", "16")
         .processedWith(new JsonAnnotationProcessor())
         .failsToCompile();
   }
@@ -220,7 +220,7 @@ class JsonAnnotationProcessorTest {
             }""");
 
     assert_().about(javaSource()).that(file)
-        .withCompilerOptions("--enable-preview", "-source", "15")
+        .withCompilerOptions("--enable-preview", "-source", "16")
         .processedWith(new JsonAnnotationProcessor())
         .failsToCompile();
   }
@@ -237,7 +237,7 @@ class JsonAnnotationProcessorTest {
             public interface User {}""");
 
     assert_().about(javaSource()).that(file)
-        .withCompilerOptions("--enable-preview", "-source", "15")
+        .withCompilerOptions("--enable-preview", "-source", "16")
         .processedWith(new JsonAnnotationProcessor())
         .failsToCompile();
   }

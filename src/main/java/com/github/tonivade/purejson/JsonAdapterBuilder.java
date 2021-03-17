@@ -18,7 +18,6 @@ import java.util.Map;
 import com.eclipsesource.json.JsonObject;
 import com.github.tonivade.purefun.Function1;
 
-@SuppressWarnings("preview")
 public final class JsonAdapterBuilder<T> {
 
   private final Map<String, JsonEncoder<T>> encoders = new LinkedHashMap<>();

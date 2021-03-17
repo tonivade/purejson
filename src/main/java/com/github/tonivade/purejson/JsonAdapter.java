@@ -74,7 +74,7 @@ public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
    * @param type
    * @return
    */
-  @SuppressWarnings({ "unchecked", "preview" })
+  @SuppressWarnings("unchecked")
   static <T> Option<JsonAdapter<T>> load(Type type) {
     if (type instanceof Class<?> clazz && clazz.isAnnotationPresent(Json.class)) {
       return Option.<Class<?>>of(() -> clazz.getAnnotation(Json.class).adapter())

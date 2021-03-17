@@ -36,16 +36,11 @@ repositories {
 test {
   useJUnitPlatform()
 
-  jvmArgs(['--enable-preview', "--illegal-access=permit"])
-}
-
-tasks.withType(JavaCompile).each {
-  it.options.compilerArgs.addAll('--enable-preview')
+  jvmArgs(["--illegal-access=permit"])
 }
 
 javadoc.options {
-  addBooleanOption('-enable-preview', true)
-  addStringOption('-release', '15')
+  addStringOption('-release', '16')
 }
 
 dependencies {

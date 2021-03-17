@@ -27,7 +27,6 @@ import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Try;
 
 @FunctionalInterface
-@SuppressWarnings("preview")
 public interface JsonEncoder<T> {
   
   JsonNode encode(T value);

@@ -66,7 +66,6 @@ class JsonAnnotationProcessorTest {
             }""");
 
     assert_().about(javaSource()).that(file)
-        .withCompilerOptions("--enable-preview", "-source", "16")
         .processedWith(new JsonAnnotationProcessor())
         .compilesWithoutError().and().generatesSources(expected);
   }
@@ -86,7 +85,6 @@ class JsonAnnotationProcessorTest {
             class UserAdapter {}""");
 
     assert_().about(javaSource()).that(file)
-        .withCompilerOptions("--enable-preview", "-source", "16")
         .processedWith(new JsonAnnotationProcessor())
         .compilesWithoutError();
   }
@@ -160,7 +158,6 @@ class JsonAnnotationProcessorTest {
             }""");
 
     assert_().about(javaSource()).that(file)
-        .withCompilerOptions("--enable-preview", "-source", "16")
         .processedWith(new JsonAnnotationProcessor())
         .compilesWithoutError().and().generatesSources(expected);
   }
@@ -191,7 +188,6 @@ class JsonAnnotationProcessorTest {
             }""");
 
     assert_().about(javaSource()).that(file)
-        .withCompilerOptions("--enable-preview", "-source", "16")
         .processedWith(new JsonAnnotationProcessor())
         .failsToCompile();
   }
@@ -220,7 +216,6 @@ class JsonAnnotationProcessorTest {
             }""");
 
     assert_().about(javaSource()).that(file)
-        .withCompilerOptions("--enable-preview", "-source", "16")
         .processedWith(new JsonAnnotationProcessor())
         .failsToCompile();
   }
@@ -237,7 +232,6 @@ class JsonAnnotationProcessorTest {
             public interface User {}""");
 
     assert_().about(javaSource()).that(file)
-        .withCompilerOptions("--enable-preview", "-source", "16")
         .processedWith(new JsonAnnotationProcessor())
         .failsToCompile();
   }

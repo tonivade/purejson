@@ -9,16 +9,15 @@ import java.lang.reflect.Type;
 
 public class TypeToken<T> {
   
-  private final Class<?> rawType;
+  private final Class<? super T> rawType;
   private final Type type;
   
   protected TypeToken() {
-    Type genericSuperType = getClass().getGenericSuperclass();
-    this.type = genericType(genericSuperType);
+    this.type = genericType(getClass().getGenericSuperclass());
     this.rawType = rawType(type);
   }
   
-  public Class<?> getRawType() {
+  public Class<? super T> getRawType() {
     return rawType;
   }
   
@@ -30,16 +29,17 @@ public class TypeToken<T> {
     if (type instanceof ParameterizedType p) {
       return p.getActualTypeArguments()[0];
     }
-    throw new UnsupportedOperationException("not supported " + type.getTypeName());
+    throw new UnsupportedOperationException("type not supported " + type.getTypeName());
   }
 
-  private static Class<?> rawType(Type type) {
+  @SuppressWarnings("unchecked")
+  private static <T> Class<? super T> rawType(Type type) {
     if (type instanceof ParameterizedType p) {
       return rawType(p.getRawType());
     }
     if (type instanceof Class<?> c) {
-      return c;
+      return (Class<? super T>) c;
     }
-    throw new UnsupportedOperationException("not supported " + type.getTypeName());
+    throw new UnsupportedOperationException("type not supported " + type.getTypeName());
   }
 }

@@ -7,7 +7,6 @@ plugins {
 }
 
 group = 'com.github.tonivade'
-archivesBaseName = 'purejson'
 version = '0.2-SNAPSHOT'
 
 java {
@@ -92,6 +91,7 @@ publishing {
 }
 
 nexusPublishing {
+  
   repositories {
     sonatype {
       stagingProfileId = '19a96b937cdb5'

@@ -1,24 +1,21 @@
-apply plugin: 'java'
-apply plugin: 'java-library'
-apply plugin: 'jacoco'
-//apply plugin: 'com.bmuschko.nexus'
+plugins {
+  id 'java-library'
+  id 'jacoco'
+  id 'maven-publish'
+  id 'signing'
+  id 'io.github.gradle-nexus.publish-plugin' version '1.0.0'
+}
 
 group = 'com.github.tonivade'
 archivesBaseName = 'purejson'
 version = '0.2-SNAPSHOT'
 
-sourceCompatibility = 16
-targetCompatibility = 16
-
-buildscript {
-  repositories {
-    mavenCentral()
-    jcenter()
-  }
-
-  dependencies {
-    classpath 'com.bmuschko:gradle-nexus-plugin:2.3.1'
-  }
+java {
+  sourceCompatibility = JavaVersion.VERSION_16
+  targetCompatibility = JavaVersion.VERSION_16
+  
+  withJavadocJar()
+  withSourcesJar()
 }
 
 jacoco {
@@ -36,7 +33,7 @@ repositories {
 test {
   useJUnitPlatform()
 
-  jvmArgs(["--illegal-access=permit"])
+  jvmArgs(['--illegal-access=permit'])
 }
 
 javadoc.options {
@@ -56,47 +53,68 @@ dependencies {
   testImplementation 'com.google.code.gson:gson:2.8.6'
 }
 
-/*
-modifyPom {
-  project {
-    name 'PureJson'
-    description 'Pure Functional Json Parser Library'
-    url 'https://github.com/tonivade/purejson'
-    inceptionYear '2020'
+publishing {
+  publications {
+    mavenJava(MavenPublication) {
+      
+      from components.java
+      
+      pom {
+        name = 'PureJson'
+        description = 'Pure Functional Json Parser Library'
+        url = 'https://github.com/tonivade/purejson'
+        inceptionYear = '2020'
 
-    scm {
-      url 'https://github.com/tonivade/purejson'
-      connection 'scm:https://github.com/tonivade/purejson.git'
-      developerConnection 'scm:git://github.com/tonivade/purejson.git'
-    }
+        scm {
+          url = 'https://github.com/tonivade/purejson'
+          connection = 'scm:https://github.com/tonivade/purejson.git'
+          developerConnection = 'scm:git://github.com/tonivade/purejson.git'
+        }
 
-    licenses {
-      license {
-        name 'The MIT License (MIT)'
-        url 'https://github.com/tonivade/purejson/blob/master/LICENSE'
-        distribution 'repo'
-      }
-    }
+        licenses {
+          license {
+            name = 'The MIT License (MIT)'
+            url = 'https://github.com/tonivade/purejson/blob/master/LICENSE'
+            distribution = 'repo'
+          }
+        }
 
-    developers {
-      developer {
-        id 'tonivade'
-        name 'Antonio Muñoz'
-        email 'antoniogmc@gmail.com'
+        developers {
+          developer {
+            id = 'tonivade'
+            name = 'Antonio Muñoz'
+            email = 'antoniogmc@gmail.com'
+          }
+        }
       }
     }
   }
 }
 
-extraArchive {
-  sources = true
-  tests = false
-  javadoc = true
+nexusPublishing {
+  repositories {
+    sonatype {
+      stagingProfileId = '19a96b937cdb5'
+      
+      username = project.findProperty('nexusUsername')  
+      password = project.findProperty('nexusPassword')
+    }
+  }
+  
+  clientTimeout = Duration.ofSeconds(300)
+  connectTimeout = Duration.ofSeconds(60)
+
+  transitionCheckOptions {
+    maxRetries.set(40)
+    delayBetween.set(java.time.Duration.ofMillis(3000))
+  }
 }
 
-nexus {
-  sign = true
-  repositoryUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
-  snapshotRepositoryUrl = 'https://oss.sonatype.org/content/repositories/snapshots'
+signing {
+  def signingKey = project.findProperty('signing.keyId')
+  def signingPassword = project.findProperty('signing.password')
+
+  useInMemoryPgpKeys(signingKey, signingPassword)
+
+  sign publishing.publications.mavenJava
 }
-*/

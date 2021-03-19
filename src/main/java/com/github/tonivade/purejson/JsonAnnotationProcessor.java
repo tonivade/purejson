@@ -45,7 +45,6 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
-@SuppressWarnings("preview")
 @SupportedAnnotationTypes("com.github.tonivade.purejson.Json")
 public class JsonAnnotationProcessor extends AbstractProcessor {
 

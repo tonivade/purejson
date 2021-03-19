@@ -7,7 +7,6 @@ package com.github.tonivade.purejson;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
-@SuppressWarnings({"unused", "preview"})
 public class TypeToken<T> {
   
   private final Class<?> rawType;

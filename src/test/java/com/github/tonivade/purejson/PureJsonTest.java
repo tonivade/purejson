@@ -64,7 +64,6 @@ import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Try;
 import com.google.gson.GsonBuilder;
 
-@SuppressWarnings("preview")
 class PureJsonTest extends IOTestSpec<String> {
 
   record User(Integer id, String name) {}

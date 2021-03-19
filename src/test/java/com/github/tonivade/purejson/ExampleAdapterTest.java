@@ -12,7 +12,6 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-@SuppressWarnings("preview")
 class ExampleAdapterTest {
   
   @Json(adapter = RoleAdapter.class)

@@ -145,7 +145,7 @@ public class JsonAnnotationProcessor extends AbstractProcessor {
     private CodeBlock encodeMethod() {
       var builder = CodeBlock.builder();
       for (var field : fields) {
-        builder.addStatement("var $N = $T.entry($S, u$L.encode($N.$N()))",
+        builder.addStatement("var $N = $T.entry($S, $L.encode($N.$N()))",
             field.name, JsonDSL.class, field.name, field.getAdapterName(), "value", field.accessor.getSimpleName());
       }
       String params = fields.map(f -> f.name).join(", ");

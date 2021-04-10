@@ -34,7 +34,7 @@ public final class Record<T> {
     try {
       isRecord = Class.class.getDeclaredMethod("isRecord");
       getRecordComponents = Class.class.getMethod("getRecordComponents");
-      Class c = Class.forName("java.lang.reflect.RecordComponent");
+      Class<?> c = Class.forName("java.lang.reflect.RecordComponent");
       getName = c.getMethod("getName");
       getType = c.getMethod("getType");
       getGenericType = c.getMethod("getGenericType");
@@ -97,22 +97,27 @@ public final class Record<T> {
 
     @Override
     public String getName() {
-      return (String) Try.of(() -> GET_NAME.invoke(component)).getOrElseThrow();
+      return invoke(GET_NAME);
     }
 
     @Override
     public Class<?> getType() {
-      return (Class<?>) Try.of(() -> GET_TYPE.invoke(component)).getOrElseThrow();
+      return invoke(GET_TYPE);
     }
 
     @Override
     public Method getAccessor() {
-      return (Method) Try.of(() -> GET_ACCESSOR.invoke(component)).getOrElseThrow();
+      return invoke(GET_ACCESSOR);
     }
 
     @Override
     public Type getGenericType() {
-      return (Class<?>) Try.of(() -> GET_GENERIC_TYPE.invoke(component)).getOrElseThrow();
+      return invoke(GET_GENERIC_TYPE);
+    }
+    
+    @SuppressWarnings("unchecked")
+    private <T> T invoke(Method method) {
+      return (T) Try.of(() -> method.invoke(component)).getOrElseThrow();
     }
     
   }

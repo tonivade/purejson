@@ -288,7 +288,7 @@ public class JsonAnnotationProcessor extends AbstractProcessor {
       try {
         Class<?> clazz = Class.forName("javax.lang.model.element.RecordComponentElement");
         getAccessor = clazz.getMethod("getAccessor");
-      } catch (ClassNotFoundException | NoSuchMethodException | SecurityException e) {
+      } catch (ClassNotFoundException | NoSuchMethodException e) {
         getAccessor = null;
       }
       GET_ACCESSOR = getAccessor;

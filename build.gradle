@@ -10,8 +10,8 @@ group = 'com.github.tonivade'
 version = '0.2-SNAPSHOT'
 
 java {
-  sourceCompatibility = JavaVersion.VERSION_16
-  targetCompatibility = JavaVersion.VERSION_16
+  sourceCompatibility = JavaVersion.VERSION_11
+  targetCompatibility = JavaVersion.VERSION_11
   
   withJavadocJar()
   withSourcesJar()
@@ -36,7 +36,7 @@ test {
 }
 
 javadoc.options {
-  addStringOption('-release', '16')
+  addStringOption('-release', '11')
 }
 
 dependencies {

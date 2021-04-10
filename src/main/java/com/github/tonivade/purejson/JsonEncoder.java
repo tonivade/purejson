@@ -80,7 +80,8 @@ public interface JsonEncoder<T> {
   }
 
   static <T> JsonEncoder<T> recordEncoder(Class<T> type) {
-    var fields = Arrays.stream(type.getRecordComponents())
+    var record = new Record<T>(type);
+    var fields = Arrays.stream(record.getRecordComponents())
         .map(f -> Tuple2.of(f, encoder(f.getGenericType())))
         .collect(toList());
     return value -> {
@@ -127,38 +128,37 @@ public interface JsonEncoder<T> {
 
   @SuppressWarnings({ "unchecked", "rawtypes" })
   private static <T> JsonEncoder<T> create(Type type) {
-    if (type instanceof Class clazz) {
-      return create(clazz);
+    if (type instanceof Class) {
+      return create((Class) type);
     }
-    if (type instanceof ParameterizedType paramType) {
-      return create(paramType);
+    if (type instanceof ParameterizedType) {
+      return create((ParameterizedType) type);
     }
-    if (type instanceof GenericArrayType arrayType) {
-      return create(arrayType);
+    if (type instanceof GenericArrayType) {
+      return create((GenericArrayType) type);
     }
-    if (type instanceof WildcardType wildcardType) {
-      return create(wildcardType);
+    if (type instanceof WildcardType) {
+      return create((WildcardType) type);
     }
     throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
   }
 
   @SuppressWarnings("unchecked")
   private static <T> JsonEncoder<T> create(ParameterizedType type) {
-    if (type.getRawType() instanceof Class<?> c 
-        && ImmutableMap.class.isAssignableFrom(c)
-        && type.getActualTypeArguments()[0].equals(String.class)) {
-      var create = encoder(type.getActualTypeArguments()[1]);
-      return (JsonEncoder<T>) immutableMapEncoder(create);
-    }
-    if (type.getRawType() instanceof Class<?> c 
-        && Map.class.isAssignableFrom(c)
-        && type.getActualTypeArguments()[0].equals(String.class)) {
-      var create = encoder(type.getActualTypeArguments()[1]);
-      return (JsonEncoder<T>) mapEncoder(create);
-    }
-    if (type.getRawType() instanceof Class<?> c && Iterable.class.isAssignableFrom(c)) {
-      var create = encoder(type.getActualTypeArguments()[0]);
-      return (JsonEncoder<T>) iterableEncoder(create);
+    if (type.getRawType() instanceof Class<?>) {
+      Class<?> c = (Class<?>) type.getRawType();
+      if (ImmutableMap.class.isAssignableFrom(c) && type.getActualTypeArguments()[0].equals(String.class)) {
+        var create = encoder(type.getActualTypeArguments()[1]);
+        return (JsonEncoder<T>) immutableMapEncoder(create);
+      }
+      if (Map.class.isAssignableFrom(c) && type.getActualTypeArguments()[0].equals(String.class)) {
+        var create = encoder(type.getActualTypeArguments()[1]);
+        return (JsonEncoder<T>) mapEncoder(create);
+      }
+      if (Iterable.class.isAssignableFrom(c)) {
+        var create = encoder(type.getActualTypeArguments()[0]);
+        return (JsonEncoder<T>) iterableEncoder(create);
+      }
     }
     throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
   }
@@ -169,8 +169,8 @@ public interface JsonEncoder<T> {
 
   private static <T> JsonEncoder<T> create(GenericArrayType type) {
     Type genericComponentType = type.getGenericComponentType();
-    if (genericComponentType instanceof Class<?> c) {
-      return arrayEncoder(c);
+    if (genericComponentType instanceof Class<?>) {
+      return arrayEncoder((Class<?>) genericComponentType);
     }
     throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
   }
@@ -205,7 +205,7 @@ public interface JsonEncoder<T> {
       return (JsonEncoder<T>) JsonEncoderModule.ENUM;
     } else if (type.isArray()) {
       return arrayEncoder(type.getComponentType());
-    } else if (type.isRecord()) {
+    } else if (Record.isRecord(type)) {
       return recordEncoder(type);
     } else {
       return pojoEncoder(type);

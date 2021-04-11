@@ -24,6 +24,24 @@ library.
   assertEquals(new User(1, "toni"), user);
 ```
 
+PureJson supports runtime reflection and annotation processors. If an adapter exists for a 
+specific type, then the adapter is used instead of use reflection.
+
+## Support
+
+### Runtime Reflection
+
+- Java POJOs: with empty constructor and setter/getters. Fields are populated using reflection.
+- Java Value Objects: without empty constructor and setters (immutables). Constructor with parameters is used to create new instances.
+- Java Records (Java 16): canonical constructor is used to create new instances.
+
+### Annotation Processor
+
+You can annotate your classes with `@Json` and an adapter for this class will be generated.
+
+- Java Value Objects
+- Java Recrods (Java 16)
+
 ## Performance
 
 ```

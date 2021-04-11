@@ -34,7 +34,7 @@ subprojects {
       mavenJava(MavenPublication) {
       
         if (project.name == 'purefun-lib') {
-          artifactId = 'purefun'
+          artifactId = 'purejson'
         }
         
         from components.java

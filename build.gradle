@@ -33,7 +33,7 @@ subprojects {
     publications {
       mavenJava(MavenPublication) {
       
-        if (project.name == 'purefun-lib') {
+        if (project.name == 'purejson-lib') {
           artifactId = 'purejson'
         }
         

@@ -19,10 +19,6 @@ javadoc.options {
   addStringOption('-release', '11')
 }
 
-signing {
-  sign publishing.publications.mavenJava
-}
-
 dependencies {
   api 'com.github.tonivade:purefun-core:2.3-SNAPSHOT'
   api 'com.eclipsesource.minimal-json:minimal-json:0.9.5'

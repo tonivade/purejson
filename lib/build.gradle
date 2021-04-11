@@ -12,7 +12,6 @@ tasks.withType(JavaCompile).each {
 }
 
 tasks.withType(AbstractArchiveTask).each {
-  println(it.name)
   it.baseName = 'purejson'
 }
 

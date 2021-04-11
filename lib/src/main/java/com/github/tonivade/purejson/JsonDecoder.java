@@ -102,8 +102,8 @@ public interface JsonDecoder<T> {
         try {
           var constructor = type.getDeclaredConstructor(types.toArray(Class[]::new));
           return constructor.newInstance(values.toArray(Object[]::new));
-        } catch (InstantiationException | IllegalAccessException | IllegalArgumentException 
-            | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+          // TODO: use another exception
           throw new RuntimeException(e);
         }
       }
@@ -131,8 +131,8 @@ public interface JsonDecoder<T> {
             }
             return value;
           }
-        } catch (IllegalArgumentException | IllegalAccessException | InstantiationException 
-            | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+          // TODO: use another exception
           throw new RuntimeException(e);
         }
       }

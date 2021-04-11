@@ -63,7 +63,7 @@ public interface JsonEncoder<T> {
     var fields = Arrays.stream(type.getDeclaredFields())
         .filter(f -> !isStatic(f.getModifiers()))
         .filter(f -> !f.isSynthetic())
-        .peek(Field::trySetAccessible)
+        .filter(Field::trySetAccessible)
         .map(f -> Tuple2.of(f, encoder(f.getGenericType())))
         .collect(toList());
     return value -> {

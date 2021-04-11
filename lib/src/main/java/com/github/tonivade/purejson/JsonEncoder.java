@@ -71,7 +71,7 @@ public interface JsonEncoder<T> {
       for (var pair : fields) {
         try {
           object.add(pair.get1().getName(), pair.get2().encode(pair.get1().get(value)).unwrap());
-        } catch (IllegalArgumentException | IllegalAccessException e) {
+        } catch (IllegalAccessException e) {
           throw new IllegalStateException(e);
         }
       }
@@ -90,7 +90,7 @@ public interface JsonEncoder<T> {
         try {
           var field = pair.get1().getAccessor().invoke(value);
           object.add(pair.get1().getName(), pair.get2().encode(field).unwrap());
-        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+        } catch (IllegalAccessException | InvocationTargetException e) {
           throw new IllegalStateException(e);
         }
       }

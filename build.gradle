@@ -32,6 +32,8 @@ subprojects {
   publishing {
     publications {
       mavenJava(MavenPublication) {
+      
+        artifactId = project.name
         
         from components.java
         
@@ -71,6 +73,7 @@ subprojects {
 nexusPublishing {
   repositories {
     sonatype {
+      
       stagingProfileId = '19a96b937cdb5'
       
       username = project.findProperty('nexusUsername')  

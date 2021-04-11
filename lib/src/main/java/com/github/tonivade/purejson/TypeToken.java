@@ -26,7 +26,8 @@ public class TypeToken<T> {
   }
   
   private static Type genericType(Type type) {
-    if (type instanceof ParameterizedType p) {
+    if (type instanceof ParameterizedType) {
+      ParameterizedType p = (ParameterizedType) type;
       return p.getActualTypeArguments()[0];
     }
     throw new UnsupportedOperationException("type not supported " + type.getTypeName());
@@ -34,10 +35,12 @@ public class TypeToken<T> {
 
   @SuppressWarnings("unchecked")
   private static <T> Class<? super T> rawType(Type type) {
-    if (type instanceof ParameterizedType p) {
+    if (type instanceof ParameterizedType) {
+      ParameterizedType p = (ParameterizedType) type;
       return rawType(p.getRawType());
     }
-    if (type instanceof Class<?> c) {
+    if (type instanceof Class<?>) {
+      Class<?> c = (Class<?>) type;
       return (Class<? super T>) c;
     }
     throw new UnsupportedOperationException("type not supported " + type.getTypeName());

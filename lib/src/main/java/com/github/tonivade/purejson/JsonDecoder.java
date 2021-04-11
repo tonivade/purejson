@@ -4,10 +4,12 @@
  */
 package com.github.tonivade.purejson;
 
+import static com.github.tonivade.purefun.data.Sequence.listOf;
 import static java.lang.reflect.Modifier.isStatic;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
-import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toUnmodifiableList;
+import static java.util.stream.Collectors.toUnmodifiableMap;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
@@ -88,7 +90,7 @@ public interface JsonDecoder<T> {
     var record = new Record<T>(type);
     var fields = Arrays.stream(record.getRecordComponents())
         .map(f -> Tuple2.of(f, decoder(f.getGenericType())))
-        .collect(toList());
+        .collect(toUnmodifiableList());
     return json -> {
       if (json instanceof JsonNode.Object) {
         JsonNode.Object o = (JsonNode.Object) json;
@@ -115,21 +117,34 @@ public interface JsonDecoder<T> {
     var fields = Arrays.stream(type.getDeclaredFields())
         .filter(f -> !isStatic(f.getModifiers()))
         .filter(f -> !f.isSynthetic())
-        .peek(Field::trySetAccessible)
+        .filter(Field::trySetAccessible)
         .map(f -> Tuple2.of(f, decoder(f.getGenericType())))
-        .collect(toList());
+        .collect(toUnmodifiableList());
     return json -> {
       if (json instanceof JsonNode.Object) {
         JsonNode.Object o = (JsonNode.Object) json;
         try {
-          Constructor<T> constructor = type.getDeclaredConstructor();
+          var constructor = findConstructor(type);
           if (constructor.trySetAccessible()) {
-            T value = constructor.newInstance();
-            for (var pair : fields) {
-              var node = o.get(pair.get1().getName());
-              pair.get1().set(value, pair.get2().decode(node));
+            if (constructor.getParameterCount() > 0) {
+              var fieldsToDecode = 
+                  fields.stream().collect(toUnmodifiableMap(t -> t.get1().getName(), t -> t.get2()));
+              
+              var values = Arrays.stream(constructor.getParameters())
+                .map(p -> p.getAnnotation(JsonProperty.class))
+                .map(JsonProperty::value)
+                .map(name -> fieldsToDecode.get(name).decode(o.get(name)))
+                .toArray();
+              
+              return constructor.newInstance(values);
+            } else {
+              T value = constructor.newInstance();
+              for (var pair : fields) {
+                var node = o.get(pair.get1().getName());
+                pair.get1().set(value, pair.get2().decode(node));
+              }
+              return value;
             }
-            return value;
           }
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
           // TODO: use another exception
@@ -138,6 +153,27 @@ public interface JsonDecoder<T> {
       }
       throw new IllegalArgumentException(json.toString());
     };
+  }
+
+  @SuppressWarnings("unchecked")
+  private static <T> Constructor<T> findConstructor(Class<T> type) throws NoSuchMethodException {
+    return (Constructor<T>) findUniqueConstructor(type)
+        .or(() -> findDefaultConstructor(type))
+        .or(() -> findAnnotatedConstructor(type))
+        .getOrElseThrow(NoSuchMethodException::new);
+  }
+
+  static <T> Option<Constructor<?>> findUniqueConstructor(Class<T> type) {
+    var list = listOf(type.getDeclaredConstructors());
+    return list.tail().isEmpty() ? list.head() : Option.none();
+  }
+
+  static <T> Option<Constructor<?>> findAnnotatedConstructor(Class<T> type) {
+    return listOf(type.getDeclaredConstructors()).filter(c -> c.isAnnotationPresent(JsonCreator.class)).head();
+  }
+
+  static <T> Option<Constructor<?>> findDefaultConstructor(Class<T> type) {
+    return listOf(type.getDeclaredConstructors()).filter(c -> c.getParameterCount() == 0).head();
   }
 
   static <E> JsonDecoder<Iterable<E>> iterableDecoder(JsonDecoder<E> itemDecoder) {

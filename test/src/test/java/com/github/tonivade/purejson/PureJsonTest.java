@@ -68,6 +68,44 @@ class PureJsonTest extends IOTestSpec<String> {
 
   record User(Integer id, String name) {}
 
+  static final class Value {
+    
+    @SuppressWarnings("unused")
+    private static final int x = 1;
+    
+    private final Integer id;
+    private final String name;
+    
+    @JsonCreator
+    Value(@JsonProperty("id") Integer id, @JsonProperty("name") String name) {
+      this.id = id;
+      this.name = name;
+    }
+    
+    public Integer getId() {
+      return id;
+    }
+    
+    public String getName() {
+      return name;
+    }
+    
+    @Override
+    public int hashCode() {
+      return Objects.hash(id, name);
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+      return Equal.<Value>of().comparing(Value::getId).comparing(Value::getName).applyTo(this, obj);
+    }
+    
+    @Override
+    public String toString() {
+      return "Value(id:%s,name:%s)".formatted(id, name);
+    }
+  }
+
   static final class Pojo {
     
     @SuppressWarnings("unused")
@@ -124,6 +162,20 @@ class PureJsonTest extends IOTestSpec<String> {
         it.should("serialize a record with null fields")
           .given(new User(1, null))
           .when(value -> new PureJson<>(User.class).toString(value))
+          .thenMustBe(equalsTo(success("""
+              {"id":1,"name":null} 
+              """.strip()))),
+          
+        it.should("serialize a value")
+          .given(new Value(1, "toni"))
+          .when(value -> new PureJson<>(Value.class).toString(value))
+          .thenMustBe(equalsTo(success("""
+              {"id":1,"name":"toni"} 
+              """.strip()))),
+          
+        it.should("serialize a value with null fields")
+          .given(new Value(1, null))
+          .when(value -> new PureJson<>(Value.class).toString(value))
           .thenMustBe(equalsTo(success("""
               {"id":1,"name":null} 
               """.strip()))),
@@ -456,6 +508,25 @@ class PureJsonTest extends IOTestSpec<String> {
         it.should("parse a null record")
           .given("null")
           .when(node -> new PureJson<>(User.class).fromJson(node))
+          .thenMustBe(equalsTo(success(none()))),
+
+        it.should("parse a value")
+          .given("""
+              {"id":1,"name":"toni"} 
+              """.strip())
+          .when(node -> new PureJson<>(Value.class).fromJson(node))
+          .thenMustBe(equalsTo(success(some(new Value(1, "toni"))))),
+
+        it.should("parse a value")
+          .given("""
+              {"id":1,"name":null} 
+              """.strip())
+          .when(node -> new PureJson<>(Value.class).fromJson(node))
+          .thenMustBe(equalsTo(success(some(new Value(1, null))))),
+
+        it.should("parse a null value")
+          .given("null")
+          .when(node -> new PureJson<>(Value.class).fromJson(node))
           .thenMustBe(equalsTo(success(none()))),
 
         it.should("parse a pojo")

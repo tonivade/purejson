@@ -1,7 +1,3 @@
-  
-tasks.withType(JavaCompile).each {
-  it.options.compilerArgs.addAll('--release', '11')
-}
 
 java {
   sourceCompatibility = JavaVersion.VERSION_11
@@ -9,6 +5,15 @@ java {
   
   withJavadocJar()
   withSourcesJar()
+}
+
+tasks.withType(JavaCompile).each {
+  it.options.compilerArgs.addAll('--release', '11')
+}
+
+tasks.withType(AbstractArchiveTask).each {
+  println(it.name)
+  it.baseName = 'purejson'
 }
 
 javadoc.options {

@@ -1,5 +1,5 @@
-rootProject.name = "purejson"
+rootProject.name = "purejson-parent"
 
 include "lib", "test"
 
-rootProject.children.each { it.name = rootProject.name + "-" + it.name }
+rootProject.children.each { it.name = "purejson-" + it.name }

@@ -10,6 +10,7 @@ import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.toList;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.InvocationTargetException;
@@ -121,12 +122,15 @@ public interface JsonDecoder<T> {
       if (json instanceof JsonNode.Object) {
         JsonNode.Object o = (JsonNode.Object) json;
         try {
-          T value = type.getDeclaredConstructor().newInstance();
-          for (var pair : fields) {
-            var node = o.get(pair.get1().getName());
-            pair.get1().set(value, pair.get2().decode(node));
+          Constructor<T> constructor = type.getDeclaredConstructor();
+          if (constructor.trySetAccessible()) {
+            T value = constructor.newInstance();
+            for (var pair : fields) {
+              var node = o.get(pair.get1().getName());
+              pair.get1().set(value, pair.get2().decode(node));
+            }
+            return value;
           }
-          return value;
         } catch (IllegalArgumentException | IllegalAccessException | InstantiationException 
             | InvocationTargetException | NoSuchMethodException | SecurityException e) {
           throw new RuntimeException(e);

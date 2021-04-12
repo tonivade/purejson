@@ -40,7 +40,7 @@ specific type, then the adapter is used instead of use reflection.
 You can annotate your classes with `@Json` and an adapter for this class will be generated.
 
 - Java Value Objects
-- Java Recrods (Java 16)
+- Java Records (Java 16)
 
 ## Performance
 

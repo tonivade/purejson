@@ -27,7 +27,7 @@ library.
 PureJson supports runtime reflection and annotation processors. If an adapter exists for a 
 specific type, then the adapter is used instead of use reflection.
 
-## Support
+## Features
 
 ### Runtime Reflection
 

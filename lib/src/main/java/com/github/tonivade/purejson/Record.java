@@ -5,12 +5,10 @@
 package com.github.tonivade.purejson;
 
 import static com.github.tonivade.purefun.Precondition.checkNonNull;
-
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Arrays;
-
 import com.github.tonivade.purefun.type.Try;
 
 public final class Record<T> {
@@ -21,7 +19,7 @@ public final class Record<T> {
   private static final Method GET_TYPE;
   private static final Method GET_GENERIC_TYPE;
   private static final Method GET_ACCESSOR;
-  
+
   private final Class<T> clazz;
 
   static {
@@ -59,15 +57,15 @@ public final class Record<T> {
   public Record(Class<T> clazz) {
     this.clazz = checkNonNull(clazz);
   }
-  
+
   public String getName() {
     try {
       return (String) GET_NAME.invoke(clazz);
-    } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-      throw new AssertionError();
+    } catch (IllegalAccessException | InvocationTargetException e) {
+      throw new AssertionError(e);
     }
   }
-  
+
   public RecordComponent[] getRecordComponents() {
     try {
       Object[] components = (Object[]) GET_RECORD_COMPONENTS.invoke(clazz);
@@ -75,8 +73,8 @@ public final class Record<T> {
         return Arrays.stream(components).map(ReflectionRecordComponent::new).toArray(RecordComponent[]::new);
       }
       return new RecordComponent[] {};
-    } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-      throw new AssertionError();
+    } catch (IllegalAccessException | InvocationTargetException e) {
+      throw new AssertionError(e);
     }
   }
 
@@ -86,11 +84,11 @@ public final class Record<T> {
     Class<?> getType();
     Type getGenericType();
   }
-  
+
   static final class ReflectionRecordComponent implements RecordComponent {
-    
+
     private final Object component;
-    
+
     public ReflectionRecordComponent(Object component) {
       this.component = checkNonNull(component);
     }
@@ -114,19 +112,19 @@ public final class Record<T> {
     public Type getGenericType() {
       return invoke(GET_GENERIC_TYPE);
     }
-    
+
     @SuppressWarnings("unchecked")
     private <T> T invoke(Method method) {
       return (T) Try.of(() -> method.invoke(component)).getOrElseThrow();
     }
-    
+
   }
 
   public static boolean isRecord(Class<?> aClass) {
     try {
       return IS_RECORD == null ? false : (boolean) IS_RECORD.invoke(aClass);
     } catch (IllegalAccessException | InvocationTargetException e) {
-      throw new AssertionError();
+      throw new AssertionError(e);
     }
   }
 

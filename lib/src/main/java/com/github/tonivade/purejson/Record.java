@@ -59,11 +59,7 @@ public final class Record<T> {
   }
 
   public String getName() {
-    try {
-      return (String) GET_NAME.invoke(clazz);
-    } catch (IllegalAccessException | InvocationTargetException e) {
-      throw new AssertionError(e);
-    }
+    return clazz.getName();
   }
 
   public RecordComponent[] getRecordComponents() {

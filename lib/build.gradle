@@ -1,4 +1,12 @@
 
+sourceSets {
+  java16 {
+    java {
+      srcDirs = ['src/main/java16']
+    }
+  }
+}
+
 java {
   sourceCompatibility = JavaVersion.VERSION_11
   targetCompatibility = JavaVersion.VERSION_11
@@ -7,8 +15,24 @@ java {
   withSourcesJar()
 }
 
+compileJava16Java {
+  sourceCompatibility = JavaVersion.VERSION_16
+  targetCompatibility = JavaVersion.VERSION_16
+}
+
+jar {
+  into('META-INF/versions/16') {
+    from sourceSets.java16.output
+  }
+  manifest.attributes('Multi-Release': 'true')
+}
+
 tasks.withType(JavaCompile).each {
-  it.options.compilerArgs.addAll('--release', '11')
+  if (it.getName().contains("Java16")) {
+    it.options.compilerArgs.addAll('--release', '16')
+  } else {
+    it.options.compilerArgs.addAll('--release', '11')
+  }
 }
 
 tasks.withType(AbstractArchiveTask).each {
@@ -23,4 +47,8 @@ dependencies {
   api 'com.github.tonivade:purefun-core:2.3-SNAPSHOT'
   api 'com.eclipsesource.minimal-json:minimal-json:0.9.5'
   api 'com.squareup:javapoet:1.12.1'
+  java16Implementation files(sourceSets.main.output.classesDirs) {
+     builtBy compileJava
+  }
+  java16Implementation 'com.github.tonivade:purefun-core:2.3-SNAPSHOT'
 }

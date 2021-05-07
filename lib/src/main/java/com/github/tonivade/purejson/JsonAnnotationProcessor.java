@@ -15,6 +15,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -22,6 +23,7 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ElementVisitor;
@@ -62,30 +64,40 @@ public class JsonAnnotationProcessor extends AbstractProcessor {
   public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
     for (TypeElement annotation : annotations) {
       for (Element element : roundEnv.getElementsAnnotatedWith(annotation)) {
-        var json = element.getAnnotationMirrors().stream()
-            .filter(am -> am.getAnnotationType().equals(annotation.asType()))
-            .findFirst().orElseThrow();
-
-        var adapter = json.getElementValues().entrySet().stream()
-          .filter(entry -> entry.getKey().getSimpleName().toString().equals("adapter"))
-          .map(Map.Entry::getValue).findFirst();
-
-        if (adapter.isEmpty()) {
-          if (element.getKind().name().equals("RECORD")) {
-            printNote(element.getSimpleName() + " record found");
-            saveFile(modelForRecord((TypeElement) element));
-          } else if (element.getKind().name().equals("CLASS")) {
-            printNote(element.getSimpleName() + " pojo found");
-            saveFile(modelForPojo((TypeElement) element));
-          } else {
-            printError(element.getSimpleName() + " is not supported: " + element.getKind());
-          }
-        } else {
-          printNote(element.getSimpleName() + " pojo found with adapter: " + adapter.get().getValue());
-        }
+        getAdapterFromAnnotation(getAnnotation(annotation, element))
+          .ifPresentOrElse(
+              adapter -> adapterAlreadyExists(element, adapter), () -> generateAdapter(element));
       }
     }
     return true;
+  }
+
+  private AnnotationMirror getAnnotation(TypeElement annotation, Element element) {
+    return element.getAnnotationMirrors().stream()
+        .filter(am -> am.getAnnotationType().equals(annotation.asType()))
+        .findFirst().orElseThrow();
+  }
+
+  private Optional<? extends AnnotationValue> getAdapterFromAnnotation(AnnotationMirror json) {
+    return json.getElementValues().entrySet().stream()
+      .filter(entry -> entry.getKey().getSimpleName().toString().equals("adapter"))
+      .map(Map.Entry::getValue).findFirst();
+  }
+
+  private void adapterAlreadyExists(Element element, AnnotationValue adapter) {
+    printNote(element.getSimpleName() + " pojo found with adapter: " + adapter.getValue());
+  }
+
+  private void generateAdapter(Element element) {
+    if (element.getKind().name().equals("RECORD")) {
+      printNote(element.getSimpleName() + " record found");
+      saveFile(modelForRecord((TypeElement) element));
+    } else if (element.getKind().name().equals("CLASS")) {
+      printNote(element.getSimpleName() + " pojo found");
+      saveFile(modelForPojo((TypeElement) element));
+    } else {
+      printError(element.getSimpleName() + " is not supported: " + element.getKind());
+    }
   }
 
   static final class Model {
@@ -344,8 +356,8 @@ public class JsonAnnotationProcessor extends AbstractProcessor {
       return element.getAnnotation(annotationType);
     }
 
-    public <R, P> R accept(ElementVisitor<R, P> v, P p) {
-      return element.accept(v, p);
+    public <R, P> R accept(ElementVisitor<R, P> visitor, P parameter) {
+      return element.accept(visitor, parameter);
     }
 
     public ExecutableElement getAccessor() {

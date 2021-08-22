@@ -36,7 +36,7 @@ tasks.withType(JavaCompile).each {
 }
 
 tasks.withType(AbstractArchiveTask).each {
-  it.baseName = 'purejson'
+  it.archiveBaseName = 'purejson'
 }
 
 javadoc.options {

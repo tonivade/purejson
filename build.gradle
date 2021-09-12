@@ -13,7 +13,7 @@ allprojects {
   apply plugin: 'signing'
 
   group = 'com.github.tonivade'
-  version = '0.2'
+  version = '0.3-SNAPSHOT'
   
   ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 

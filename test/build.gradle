@@ -16,7 +16,7 @@ dependencies {
   testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
   testImplementation 'org.junit.platform:junit-platform-runner:1.7.0'
   testImplementation 'com.github.tonivade:purecheck:0.2-SNAPSHOT'
-  testImplementation 'com.github.tonivade:purefun-monad:2.3-SNAPSHOT'
-  testImplementation 'com.github.tonivade:purefun-instances:2.3-SNAPSHOT'
+  testImplementation 'com.github.tonivade:purefun-monad:3.0'
+  testImplementation 'com.github.tonivade:purefun-instances:3.0'
   testImplementation 'com.google.code.gson:gson:2.8.6'
 }

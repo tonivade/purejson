@@ -44,11 +44,11 @@ javadoc.options {
 }
 
 dependencies {
-  api 'com.github.tonivade:purefun-core:2.3-SNAPSHOT'
+  api 'com.github.tonivade:purefun-core:3.0'
   api 'com.eclipsesource.minimal-json:minimal-json:0.9.5'
   api 'com.squareup:javapoet:1.12.1'
   java16Implementation files(sourceSets.main.output.classesDirs) {
      builtBy compileJava
   }
-  java16Implementation 'com.github.tonivade:purefun-core:3.0-SNAPSHOT'
+  java16Implementation 'com.github.tonivade:purefun-core:3.0'
 }

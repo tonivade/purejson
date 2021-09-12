@@ -13,7 +13,7 @@ allprojects {
   apply plugin: 'signing'
 
   group = 'com.github.tonivade'
-  version = '0.2-SNAPSHOT'
+  version = '0.2'
   
   ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
@@ -31,6 +31,12 @@ allprojects {
 }
 
 subprojects {
+
+  java {
+    withJavadocJar()
+    withSourcesJar()
+  }
+
   publishing {
     publications {
       mavenJava(MavenPublication) {

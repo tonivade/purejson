@@ -18,7 +18,7 @@ allprojects {
   ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
   jacoco {
-    toolVersion = '0.8.6'
+    toolVersion = '0.8.7'
   }
 
   repositories {

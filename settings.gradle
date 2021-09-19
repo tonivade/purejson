@@ -1,5 +1,25 @@
+enableFeaturePreview("VERSION_CATALOGS")
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
 rootProject.name = "purejson-parent"
 
 include "lib", "test"
 
 rootProject.children.each { it.name = "purejson-" + it.name }
+
+dependencyResolutionManagement {
+  versionCatalogs {
+    libs {
+      alias('purefunCore').to("com.github.tonivade:purefun-core:$purefunVersion")
+      alias('purefunMonad').to("com.github.tonivade:purefun-monad:$purefunVersion")
+      alias('purefunInstances').to("com.github.tonivade:purefun-instances:$purefunVersion")
+      alias('purecheck').to("com.github.tonivade:purecheck:$purecheckVersion")
+      alias('minimalJson').to("com.eclipsesource.minimal-json:minimal-json:${minimalJsonVersion}")
+      alias('javapoet').to("com.squareup:javapoet:${javapoetVersion}")
+      alias('junitJupiter').to("org.junit.jupiter:junit-jupiter-engine:$junitEngineVersion")
+      alias('junitRunner').to("org.junit.platform:junit-platform-runner:$junitPlatformVersion")
+      alias('compileTesting').to("com.google.testing.compile:compile-testing:$compileTestingVersion")
+      alias('gson').to("com.google.code.gson:gson:${gsonVersion}")
+    }
+  }
+}

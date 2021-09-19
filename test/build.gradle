@@ -11,12 +11,12 @@ test {
 }
 
 dependencies {
-  implementation project(":purejson-lib")
-  testImplementation "com.google.testing.compile:compile-testing:${compileTestingVersion}"
-  testImplementation "org.junit.jupiter:junit-jupiter-engine:${junitEngineVersion}"
-  testImplementation "org.junit.platform:junit-platform-runner:${junitPlatformVersion}"
-  testImplementation "com.github.tonivade:purecheck:${purecheckVersion}"
-  testImplementation "com.github.tonivade:purefun-monad:${purefunVersion}"
-  testImplementation "com.github.tonivade:purefun-instances:${purefunVersion}"
-  testImplementation "com.google.code.gson:gson:${gsonVersion}"
+  implementation projects.purejsonLib
+  testImplementation libs.compileTesting
+  testImplementation libs.junitJupiter
+  testImplementation libs.junitRunner
+  testImplementation libs.purecheck
+  testImplementation libs.purefunMonad
+  testImplementation libs.purefunInstances
+  testImplementation libs.gson
 }

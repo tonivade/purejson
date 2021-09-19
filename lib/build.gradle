@@ -1,8 +1,8 @@
 
 sourceSets {
-  java16 {
+  java17 {
     java {
-      srcDirs = ['src/main/java16']
+      srcDirs = ['src/main/java17']
     }
   }
 }
@@ -15,21 +15,21 @@ java {
   withSourcesJar()
 }
 
-compileJava16Java {
-  sourceCompatibility = JavaVersion.VERSION_16
-  targetCompatibility = JavaVersion.VERSION_16
+compileJava17Java {
+  sourceCompatibility = JavaVersion.VERSION_17
+  targetCompatibility = JavaVersion.VERSION_17
 }
 
 jar {
-  into('META-INF/versions/16') {
-    from sourceSets.java16.output
+  into('META-INF/versions/17') {
+    from sourceSets.java17.output
   }
   manifest.attributes('Multi-Release': 'true')
 }
 
 tasks.withType(JavaCompile).each {
-  if (it.getName().contains("Java16")) {
-    it.options.compilerArgs.addAll('--release', '16')
+  if (it.getName().contains("Java17")) {
+    it.options.compilerArgs.addAll('--release', '17')
   } else {
     it.options.compilerArgs.addAll('--release', '11')
   }
@@ -44,11 +44,11 @@ javadoc.options {
 }
 
 dependencies {
-  api 'com.github.tonivade:purefun-core:3.0'
-  api 'com.eclipsesource.minimal-json:minimal-json:0.9.5'
-  api 'com.squareup:javapoet:1.12.1'
-  java16Implementation files(sourceSets.main.output.classesDirs) {
+  api "com.github.tonivade:purefun-core:${purefunVersion}"
+  api "com.eclipsesource.minimal-json:minimal-json:${minimalJsonVersion}"
+  api "com.squareup:javapoet:${javapoetVersion}"
+  java17Implementation files(sourceSets.main.output.classesDirs) {
      builtBy compileJava
   }
-  java16Implementation 'com.github.tonivade:purefun-core:3.0'
+  java17Implementation "com.github.tonivade:purefun-core:${purefunVersion}"
 }

@@ -13,18 +13,44 @@ allprojects {
   apply plugin: 'signing'
 
   group = 'com.github.tonivade'
+
+  java {
+    toolchain {
+      languageVersion = JavaLanguageVersion.of(17)
+    }
+  }
   
   ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
-
-  jacoco {
-    toolVersion = '0.8.7'
-  }
 
   repositories {
     mavenLocal() 
     mavenCentral()
     maven {
       url = 'https://oss.sonatype.org/content/repositories/snapshots'
+    }
+  }
+
+  jacoco {
+    toolVersion = '0.8.7'
+  }
+
+  compileJava {
+    options.compilerArgs << '-Xlint:unchecked'
+    options.compilerArgs << '-Xlint:rawtypes'
+    options.release = 17
+  }
+
+  compileTestJava {
+    options.compilerArgs << '-Xlint:unchecked'
+    options.compilerArgs << '-Xlint:rawtypes'
+    options.release = 17
+  }
+
+  jacocoTestReport {
+    reports {
+      xml.required = true
+      html.required = true
+      xml.destination file("${buildDir}/reports/jacoco/report.xml")
     }
   }
 }
@@ -34,6 +60,16 @@ subprojects {
   java {
     withJavadocJar()
     withSourcesJar()
+  }
+
+  test {
+    useJUnitPlatform()
+
+    jacoco {
+      destinationFile = file("${buildDir}/jacoco/test.exec")
+    }
+
+    reports.html.required = false
   }
 
   publishing {
@@ -103,6 +139,6 @@ nexusPublishing {
 
   transitionCheckOptions {
     maxRetries.set(40)
-    delayBetween.set(java.time.Duration.ofMillis(3000))
+    delayBetween.set(Duration.ofMillis(3000))
   }
 }

@@ -1,54 +1,5 @@
-
-sourceSets {
-  java17 {
-    java {
-      srcDirs = ['src/main/java17']
-    }
-  }
-}
-
-java {
-  sourceCompatibility = JavaVersion.VERSION_11
-  targetCompatibility = JavaVersion.VERSION_11
-  
-  withJavadocJar()
-  withSourcesJar()
-}
-
-compileJava17Java {
-  sourceCompatibility = JavaVersion.VERSION_17
-  targetCompatibility = JavaVersion.VERSION_17
-}
-
-jar {
-  into('META-INF/versions/17') {
-    from sourceSets.java17.output
-  }
-  manifest.attributes('Multi-Release': 'true')
-}
-
-tasks.withType(JavaCompile).each {
-  if (it.getName().contains("Java17")) {
-    it.options.compilerArgs.addAll('--release', '17')
-  } else {
-    it.options.compilerArgs.addAll('--release', '11')
-  }
-}
-
-tasks.withType(AbstractArchiveTask).each {
-  it.archiveBaseName = 'purejson'
-}
-
-javadoc.options {
-  addStringOption('-release', '11')
-}
-
 dependencies {
   api libs.purefunCore
   api libs.minimalJson
   api libs.javapoet
-  java17Implementation files(sourceSets.main.output.classesDirs) {
-     builtBy compileJava
-  }
-  java17Implementation libs.purefunCore
 }

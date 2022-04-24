@@ -80,7 +80,7 @@ public class JsonAnnotationProcessor extends AbstractProcessor {
 
   private Optional<? extends AnnotationValue> getAdapterFromAnnotation(AnnotationMirror json) {
     return json.getElementValues().entrySet().stream()
-      .filter(entry -> entry.getKey().getSimpleName().toString().equals("adapter"))
+      .filter(entry -> entry.getKey().getSimpleName().toString().equals("value"))
       .map(Map.Entry::getValue).findFirst();
   }
 

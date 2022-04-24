@@ -79,7 +79,7 @@ class JsonAnnotationProcessorTest {
             import com.github.tonivade.purejson.Json;
             import java.util.List;
 
-            @Json(adapter = UserAdapter.class)
+            @Json(UserAdapter.class)
             public record User(int id, String name, List<String> roles) {}
 
             class UserAdapter {}""");

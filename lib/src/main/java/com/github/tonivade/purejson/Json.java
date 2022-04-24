@@ -13,5 +13,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface Json {
 
-  Class<?> adapter() default Void.class;
+  Class<?> value() default Void.class;
 }

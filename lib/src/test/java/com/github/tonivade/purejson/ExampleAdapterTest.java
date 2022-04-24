@@ -14,9 +14,9 @@ import org.junit.jupiter.api.Test;
 
 class ExampleAdapterTest {
   
-  @Json(adapter = RoleAdapter.class)
+  @Json(RoleAdapter.class)
   record Role(String name) {}
-  @Json(adapter = UserAdapter.class)
+  @Json(UserAdapter.class)
   record User(int id, String name, List<Role> roles) {}
   
   public enum RoleAdapter implements JsonAdapter<Role> {

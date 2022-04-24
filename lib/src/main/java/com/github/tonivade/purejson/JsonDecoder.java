@@ -86,8 +86,8 @@ public interface JsonDecoder<T> {
     return create(String.class).andThen(string -> Enum.valueOf(type, string));
   }
 
-  static <T> JsonDecoder<T> recordDecoder(Class<T> record) {
-    var fields = Arrays.stream(record.getRecordComponents())
+  static <T> JsonDecoder<T> recordDecoder(Class<T> clazz) {
+    var fields = Arrays.stream(clazz.getRecordComponents())
         .map(f -> Tuple2.of(f, decoder(f.getGenericType())))
         .toList();
     return json -> {
@@ -100,19 +100,18 @@ public interface JsonDecoder<T> {
           values.add(pair.get2().decode(jsonElement));
         }
         try {
-          var constructor = record.getDeclaredConstructor(types.toArray(Class[]::new));
+          var constructor = clazz.getDeclaredConstructor(types.toArray(Class[]::new));
           return constructor.newInstance(values.toArray(Object[]::new));
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-          // TODO: use another exception
-          throw new RuntimeException(e);
+          throw new IllegalStateException("cannot create instance of record: " + clazz.getName(), e);
         }
       }
       throw new IllegalArgumentException(json.toString());
     };
   }
 
-  static <T> JsonDecoder<T> pojoDecoder(Class<T> type) {
-    var fields = Arrays.stream(type.getDeclaredFields())
+  static <T> JsonDecoder<T> pojoDecoder(Class<T> clazz) {
+    var fields = Arrays.stream(clazz.getDeclaredFields())
         .filter(f -> !isStatic(f.getModifiers()))
         .filter(f -> !f.isSynthetic())
         .filter(Field::trySetAccessible)
@@ -121,37 +120,56 @@ public interface JsonDecoder<T> {
     return json -> {
       if (json instanceof JsonNode.Object object) {
         try {
-          var constructor = findConstructor(type);
+          var constructor = findConstructor(clazz);
           if (constructor.trySetAccessible()) {
             if (constructor.getParameterCount() > 0 && constructor.isAnnotationPresent(JsonCreator.class)) {
-              var fieldsToDecode = 
-                  fields.stream().collect(toUnmodifiableMap(t -> t.get1().getName(), Tuple2::get2));
-              
-              var values = Arrays.stream(constructor.getParameters())
-                .map(p -> p.getAnnotation(JsonProperty.class))
-                .map(JsonProperty::value)
-                .map(name -> fieldsToDecode.get(name).decode(object.get(name)))
-                .toArray();
-              
-              return constructor.newInstance(values);
+              return createPojoFromAnnotatedConstructor(constructor, fields, object);
             } else if (constructor.getParameterCount() == 0) {
-              T value = constructor.newInstance();
-              for (var pair : fields) {
-                var node = object.get(pair.get1().getName());
-                pair.get1().set(value, pair.get2().decode(node));
-              }
-              return value;
+              return createPojoFromDefaultConstructor(constructor, fields, object);
             } else {
-              throw new RuntimeException("no suitable constructor for type " + type.getName());
+              throw new IllegalStateException("no suitable constructor for type " + clazz.getName());
             }
+          } else {
+            throw new IllegalStateException("cannot access to constructor: " + constructor);
           }
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-          // TODO: use another exception
-          throw new RuntimeException(e);
+        } catch (NoSuchMethodException e) {
+          throw new IllegalStateException("no suitable constructor found for type: " + clazz.getName(), e);
         }
       }
       throw new IllegalArgumentException(json.toString());
     };
+  }
+
+  static <T> T createPojoFromDefaultConstructor(Constructor<T> constructor, List<Tuple2<Field, JsonDecoder<Object>>> fields,
+      JsonNode.Object object) {
+    try {
+      T value = constructor.newInstance();
+      for (var pair : fields) {
+        var node = object.get(pair.get1().getName());
+        pair.get1().set(value, pair.get2().decode(node));
+      }
+      return value;
+    } catch (IllegalArgumentException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+      throw new IllegalArgumentException(e);
+    }
+  }
+
+  static <T> T createPojoFromAnnotatedConstructor(Constructor<T> constructor,
+      List<Tuple2<Field, JsonDecoder<Object>>> fields, JsonNode.Object object) {
+    try {
+      var fieldsToDecode = 
+          fields.stream().collect(toUnmodifiableMap(t -> t.get1().getName(), Tuple2::get2));
+      
+      var values = Arrays.stream(constructor.getParameters())
+        .map(p -> p.getAnnotation(JsonProperty.class))
+        .map(JsonProperty::value)
+        .map(name -> fieldsToDecode.get(name).decode(object.get(name)))
+        .toArray();
+      
+      return constructor.newInstance(values);
+    } catch (IllegalArgumentException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+      throw new IllegalStateException(e);
+    }
   }
 
   @SuppressWarnings("unchecked")

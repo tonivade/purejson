@@ -79,7 +79,7 @@ public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
     if (type instanceof Class<?>) {
       Class<?> clazz = (Class<?>) type;
       if (clazz.isAnnotationPresent(Json.class)) {
-        return Option.<Class<?>>of(() -> clazz.getAnnotation(Json.class).adapter())
+        return Option.<Class<?>>of(() -> clazz.getAnnotation(Json.class).value())
             .filterNot(is(Void.class))
             .toTry()
             .recover(error -> Class.forName(type.getTypeName() + "Adapter"))

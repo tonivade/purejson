@@ -20,7 +20,7 @@ import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonObject.Member;
 import com.eclipsesource.json.JsonValue;
 
-public abstract class JsonNode {
+public abstract sealed class JsonNode {
 
   public static final JsonNode NULL = new Null();
 

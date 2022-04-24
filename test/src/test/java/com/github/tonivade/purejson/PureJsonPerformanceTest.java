@@ -15,6 +15,8 @@ import static com.github.tonivade.purejson.JsonDSL.entry;
 import static com.github.tonivade.purejson.JsonDSL.object;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
+
+import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -30,10 +32,16 @@ import com.github.tonivade.purefun.instances.IOInstances;
 import com.github.tonivade.purefun.instances.SequenceInstances;
 import com.github.tonivade.purefun.monad.IO_;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
 
 @Tag("performance")
 @Tag("slow")
 class PureJsonPerformanceTest {
+  
+  private static record Value(Integer id, String name) {}
 
   private static final class Pojo {
 
@@ -43,9 +51,9 @@ class PureJsonPerformanceTest {
     private Integer id;
     private String name;
 
-    Pojo() {}
+    public Pojo() {}
 
-    Pojo(Integer id, String name) {
+    public Pojo(Integer id, String name) {
       this.id = id;
       this.name = name;
     }
@@ -73,9 +81,38 @@ class PureJsonPerformanceTest {
       return "Pojo(id:%s,name:%s)".formatted(id, name);
     }
   }
+  
+  static final class ValueAdapter implements JsonDeserializer<Value> {
+
+    @Override
+    public Value deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
+        throws JsonParseException {
+      return new Value(
+          json.getAsJsonObject().get("id").getAsInt(), 
+          json.getAsJsonObject().get("name").getAsString());
+    }
+  }
 
   @Test
-  void parsePerformance() {
+  void parsePerformanceRecord() {
+    var listOfUsers = new TypeToken<List<Value>>() { }.getType();
+    var json1 = new PureJson<>(listOfUsers);
+    var json2 = new PureJson<>(builderValueAdapter());
+    var json3 = new PureJson<>(adhocValueAdapter());
+    var gson = new GsonBuilder().registerTypeAdapter(Value.class, new ValueAdapter()).create();
+
+    int times = 5000;
+    int warmup = 50;
+    var stats1 = ioPerfCase("reflection", parseTask(string -> json1.fromJson(string))).warmup(warmup).run(times);
+    var stats2 = ioPerfCase("builder", parseTask(string -> json2.fromJson(string))).warmup(warmup).run(times);
+    var stats3 = ioPerfCase("adhoc", parseTask(string -> json3.fromJson(string))).warmup(warmup).run(times);
+    var stats4 = ioPerfCase("gson", parseTask(string -> gson.fromJson(string, listOfUsers))).warmup(warmup).run(times);
+
+    runPerf("parse value", listOf(stats1, stats2, stats3, stats4));
+  }
+
+  @Test
+  void parsePerformancePojo() {
     var listOfUsers = new TypeToken<List<Pojo>>() { }.getType();
     var json1 = new PureJson<>(listOfUsers);
     var json2 = new PureJson<>(builderPojoAdapter());
@@ -89,25 +126,45 @@ class PureJsonPerformanceTest {
     var stats3 = ioPerfCase("adhoc", parseTask(string -> json3.fromJson(string))).warmup(warmup).run(times);
     var stats4 = ioPerfCase("gson", parseTask(string -> gson.fromJson(string, listOfUsers))).warmup(warmup).run(times);
 
-    runPerf("parse", listOf(stats1, stats2, stats3, stats4));
+    runPerf("parse pojo", listOf(stats1, stats2, stats3, stats4));
   }
 
   @Test
-  void serializePerformance() {
+  void serializePerformanceRecord() {
+    var listOfUsers = new TypeToken<List<Value>>() { }.getType();
+    var json1 = new PureJson<>(listOfUsers);
+    var json2 = new PureJson<>(builderValueAdapter());
+    var json3 = new PureJson<>(adhocValueAdapter());
+    var gson = new GsonBuilder().create();
+
+    int times = 5000;
+    int warmup = 50;
+    Producer<Value> supplier = () -> new Value(1, "name");
+    var stats1 = ioPerfCase("reflection", serializeTask(supplier, value -> json1.toString(value))).warmup(warmup).run(times);
+    var stats2 = ioPerfCase("builder", serializeTask(supplier, value -> json2.toString(value))).warmup(warmup).run(times);
+    var stats3 = ioPerfCase("adhoc", serializeTask(supplier, value -> json3.toString(value))).warmup(warmup).run(times);
+    var stats4 = ioPerfCase("gson", serializeTask(supplier, value -> gson.toJson(value, listOfUsers))).warmup(warmup).run(times);
+
+    runPerf("serialize value", listOf(stats1, stats2, stats3, stats4));
+  }
+
+  @Test
+  void serializePerformancePojo() {
     var listOfUsers = new TypeToken<List<Pojo>>() { }.getType();
     var json1 = new PureJson<>(listOfUsers);
     var json2 = new PureJson<>(builderPojoAdapter());
     var json3 = new PureJson<>(adhocPojoAdapter());
     var gson = new GsonBuilder().create();
 
-    int times = 2000;
-    int warmup = 20;
-    var stats1 = ioPerfCase("reflection", serializeTask(value -> json1.toString(value))).warmup(warmup).run(times);
-    var stats2 = ioPerfCase("builder", serializeTask(value -> json2.toString(value))).warmup(warmup).run(times);
-    var stats3 = ioPerfCase("adhoc", serializeTask(value -> json3.toString(value))).warmup(warmup).run(times);
-    var stats4 = ioPerfCase("gson", serializeTask(value -> gson.toJson(value, listOfUsers))).warmup(warmup).run(times);
+    int times = 5000;
+    int warmup = 50;
+    Producer<Pojo> supplier = () -> new Pojo(1, "name");
+    var stats1 = ioPerfCase("reflection", serializeTask(supplier, value -> json1.toString(value))).warmup(warmup).run(times);
+    var stats2 = ioPerfCase("builder", serializeTask(supplier, value -> json2.toString(value))).warmup(warmup).run(times);
+    var stats3 = ioPerfCase("adhoc", serializeTask(supplier, value -> json3.toString(value))).warmup(warmup).run(times);
+    var stats4 = ioPerfCase("gson", serializeTask(supplier, value -> gson.toJson(value, listOfUsers))).warmup(warmup).run(times);
 
-    runPerf("serialize", listOf(stats1, stats2, stats3, stats4));
+    runPerf("serialize pojo", listOf(stats1, stats2, stats3, stats4));
   }
 
   private void runPerf(String name, Sequence<Kind<IO_, Stats>> stats) {
@@ -115,10 +172,10 @@ class PureJsonPerformanceTest {
       IOInstances.applicative(), stats).fix(toIO()).unsafeRunSync().fix(toSequence()));
   }
 
-  private <R> Producer<R> serializeTask(Function1<List<Pojo>, R> serializer) {
-    var user = new Pojo(1, "toni");
+  private <T, R> Producer<R> serializeTask(Producer<T> supplier, Function1<List<T>, R> serializer) {
+    var user = supplier.get();
 
-    var listOfUsers = Stream.generate(() -> user).limit(3000).collect(toList());
+    var listOfUsers = Stream.generate(() -> user).limit(10_000).collect(toList());
 
     return () -> serializer.apply(listOfUsers);
   }
@@ -128,7 +185,7 @@ class PureJsonPerformanceTest {
       {"id":1,"name":"toni"}
       """.strip();
 
-    var listOfUsers = Stream.generate(() -> user).limit(3000).collect(joining(",", "[", "]"));
+    var listOfUsers = Stream.generate(() -> user).limit(10_000).collect(joining(",", "[", "]"));
 
     return () -> parser.apply(listOfUsers);
   }
@@ -141,6 +198,14 @@ class PureJsonPerformanceTest {
       .build());
   }
 
+  private JsonAdapter<Iterable<Value>> builderValueAdapter() {
+    return iterableAdapter(
+      JsonAdapter.builder(Value.class)
+      .addInteger("id", Value::id)
+      .addString("name", Value::name)
+      .build());
+  }
+
   private JsonAdapter<Iterable<Pojo>> adhocPojoAdapter() {
     return iterableAdapter(JsonAdapter.of(
       value -> object(
@@ -149,6 +214,21 @@ class PureJsonPerformanceTest {
       json -> {
         if (json instanceof JsonNode.Object o) {
           return new Pojo(
+            INTEGER.decode(o.get("id")),
+            STRING.decode(o.get("name")));
+        }
+        throw new IllegalArgumentException();
+      }));
+  }
+
+  private JsonAdapter<Iterable<Value>> adhocValueAdapter() {
+    return iterableAdapter(JsonAdapter.of(
+      value -> object(
+        entry("id", INTEGER.encode(value.id())),
+        entry("name", STRING.encode(value.name()))), 
+      json -> {
+        if (json instanceof JsonNode.Object o) {
+          return new Value(
             INTEGER.decode(o.get("id")),
             STRING.decode(o.get("name")));
         }

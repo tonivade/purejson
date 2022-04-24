@@ -123,9 +123,9 @@ public interface JsonDecoder<T> {
         try {
           var constructor = findConstructor(type);
           if (constructor.trySetAccessible()) {
-            if (constructor.getParameterCount() > 0) {
+            if (constructor.getParameterCount() > 0 && constructor.isAnnotationPresent(JsonCreator.class)) {
               var fieldsToDecode = 
-                  fields.stream().collect(toUnmodifiableMap(t -> t.get1().getName(), t -> t.get2()));
+                  fields.stream().collect(toUnmodifiableMap(t -> t.get1().getName(), Tuple2::get2));
               
               var values = Arrays.stream(constructor.getParameters())
                 .map(p -> p.getAnnotation(JsonProperty.class))
@@ -134,13 +134,15 @@ public interface JsonDecoder<T> {
                 .toArray();
               
               return constructor.newInstance(values);
-            } else {
+            } else if (constructor.getParameterCount() == 0) {
               T value = constructor.newInstance();
               for (var pair : fields) {
                 var node = object.get(pair.get1().getName());
                 pair.get1().set(value, pair.get2().decode(node));
               }
               return value;
+            } else {
+              throw new RuntimeException("no suitable constructor for type " + type.getName());
             }
           }
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {

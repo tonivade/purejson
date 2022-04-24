@@ -1,13 +1,8 @@
 
-java {
-  sourceCompatibility = JavaVersion.VERSION_17
-  targetCompatibility = JavaVersion.VERSION_17
-}
-
 test {
-  useJUnitPlatform()
-
-  jvmArgs(['--add-opens=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED'])
+  useJUnitPlatform() {
+    excludeTags "performance"
+  }
 }
 
 dependencies {

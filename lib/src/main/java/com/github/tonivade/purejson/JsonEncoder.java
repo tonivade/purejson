@@ -5,7 +5,6 @@
 package com.github.tonivade.purejson;
 
 import static java.lang.reflect.Modifier.isStatic;
-import static java.util.stream.Collectors.toList;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
@@ -69,7 +68,7 @@ public interface JsonEncoder<T> {
         .filter(f -> !f.isSynthetic())
         .filter(Field::trySetAccessible)
         .map(f -> Tuple2.of(f, encoder(f.getGenericType())))
-        .collect(toList());
+        .toList();
     return value -> {
       var object = new JsonObject();
       for (var pair : fields) {
@@ -83,11 +82,10 @@ public interface JsonEncoder<T> {
     };
   }
 
-  static <T> JsonEncoder<T> recordEncoder(Class<T> type) {
-    var record = new Record<T>(type);
+  static <T> JsonEncoder<T> recordEncoder(Class<T> record) {
     var fields = Arrays.stream(record.getRecordComponents())
         .map(f -> Tuple2.of(f, encoder(f.getGenericType())))
-        .collect(toList());
+        .toList();
     return value -> {
       var object = new JsonObject();
       for (var pair : fields) {
@@ -132,25 +130,24 @@ public interface JsonEncoder<T> {
 
   @SuppressWarnings({ "unchecked", "rawtypes" })
   private static <T> JsonEncoder<T> create(Type type) {
-    if (type instanceof Class) {
-      return create((Class) type);
+    if (type instanceof Class clazz) {
+      return create(clazz);
     }
-    if (type instanceof ParameterizedType) {
-      return create((ParameterizedType) type);
+    if (type instanceof ParameterizedType parameterizedType) {
+      return create(parameterizedType);
     }
-    if (type instanceof GenericArrayType) {
-      return create((GenericArrayType) type);
+    if (type instanceof GenericArrayType genericArrayType) {
+      return create(genericArrayType);
     }
-    if (type instanceof WildcardType) {
-      return create((WildcardType) type);
+    if (type instanceof WildcardType wildcardType) {
+      return create(wildcardType);
     }
     throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
   }
 
   @SuppressWarnings("unchecked")
   private static <T> JsonEncoder<T> create(ParameterizedType type) {
-    if (type.getRawType() instanceof Class<?>) {
-      Class<?> c = (Class<?>) type.getRawType();
+    if (type.getRawType() instanceof Class<?> c) {
       if (ImmutableMap.class.isAssignableFrom(c) && type.getActualTypeArguments()[0].equals(String.class)) {
         var create = encoder(type.getActualTypeArguments()[1]);
         return (JsonEncoder<T>) immutableMapEncoder(create);
@@ -209,7 +206,7 @@ public interface JsonEncoder<T> {
       return (JsonEncoder<T>) JsonEncoderModule.ENUM;
     } else if (type.isArray()) {
       return arrayEncoder(type.getComponentType());
-    } else if (Record.isRecord(type)) {
+    } else if (type.isRecord()) {
       return recordEncoder(type);
     } else {
       return pojoEncoder(type);

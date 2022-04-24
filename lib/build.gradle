@@ -1,5 +1,20 @@
+
+test {
+  useJUnitPlatform()
+
+  jvmArgs(['--add-opens=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED'])
+}
+
 dependencies {
   api libs.purefunCore
   api libs.minimalJson
   api libs.javapoet
+  
+  testImplementation libs.compileTesting
+  testImplementation libs.junitJupiter
+  testImplementation libs.junitRunner
+  testImplementation libs.purecheck
+  testImplementation libs.purefunMonad
+  testImplementation libs.purefunInstances
+  testImplementation libs.gson
 }

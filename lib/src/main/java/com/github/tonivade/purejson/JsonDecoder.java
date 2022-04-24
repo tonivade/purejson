@@ -8,9 +8,7 @@ import static com.github.tonivade.purefun.data.Sequence.listOf;
 import static java.lang.reflect.Modifier.isStatic;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
-import static java.util.stream.Collectors.toUnmodifiableList;
 import static java.util.stream.Collectors.toUnmodifiableMap;
-
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -31,7 +29,6 @@ import java.util.Map;
 import java.util.NavigableSet;
 import java.util.Queue;
 import java.util.Set;
-
 import com.github.tonivade.purefun.Function1;
 import com.github.tonivade.purefun.Tuple2;
 import com.github.tonivade.purefun.data.ImmutableArray;
@@ -74,8 +71,7 @@ public interface JsonDecoder<T> {
   static <T> JsonDecoder<T[]> arrayDecoder(Class<T> type) {
     var itemDecoder = decoder(type);
     return json -> {
-      if (json instanceof JsonNode.Array) {
-        JsonNode.Array a = (JsonNode.Array) json;
+      if (json instanceof JsonNode.Array a) {
         var array = Array.newInstance(type, a.size());
         for (int i = 0; i < a.size(); i++) {
           Array.set(array, i, itemDecoder.decode(a.get(i)));
@@ -90,23 +86,21 @@ public interface JsonDecoder<T> {
     return create(String.class).andThen(string -> Enum.valueOf(type, string));
   }
 
-  static <T> JsonDecoder<T> recordDecoder(Class<T> type) {
-    var record = new Record<T>(type);
+  static <T> JsonDecoder<T> recordDecoder(Class<T> record) {
     var fields = Arrays.stream(record.getRecordComponents())
         .map(f -> Tuple2.of(f, decoder(f.getGenericType())))
-        .collect(toUnmodifiableList());
+        .toList();
     return json -> {
-      if (json instanceof JsonNode.Object) {
-        JsonNode.Object o = (JsonNode.Object) json;
+      if (json instanceof JsonNode.Object object) {
         var types = new ArrayList<Class<?>>();
         var values = new ArrayList<>();
         for (var pair : fields) {
           types.add(pair.get1().getType());
-          JsonNode jsonElement = o.get(pair.get1().getName());
+          JsonNode jsonElement = object.get(pair.get1().getName());
           values.add(pair.get2().decode(jsonElement));
         }
         try {
-          var constructor = type.getDeclaredConstructor(types.toArray(Class[]::new));
+          var constructor = record.getDeclaredConstructor(types.toArray(Class[]::new));
           return constructor.newInstance(values.toArray(Object[]::new));
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
           // TODO: use another exception
@@ -123,10 +117,9 @@ public interface JsonDecoder<T> {
         .filter(f -> !f.isSynthetic())
         .filter(Field::trySetAccessible)
         .map(f -> Tuple2.of(f, decoder(f.getGenericType())))
-        .collect(toUnmodifiableList());
+        .toList();
     return json -> {
-      if (json instanceof JsonNode.Object) {
-        JsonNode.Object o = (JsonNode.Object) json;
+      if (json instanceof JsonNode.Object object) {
         try {
           var constructor = findConstructor(type);
           if (constructor.trySetAccessible()) {
@@ -137,14 +130,14 @@ public interface JsonDecoder<T> {
               var values = Arrays.stream(constructor.getParameters())
                 .map(p -> p.getAnnotation(JsonProperty.class))
                 .map(JsonProperty::value)
-                .map(name -> fieldsToDecode.get(name).decode(o.get(name)))
+                .map(name -> fieldsToDecode.get(name).decode(object.get(name)))
                 .toArray();
               
               return constructor.newInstance(values);
             } else {
               T value = constructor.newInstance();
               for (var pair : fields) {
-                var node = o.get(pair.get1().getName());
+                var node = object.get(pair.get1().getName());
                 pair.get1().set(value, pair.get2().decode(node));
               }
               return value;
@@ -182,8 +175,7 @@ public interface JsonDecoder<T> {
 
   static <E> JsonDecoder<Iterable<E>> iterableDecoder(JsonDecoder<E> itemDecoder) {
     return json -> {
-      if (json instanceof JsonNode.Array) {
-        JsonNode.Array array = (JsonNode.Array) json;
+      if (json instanceof JsonNode.Array array) {
         var list = new ArrayList<E>();
         for (var object : array) {
           list.add(itemDecoder.decode(object));
@@ -196,8 +188,7 @@ public interface JsonDecoder<T> {
 
   static <V> JsonDecoder<Map<String, V>> mapDecoder(JsonDecoder<V> itemEncoder) {
     return json -> {
-      if (json instanceof JsonNode.Object) {
-        JsonNode.Object object = (JsonNode.Object) json;
+      if (json instanceof JsonNode.Object object) {
         var map = new LinkedHashMap<String, V>();
         for (Map.Entry<String, JsonNode> entry : object) {
           map.put(entry.getKey(), itemEncoder.decode(entry.getValue()));
@@ -214,25 +205,24 @@ public interface JsonDecoder<T> {
   
   @SuppressWarnings({ "unchecked", "rawtypes" })
   private static <T> JsonDecoder<T> create(Type type) {
-    if (type instanceof Class) {
-      return create((Class) type);
+    if (type instanceof Class clazz) {
+      return create(clazz);
     }
-    if (type instanceof ParameterizedType) {
-      return create((ParameterizedType) type);
+    if (type instanceof ParameterizedType parameterizedType) {
+      return create(parameterizedType);
     }
-    if (type instanceof GenericArrayType) {
-      return create((GenericArrayType) type);
+    if (type instanceof GenericArrayType genericArrayType) {
+      return create(genericArrayType);
     }
-    if (type instanceof WildcardType) {
-      return create((WildcardType) type);
+    if (type instanceof WildcardType wildcardType) {
+      return create(wildcardType);
     }
     throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
   }
 
   @SuppressWarnings("unchecked")
   private static <T> JsonDecoder<T> create(ParameterizedType type) {
-    if (type.getRawType() instanceof Class<?>) {
-      Class<?> c = (Class<?>) type.getRawType();
+    if (type.getRawType() instanceof Class<?> c) {
       if (Collection.class.isAssignableFrom(c)) {
         var create = decoder(type.getActualTypeArguments()[0]);
         return (JsonDecoder<T>) iterableDecoder(create).andThen(toCollection(c));
@@ -296,7 +286,7 @@ public interface JsonDecoder<T> {
       return enumDecoder((Class) type);
     } else if (type.isArray()) {
       return arrayDecoder((Class) type.getComponentType());
-    } else if (Record.isRecord(type)) {
+    } else if (type.isRecord()) {
       return recordDecoder(type);
     } else {
       return pojoDecoder(type);

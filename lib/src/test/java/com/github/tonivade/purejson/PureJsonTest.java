@@ -809,9 +809,9 @@ class PureJsonTest extends IOTestSpec<String> {
           .thenMustBe(equalsTo(success("\"A\""))),
 
         it.should("serialize a unicode character")
-          .given('Á')
+          .given('\u00c1')
           .when(value -> new PureJson<>(Character.class).toString(value))
-          .thenMustBe(equalsTo(success("\"Á\""))),
+          .thenMustBe(equalsTo(success("\"\u00c1\""))),
 
         it.should("serialize a byte")
           .given((byte) 1)
@@ -881,9 +881,9 @@ class PureJsonTest extends IOTestSpec<String> {
           .thenMustBe(equalsTo(success(some('A')))),
 
         it.should("parse unicode char")
-          .given("\"Á\"")
+          .given("\"\u00c1\"")
           .when(json -> new PureJson<>(char.class).fromJson(json))
-          .thenMustBe(equalsTo(success(some('Á')))),
+          .thenMustBe(equalsTo(success(some('\u00c1')))),
 
         it.should("parse byte")
           .given("1")

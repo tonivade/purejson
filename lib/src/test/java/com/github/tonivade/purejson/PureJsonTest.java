@@ -386,9 +386,9 @@ class PureJsonTest extends IOTestSpec<String> {
               """.strip()))),
 
         it.should("serialize a null immutable set")
-          .given(emptySet().append(null))
+          .given(() -> emptySet().append(null))
           .when(value -> json.toString(value))
-          .thenMustBe(equalsTo(success("[null]")))
+          .thenMustBe(equalsTo(success("[null]"))).disable("set doesn't allow null values")
           
         ).run().assertion();
   }

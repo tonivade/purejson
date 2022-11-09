@@ -4,6 +4,7 @@ plugins {
   id 'maven-publish'
   id 'signing'
   id 'io.github.gradle-nexus.publish-plugin' version '1.1.0'
+  id 'com.github.ben-manes.versions' version "$versionsVersion"
 }
 
 allprojects {
@@ -19,11 +20,11 @@ allprojects {
       languageVersion = JavaLanguageVersion.of(17)
     }
   }
-  
+
   ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
   repositories {
-    mavenLocal() 
+    mavenLocal()
     mavenCentral()
     maven {
       url = 'https://oss.sonatype.org/content/repositories/snapshots'
@@ -75,13 +76,13 @@ subprojects {
   publishing {
     publications {
       mavenJava(MavenPublication) {
-      
+
         if (project.name == 'purejson-lib') {
           artifactId = 'purejson'
         }
-        
+
         from components.java
-        
+
         pom {
           name = 'PureJson'
           description = 'Pure Functional Json Parser Library'
@@ -117,7 +118,7 @@ subprojects {
   signing {
     sign publishing.publications.mavenJava
   }
-  
+
   tasks.withType(Sign) {
     onlyIf { isReleaseVersion }
   }
@@ -126,14 +127,14 @@ subprojects {
 nexusPublishing {
   repositories {
     sonatype {
-      
+
       stagingProfileId = '19a96b937cdb5'
-      
-      username = project.findProperty('nexusUsername')  
+
+      username = project.findProperty('nexusUsername')
       password = project.findProperty('nexusPassword')
     }
   }
-  
+
   clientTimeout = Duration.ofSeconds(300)
   connectTimeout = Duration.ofSeconds(60)
 

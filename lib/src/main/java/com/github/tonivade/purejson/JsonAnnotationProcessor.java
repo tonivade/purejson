@@ -10,8 +10,6 @@ import static com.github.tonivade.purefun.data.ImmutableMap.toImmutableMap;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.io.Writer;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -26,10 +24,9 @@ import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ElementVisitor;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
-import javax.lang.model.element.Name;
+import javax.lang.model.element.RecordComponentElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
@@ -42,7 +39,6 @@ import com.github.tonivade.purefun.data.ImmutableList;
 import com.github.tonivade.purefun.data.ImmutableMap;
 import com.github.tonivade.purefun.data.Sequence;
 import com.github.tonivade.purefun.type.Option;
-import com.github.tonivade.purefun.type.Try;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
@@ -54,6 +50,8 @@ import com.squareup.javapoet.TypeSpec;
 
 @SupportedAnnotationTypes("com.github.tonivade.purejson.Json")
 public class JsonAnnotationProcessor extends AbstractProcessor {
+
+  private static final String VALUE = "value";
 
   @Override
   public SourceVersion getSupportedSourceVersion() {
@@ -80,7 +78,7 @@ public class JsonAnnotationProcessor extends AbstractProcessor {
 
   private Optional<? extends AnnotationValue> getAdapterFromAnnotation(AnnotationMirror json) {
     return json.getElementValues().entrySet().stream()
-      .filter(entry -> entry.getKey().getSimpleName().toString().equals("value"))
+      .filter(entry -> entry.getKey().getSimpleName().toString().equals(VALUE))
       .map(Map.Entry::getValue).findFirst();
   }
 
@@ -102,10 +100,10 @@ public class JsonAnnotationProcessor extends AbstractProcessor {
 
   static final class Model {
     private final String packageName;
-    private final String name; 
+    private final String name;
     private final TypeMirror type;
     private final Sequence<Field> fields;
-    
+
     public Model(String packageName, String name, TypeMirror type, Sequence<Field> fields) {
       this.packageName = packageName;
       this.name = name;
@@ -126,7 +124,7 @@ public class JsonAnnotationProcessor extends AbstractProcessor {
           .addMethod(MethodSpec.methodBuilder("encode")
               .addAnnotation(Override.class)
               .addModifiers(Modifier.PUBLIC)
-              .addParameter(TypeName.get(type), "value")
+              .addParameter(TypeName.get(type), VALUE)
               .returns(JsonNode.class)
               .addCode(encodeMethod())
               .build())
@@ -158,7 +156,7 @@ public class JsonAnnotationProcessor extends AbstractProcessor {
       var builder = CodeBlock.builder();
       for (var field : fields) {
         builder.addStatement("var $N = $T.entry($S, $L.encode($N.$N()))",
-            field.name, JsonDSL.class, field.name, field.getAdapterName(), "value", field.accessor.getSimpleName());
+            field.name, JsonDSL.class, field.name, field.getAdapterName(), VALUE, field.accessor.getSimpleName());
       }
       String params = fields.map(f -> f.name).join(", ");
       return builder.addStatement("return $T.object($L)", JsonDSL.class, params).build();
@@ -177,11 +175,11 @@ public class JsonAnnotationProcessor extends AbstractProcessor {
   }
 
   static final class Field {
-    
+
     private final String name;
     private final TypeMirror type;
     private final ExecutableElement accessor;
-    
+
     public Field(String name, TypeMirror type, ExecutableElement accessor) {
       this.name = name;
       this.type = type;
@@ -227,14 +225,14 @@ public class JsonAnnotationProcessor extends AbstractProcessor {
   private Model modelForPojo(TypeElement element) {
     ImmutableList<VariableElement> fields = element.getEnclosedElements().stream()
         .filter(e -> e.getKind() == ElementKind.FIELD)
-        .map(e -> (VariableElement) e)
+        .map(VariableElement.class::cast)
         .collect(toImmutableList());
 
     findConstructor(element, fields);
 
     ImmutableMap<String, ExecutableElement> methods = element.getEnclosedElements().stream()
         .filter(e -> e.getKind() == ElementKind.METHOD)
-        .map(e -> (ExecutableElement) e)
+        .map(ExecutableElement.class::cast)
         .map(e -> Tuple.of(e.getSimpleName().toString(), e))
         .collect(toImmutableMap(Tuple2::get1, Tuple2::get2));
 
@@ -256,7 +254,7 @@ public class JsonAnnotationProcessor extends AbstractProcessor {
   private Model modelForRecord(TypeElement element) {
     ImmutableList<RecordComponentElement> fields = element.getEnclosedElements().stream()
         .filter(e -> e.getKind().name().equals("RECORD_COMPONENT"))
-        .map(RecordComponentElement::new)
+        .map(RecordComponentElement.class::cast)
         .collect(toImmutableList());
 
     findConstructor(element, fields);
@@ -276,7 +274,7 @@ public class JsonAnnotationProcessor extends AbstractProcessor {
   private <T extends Element> void findConstructor(TypeElement element, ImmutableList<T> fields) {
     element.getEnclosedElements().stream()
         .filter(e -> e.getKind() == ElementKind.CONSTRUCTOR)
-        .map(e -> (ExecutableElement) e)
+        .map(ExecutableElement.class::cast)
         .filter(c -> c.getParameters().size() == fields.size())
         .findFirst().map(Option::some).orElseGet(Option::none)
         .ifEmpty(() -> printError("no proper constructor found: " + element.getSimpleName()
@@ -289,80 +287,5 @@ public class JsonAnnotationProcessor extends AbstractProcessor {
 
   private void printError(String msg) {
     processingEnv.getMessager().printMessage(Kind.ERROR, msg);
-  }
-  
-  static final class RecordComponentElement implements Element {
-    
-    private static final Method GET_ACCESSOR;
-    
-    static {
-      Method getAccessor;
-      try {
-        Class<?> clazz = Class.forName("javax.lang.model.element.RecordComponentElement");
-        getAccessor = clazz.getMethod("getAccessor");
-      } catch (ClassNotFoundException | NoSuchMethodException e) {
-        getAccessor = null;
-      }
-      GET_ACCESSOR = getAccessor;
-    }
-
-    private final Element element;
-
-    public RecordComponentElement(Element element) {
-      this.element = element;
-    }
-
-    public TypeMirror asType() {
-      return element.asType();
-    }
-
-    public ElementKind getKind() {
-      return element.getKind();
-    }
-
-    public Set<Modifier> getModifiers() {
-      return element.getModifiers();
-    }
-
-    public Name getSimpleName() {
-      return element.getSimpleName();
-    }
-
-    public Element getEnclosingElement() {
-      return element.getEnclosingElement();
-    }
-
-    public List<? extends Element> getEnclosedElements() {
-      return element.getEnclosedElements();
-    }
-
-    public <A extends Annotation> A[] getAnnotationsByType(Class<A> annotationType) {
-      return element.getAnnotationsByType(annotationType);
-    }
-
-    public boolean equals(Object obj) {
-      return element.equals(obj);
-    }
-
-    public int hashCode() {
-      return element.hashCode();
-    }
-
-    public List<? extends AnnotationMirror> getAnnotationMirrors() {
-      return element.getAnnotationMirrors();
-    }
-
-    public <A extends Annotation> A getAnnotation(Class<A> annotationType) {
-      return element.getAnnotation(annotationType);
-    }
-
-    public <R, P> R accept(ElementVisitor<R, P> visitor, P parameter) {
-      return element.accept(visitor, parameter);
-    }
-
-    public ExecutableElement getAccessor() {
-      return (ExecutableElement) Try.of(() -> GET_ACCESSOR.invoke(element)).getOrElseThrow();
-    }
-    
   }
 }

@@ -44,42 +44,42 @@ You can annotate your classes with `@Json` and an adapter for this class will be
 ## Performance
 
 Tested on my laptop: 
-- cpu: Intel Core i7-1065G7
-- ram: 32GB
+- cpu: Intel Core i7-1165G7
+- ram: 64GB
 - cores: 8
 
 ```
 Performance parse pojo
-name  tot   min max mean  p50 p90 p95 p99
-refl  29230 10  117 14    11  23  27  82
-buil  13499 3   104 6     4   10  11  26
-adho  12194 2   105 6     4   8   9   23
-gson  7877  1   65  3     3   5   5   16
-```
-
-```
-Performance serialize pojo
-name  tot   min max mean  p50 p90 p95 p99
-refl  16256 2   213 3     2   2   2   4
-buil  18380 2   213 3     3   3   3   5
-adho  16643 2   213 3     2   2   3   5
-gson  33139 4   217 6     5   7   7   8
-```
-
-```
-Performance parse record
-name  tot   min max mean  p50 p90 p95 p99
-refl  17600 2   210 3     2   2   3   6
-buil  18339 2   284 3     2   3   4   6
-adho  23875 2   212 4     4   4   4   8
-gson  20800 2   211 4     3   3   4   7
+name  tot   min max mean p50 p90 p95 p99
+refl  85617 15  52  17   16  18  20  32
+buil  20796 3   36   4    3   4   8  11
+adho  17443 2   32   3    3   3   5  9
+gson  10485 1   31   2    1   2   4  4
 ```
 
 ```
 Performance serialize record
-name  tot   min max mean  p50 p90 p95 p99
-refl  17966 2   233 3     2   4   4   6
-buil  18709 2   233 3     2   4   5   6
-adho  18750 1   234 3     2   4   4   6
-gson  34345 4   237 6     5   7   8   9
+name  tot   min max mean p50 p90 p95 p99
+refl  13004 2   20  2    2   2   3   4
+buil  13115 2   19  2    2   3   4   4
+adho  12195 2   18  2    2   2   3   4
+gson  22594 4   21  4    4   5   5   6
+```
+
+```
+Performance serialize pojo
+name  tot   min max mean p50 p90 p95 p99
+refl  12229 2   20  2    2   2   4   4
+buil  13821 2   20  2    2   3   4   4
+adho  12565 2   22  2    2   2   4   4
+gson  22084 4   22  4    4   4   5   5
+```
+
+```
+Performance parse record
+name  tot   min max mean p50 p90 p95 p99
+refl  12360 1   55  2    2   2   3   5
+buil  12654 1   55  2    2   2   4   5
+adho  17089 2   56  3    3   3   4   7
+gson  10784 1   55  2    1   2   2   4
 ```

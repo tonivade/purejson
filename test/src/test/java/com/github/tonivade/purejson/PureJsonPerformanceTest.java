@@ -225,11 +225,11 @@ class PureJsonPerformanceTest {
     System.out.println("name\ttot\tmin\tmax\tmean\tp50\tp90\tp95\tp99");
     for (var s : stats) {
       System.out.printf("%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d%n",
-        s.getName().substring(0, 4),
-        s.getTotal().toMillis(),
-        s.getMin().toMillis(),
-        s.getMax().toMillis(),
-        s.getMean().toMillis(),
+        s.name().substring(0, 4),
+        s.total().toMillis(),
+        s.min().toMillis(),
+        s.max().toMillis(),
+        s.mean().toMillis(),
         s.getPercentile(50).getOrElseThrow().toMillis(),
         s.getPercentile(90).getOrElseThrow().toMillis(),
         s.getPercentile(95).getOrElseThrow().toMillis(),

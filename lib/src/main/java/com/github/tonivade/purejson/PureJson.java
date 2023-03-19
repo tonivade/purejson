@@ -16,19 +16,19 @@ import com.github.tonivade.purefun.type.Try;
 public final class PureJson<T> {
 
   private final JsonAdapter<T> adapter;
-  
+
   public PureJson(Type type) {
     this(adapter(type));
   }
-  
+
   public PureJson(Class<T> type) {
     this(adapter(type));
   }
-  
+
   public PureJson(JsonAdapter<T> adapter) {
     this.adapter = checkNonNull(adapter);
   }
-  
+
   public static Try<String> serialize(JsonNode node) {
     return Try.of(node::toString);
   }
@@ -62,7 +62,7 @@ public final class PureJson<T> {
 
   private static Try<JsonNode> tryParse(String json) {
     return Try.of(() -> {
-      PureJsonHandler handler = new PureJsonHandler();
+      var handler = new PureJsonHandler();
       new JsonParser(handler).parse(json);
       return handler.getValue();
     });

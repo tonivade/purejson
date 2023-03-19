@@ -9,8 +9,7 @@ import static com.github.tonivade.purejson.JsonAdapter.adapter;
 
 import java.lang.reflect.Type;
 
-import com.eclipsesource.json.Json;
-import com.eclipsesource.json.JsonValue;
+import com.eclipsesource.json.JsonParser;
 import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Try;
 
@@ -36,8 +35,7 @@ public final class PureJson<T> {
 
   public static Try<JsonNode> parse(String json) {
     return Option.of(json).fold(Try::<String>illegalArgumentException, Try::success)
-        .flatMap(PureJson::tryParse)
-        .map(JsonNode::from);
+        .flatMap(PureJson::tryParse);
   }
 
   public Try<Option<T>> fromJson(String json) {
@@ -62,7 +60,11 @@ public final class PureJson<T> {
     return adapter.tryEncode(object);
   }
 
-  private static Try<JsonValue> tryParse(String json) {
-    return Try.of(() -> Json.parse(json));
+  private static Try<JsonNode> tryParse(String json) {
+    return Try.of(() -> {
+      PureJsonHandler handler = new PureJsonHandler();
+      new JsonParser(handler).parse(json);
+      return handler.getValue();
+    });
   }
 }

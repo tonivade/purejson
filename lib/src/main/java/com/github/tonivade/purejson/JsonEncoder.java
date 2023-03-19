@@ -17,8 +17,6 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Map;
 
-import com.eclipsesource.json.JsonArray;
-import com.eclipsesource.json.JsonObject;
 import com.github.tonivade.purefun.Function1;
 import com.github.tonivade.purefun.Tuple2;
 import com.github.tonivade.purefun.data.ImmutableMap;
@@ -54,11 +52,11 @@ public interface JsonEncoder<T> {
   static <T> JsonEncoder<T> arrayEncoder(Type type) {
     var arrayEncoder = encoder(type);
     return value -> {
-      var array = new JsonArray();
+      var array = new JsonNode.Array();
       for (var item : (Object[]) value) {
-        array.add(arrayEncoder.encode(item).unwrap());
+        array.add(arrayEncoder.encode(item));
       }
-      return new JsonNode.Array(array);
+      return array;
     };
   }
 
@@ -70,15 +68,15 @@ public interface JsonEncoder<T> {
         .map(f -> Tuple2.of(f, encoder(f.getGenericType())))
         .toList();
     return value -> {
-      var object = new JsonObject();
+      var object = new JsonNode.Object();
       for (var pair : fields) {
         try {
-          object.add(pair.get1().getName(), pair.get2().encode(pair.get1().get(value)).unwrap());
+          object.add(pair.get1().getName(), pair.get2().encode(pair.get1().get(value)));
         } catch (IllegalAccessException e) {
           throw new IllegalStateException(e);
         }
       }
-      return new JsonNode.Object(object);
+      return object;
     };
   }
 
@@ -87,36 +85,36 @@ public interface JsonEncoder<T> {
         .map(f -> Tuple2.of(f, encoder(f.getGenericType())))
         .toList();
     return value -> {
-      var object = new JsonObject();
+      var object = new JsonNode.Object();
       for (var pair : fields) {
         try {
           var field = pair.get1().getAccessor().invoke(value);
-          object.add(pair.get1().getName(), pair.get2().encode(field).unwrap());
+          object.add(pair.get1().getName(), pair.get2().encode(field));
         } catch (IllegalAccessException | InvocationTargetException e) {
           throw new IllegalStateException(e);
         }
       }
-      return new JsonNode.Object(object);
+      return object;
     };
   }
 
   static <E> JsonEncoder<Iterable<E>> iterableEncoder(JsonEncoder<E> itemEncoder) {
     return value -> {
-      var array = new JsonArray();
+      var array = new JsonNode.Array();
       for (E item : value) {
-        array.add(itemEncoder.encode(item).unwrap());
+        array.add(itemEncoder.encode(item));
       }
-      return new JsonNode.Array(array);
+      return array;
     };
   }
 
   static <V> JsonEncoder<Map<String, V>> mapEncoder(JsonEncoder<V> valueEncoder) {
     return value -> {
-      var object = new JsonObject();
+      var object = new JsonNode.Object();
       for (var entry : value.entrySet()) {
-        object.add(entry.getKey(), valueEncoder.encode(entry.getValue()).unwrap());
+        object.add(entry.getKey(), valueEncoder.encode(entry.getValue()));
       }
-      return new JsonNode.Object(object);
+      return object;
     };
   }
 

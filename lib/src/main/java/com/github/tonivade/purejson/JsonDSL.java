@@ -5,11 +5,10 @@
 package com.github.tonivade.purejson;
 
 import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.eclipsesource.json.JsonArray;
-import com.eclipsesource.json.JsonObject;
 
 public final class JsonDSL {
   
@@ -20,9 +19,9 @@ public final class JsonDSL {
   }
 
   public static JsonNode array(Iterable<JsonNode> elements) {
-    var array = new JsonArray();
+    var array = new ArrayList<JsonNode>();
     for (var node : elements) {
-      array.add(node.unwrap());
+      array.add(node);
     }
     return new JsonNode.Array(array);
   }
@@ -37,9 +36,9 @@ public final class JsonDSL {
   }
 
   public static JsonNode object(Iterable<Map.Entry<String, JsonNode>> elements) {
-    var object = new JsonObject();
+    var object = new HashMap<String, JsonNode>();
     for (var entry : elements) {
-      object.add(entry.getKey(), entry.getValue().unwrap());
+      object.put(entry.getKey(), entry.getValue());
     }
     return new JsonNode.Object(object);
   }

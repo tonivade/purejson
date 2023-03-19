@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import com.eclipsesource.json.JsonObject;
 import com.github.tonivade.purefun.Function1;
 
 public final class JsonAdapterBuilder<T> {
@@ -69,11 +68,11 @@ public final class JsonAdapterBuilder<T> {
     return JsonAdapter.of(
 
         value -> {
-          var object = new JsonObject();
+          var object = new JsonNode.Object();
           for (var entry : encoders.entrySet()) {
-            object.add(entry.getKey(), entry.getValue().encode(value).unwrap());
+            object.add(entry.getKey(), entry.getValue().encode(value));
           }
-          return new JsonNode.Object(object);
+          return object;
         },
 
         json -> {

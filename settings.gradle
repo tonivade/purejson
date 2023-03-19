@@ -13,7 +13,7 @@ dependencyResolutionManagement {
       library('purefunMonad', "com.github.tonivade:purefun-monad:$purefunVersion")
       library('purefunInstances', "com.github.tonivade:purefun-instances:$purefunVersion")
       library('purecheck', "com.github.tonivade:purecheck:$purecheckVersion")
-      library('minimalJson', "com.eclipsesource.minimal-json:minimal-json:${minimalJsonVersion}")
+      library('minimalJson', "com.github.tonivade:minimal-json:${minimalJsonVersion}")
       library('javapoet', "com.squareup:javapoet:${javapoetVersion}")
       library('junitJupiter', "org.junit.jupiter:junit-jupiter-engine:$junitEngineVersion")
       library('junitRunner', "org.junit.platform:junit-platform-runner:$junitPlatformVersion")

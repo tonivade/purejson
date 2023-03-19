@@ -196,7 +196,7 @@ class PureJsonPerformanceTest {
         entry("id", INTEGER.encode(value.getId())),
         entry("name", STRING.encode(value.getName()))),
       json -> {
-        if (json instanceof JsonNode.Object o) {
+        if (json instanceof JsonNode.JsonObject o) {
           return new Pojo(
             INTEGER.decode(o.get("id")),
             STRING.decode(o.get("name")));
@@ -211,7 +211,7 @@ class PureJsonPerformanceTest {
         entry("id", INTEGER.encode(value.id())),
         entry("name", STRING.encode(value.name()))),
       json -> {
-        if (json instanceof JsonNode.Object o) {
+        if (json instanceof JsonNode.JsonObject o) {
           return new Value(
             INTEGER.decode(o.get("id")),
             STRING.decode(o.get("name")));

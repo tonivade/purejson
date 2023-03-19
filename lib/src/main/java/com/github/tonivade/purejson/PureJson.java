@@ -9,35 +9,33 @@ import static com.github.tonivade.purejson.JsonAdapter.adapter;
 
 import java.lang.reflect.Type;
 
-import com.eclipsesource.json.Json;
-import com.eclipsesource.json.JsonValue;
+import com.eclipsesource.json.JsonParser;
 import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Try;
 
 public final class PureJson<T> {
 
   private final JsonAdapter<T> adapter;
-  
+
   public PureJson(Type type) {
     this(adapter(type));
   }
-  
+
   public PureJson(Class<T> type) {
     this(adapter(type));
   }
-  
+
   public PureJson(JsonAdapter<T> adapter) {
     this.adapter = checkNonNull(adapter);
   }
-  
+
   public static Try<String> serialize(JsonNode node) {
     return Try.of(node::toString);
   }
 
   public static Try<JsonNode> parse(String json) {
     return Option.of(json).fold(Try::<String>illegalArgumentException, Try::success)
-        .flatMap(PureJson::tryParse)
-        .map(JsonNode::from);
+        .flatMap(PureJson::tryParse);
   }
 
   public Try<Option<T>> fromJson(String json) {
@@ -45,7 +43,7 @@ public final class PureJson<T> {
   }
 
   public Try<Option<T>> fromJson(JsonNode node) {
-    if (node instanceof JsonNode.Null) {
+    if (node instanceof JsonNode.JsonNull) {
       return Try.success(Option.none());
     }
     return adapter.tryDecode(node).map(Option::some);
@@ -62,7 +60,11 @@ public final class PureJson<T> {
     return adapter.tryEncode(object);
   }
 
-  private static Try<JsonValue> tryParse(String json) {
-    return Try.of(() -> Json.parse(json));
+  private static Try<JsonNode> tryParse(String json) {
+    return Try.of(() -> {
+      var handler = new PureJsonHandler();
+      new JsonParser(handler).parse(json);
+      return handler.getValue();
+    });
   }
 }

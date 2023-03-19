@@ -46,37 +46,37 @@ class PureJsonTest extends IOTestSpec<String> {
   record User(Integer id, String name) {}
 
   static final class Value {
-    
+
     @SuppressWarnings("unused")
     private static final int x = 1;
-    
+
     private final Integer id;
     private final String name;
-    
+
     @JsonCreator
     Value(@JsonProperty("id") Integer id, @JsonProperty("name") String name) {
       this.id = id;
       this.name = name;
     }
-    
+
     public Integer getId() {
       return id;
     }
-    
+
     public String getName() {
       return name;
     }
-    
+
     @Override
     public int hashCode() {
       return Objects.hash(id, name);
     }
-    
+
     @Override
     public boolean equals(Object obj) {
       return Equal.<Value>of().comparing(Value::getId).comparing(Value::getName).applyTo(this, obj);
     }
-    
+
     @Override
     public String toString() {
       return "Value(id:%s,name:%s)".formatted(id, name);
@@ -84,96 +84,96 @@ class PureJsonTest extends IOTestSpec<String> {
   }
 
   static final class Pojo {
-    
+
     @SuppressWarnings("unused")
     private static final int x = 1;
-    
+
     private Integer id;
     private String name;
-    
+
     Pojo() {}
 
     Pojo(Integer id, String name) {
       this.id = id;
       this.name = name;
     }
-    
+
     public Integer getId() {
       return id;
     }
-    
+
     public String getName() {
       return name;
     }
-    
+
     @Override
     public int hashCode() {
       return Objects.hash(id, name);
     }
-    
+
     @Override
     public boolean equals(Object obj) {
       return Equal.<Pojo>of().comparing(Pojo::getId).comparing(Pojo::getName).applyTo(this, obj);
     }
-    
+
     @Override
     public String toString() {
       return "Pojo(id:%s,name:%s)".formatted(id, name);
     }
   }
-  
+
   enum EnumTest { VAL1, VAL2 }
 
   @Test
   void serializeObject() {
-    
-    suite("serialize object", 
+
+    suite("serialize object",
 
         it.should("serialize a record")
           .given(new User(1, "toni"))
           .when(value -> new PureJson<>(User.class).toString(value))
           .then(equalsTo(success("""
-              {"id":1,"name":"toni"} 
+              {"id":1,"name":"toni"}
               """.strip()))),
 
         it.should("serialize a record with null fields")
           .given(new User(1, null))
           .when(value -> new PureJson<>(User.class).toString(value))
           .then(equalsTo(success("""
-              {"id":1,"name":null} 
+              {"id":1,"name":null}
               """.strip()))),
-          
+
         it.should("serialize a value")
           .given(new Value(1, "toni"))
           .when(value -> new PureJson<>(Value.class).toString(value))
           .then(equalsTo(success("""
-              {"id":1,"name":"toni"} 
+              {"id":1,"name":"toni"}
               """.strip()))),
-          
+
         it.should("serialize a value with null fields")
           .given(new Value(1, null))
           .when(value -> new PureJson<>(Value.class).toString(value))
           .then(equalsTo(success("""
-              {"id":1,"name":null} 
+              {"id":1,"name":null}
               """.strip()))),
-          
+
         it.should("serialize a pojo")
           .given(new Pojo(1, "toni"))
           .when(value -> new PureJson<>(Pojo.class).toString(value))
           .then(equalsTo(success("""
-              {"id":1,"name":"toni"} 
+              {"id":1,"name":"toni"}
               """.strip()))),
-          
+
         it.should("serialize a pojo with null fields")
           .given(new Pojo(1, null))
           .when(value -> new PureJson<>(Pojo.class).toString(value))
           .then(equalsTo(success("""
-              {"id":1,"name":null} 
+              {"id":1,"name":null}
               """.strip())))
 
         ).run().assertion();
   }
-  
+
   @Test
   void serializeInnerArray() {
 
@@ -181,32 +181,32 @@ class PureJsonTest extends IOTestSpec<String> {
 
     var json = new PureJson<>(Test.class);
 
-    suite("serialize inner array", 
+    suite("serialize inner array",
 
         it.should("serialize a inner array")
           .given(new Test(List.of("hola", "adios").toArray(String[]::new)))
           .when(value -> json.toString(value))
           .then(equalsTo(success("""
-              {"values":["hola","adios"]} 
+              {"values":["hola","adios"]}
               """.strip()))),
 
         it.should("serialize a inner array with null values")
           .given(new Test(asList(null, "adios").toArray(String[]::new)))
           .when(value -> json.toString(value))
           .then(equalsTo(success("""
-              {"values":[null,"adios"]} 
+              {"values":[null,"adios"]}
               """.strip()))),
 
         it.should("serialize a null inner array")
           .given(new Test(null))
           .when(value -> json.toString(value))
           .then(equalsTo(success("""
-              {"values":null} 
+              {"values":null}
               """.strip())))
 
         ).run().assertion();
   }
-  
+
   @Test
   void serializeInnerList() {
 
@@ -214,27 +214,27 @@ class PureJsonTest extends IOTestSpec<String> {
 
     var json = new PureJson<>(Test.class);
 
-    suite("serialize inner list", 
+    suite("serialize inner list",
 
         it.should("serialize a inner list")
           .given(new Test(List.of("hola", "adios")))
           .when(value -> json.toString(value))
           .then(equalsTo(success("""
-              {"values":["hola","adios"]} 
+              {"values":["hola","adios"]}
               """.strip()))),
 
         it.should("serialize a inner list with null values")
           .given(new Test(asList(null, "adios")))
           .when(value -> json.toString(value))
           .then(equalsTo(success("""
-              {"values":[null,"adios"]} 
+              {"values":[null,"adios"]}
               """.strip()))),
 
         it.should("serialize a null inner list")
           .given(new Test(null))
           .when(value -> json.toString(value))
           .then(equalsTo(success("""
-              {"values":null} 
+              {"values":null}
               """.strip())))
 
         ).run().assertion();
@@ -247,27 +247,27 @@ class PureJsonTest extends IOTestSpec<String> {
 
     var json = new PureJson<>(Test.class);
 
-    suite("serialize inner map", 
+    suite("serialize inner map",
 
         it.should("serialize a inner map")
           .given(new Test(Map.of("hola", "adios")))
           .when(value -> json.toString(value))
           .then(equalsTo(success("""
-              {"values":{"hola":"adios"}} 
+              {"values":{"hola":"adios"}}
               """.strip()))),
 
         it.should("serialize a inner map with null values")
           .given(new Test(singletonMap("hola", null)))
           .when(value -> json.toString(value))
           .then(equalsTo(success("""
-              {"values":{"hola":null}} 
+              {"values":{"hola":null}}
               """.strip()))),
 
         it.should("serialize a null inner map")
           .given(new Test(null))
           .when(value -> json.toString(value))
           .then(equalsTo(success("""
-              {"values":null} 
+              {"values":null}
               """.strip())))
 
         ).run().assertion();
@@ -279,7 +279,7 @@ class PureJsonTest extends IOTestSpec<String> {
 
     var json = new PureJson<>(listOfUsers);
 
-    suite("serialize list", 
+    suite("serialize list",
 
         it.should("serialize a list of records")
           .given(List.of(new User(1, "toni")))
@@ -299,7 +299,7 @@ class PureJsonTest extends IOTestSpec<String> {
           .given(listWithNull())
           .when(value -> json.toString(value))
           .then(equalsTo(success("[null]")))
-          
+
         ).run().assertion();
   }
 
@@ -309,7 +309,7 @@ class PureJsonTest extends IOTestSpec<String> {
 
     var json = new PureJson<>(listOfUsers);
 
-    suite("serialize immutable list", 
+    suite("serialize immutable list",
 
         it.should("serialize a immutable list of records")
           .given(listOf(new User(1, "toni")))
@@ -329,7 +329,7 @@ class PureJsonTest extends IOTestSpec<String> {
           .given(emptyList().append(null))
           .when(value -> json.toString(value))
           .then(equalsTo(success("[null]")))
-          
+
         ).run().assertion();
   }
 
@@ -339,7 +339,7 @@ class PureJsonTest extends IOTestSpec<String> {
 
     var json = new PureJson<>(listOfUsers);
 
-    suite("serialize immutable array", 
+    suite("serialize immutable array",
 
         it.should("serialize a immutable array of records")
           .given(arrayOf(new User(1, "toni")))
@@ -359,7 +359,7 @@ class PureJsonTest extends IOTestSpec<String> {
           .given(emptyArray().append(null))
           .when(value -> json.toString(value))
           .then(equalsTo(success("[null]")))
-          
+
         ).run().assertion();
   }
 
@@ -369,7 +369,7 @@ class PureJsonTest extends IOTestSpec<String> {
 
     var json = new PureJson<>(listOfUsers);
 
-    suite("serialize immutable set", 
+    suite("serialize immutable set",
 
         it.should("serialize a immutable set of records")
           .given(setOf(new User(1, "toni")))
@@ -389,7 +389,7 @@ class PureJsonTest extends IOTestSpec<String> {
           .given(() -> emptySet().append(null))
           .when(value -> json.toString(value))
           .then(equalsTo(success("[null]"))).disable("set doesn't allow null values")
-          
+
         ).run().assertion();
   }
 
@@ -414,11 +414,11 @@ class PureJsonTest extends IOTestSpec<String> {
     assertEquals(success(expected2), result2);
     assertEquals(success(expected3), result3);
   }
-  
+
   @Test
   void serializeMap() {
     Type mapOfUsers = new TypeToken<Map<String, User>>(){}.getType();
-    
+
     var json = new PureJson<>(mapOfUsers);
     var result1 = json.toString(Map.of("toni", new User(1, "toni")));
     var result2 = json.toString(Map.of("toni", new User(1, null)));
@@ -438,7 +438,7 @@ class PureJsonTest extends IOTestSpec<String> {
     assertEquals(success(expected2), result2);
     assertEquals(success(expected3), result3);
   }
-  
+
   @Test
   void serializeImmutableMap() {
     Type mapOfUsers = new TypeToken<ImmutableMap<String, User>>(){}.getType();
@@ -465,19 +465,19 @@ class PureJsonTest extends IOTestSpec<String> {
 
   @Test
   void parseObject() {
-    
-    suite("parse object", 
+
+    suite("parse object",
 
         it.should("parse a record")
           .given("""
-              {"id":1,"name":"toni"} 
+              {"id":1,"name":"toni"}
               """.strip())
           .when(node -> new PureJson<>(User.class).fromJson(node))
           .then(equalsTo(success(some(new User(1, "toni"))))),
 
         it.should("parse a record with null fields")
           .given("""
-              {"id":1,"name":null} 
+              {"id":1,"name":null}
               """.strip())
           .when(node -> new PureJson<>(User.class).fromJson(node))
           .then(equalsTo(success(some(new User(1, null))))),
@@ -489,14 +489,14 @@ class PureJsonTest extends IOTestSpec<String> {
 
         it.should("parse a value")
           .given("""
-              {"id":1,"name":"toni"} 
+              {"id":1,"name":"toni"}
               """.strip())
           .when(node -> new PureJson<>(Value.class).fromJson(node))
           .then(equalsTo(success(some(new Value(1, "toni"))))),
 
         it.should("parse a value")
           .given("""
-              {"id":1,"name":null} 
+              {"id":1,"name":null}
               """.strip())
           .when(node -> new PureJson<>(Value.class).fromJson(node))
           .then(equalsTo(success(some(new Value(1, null))))),
@@ -508,14 +508,14 @@ class PureJsonTest extends IOTestSpec<String> {
 
         it.should("parse a pojo")
           .given("""
-              {"id":1,"name":"toni"} 
+              {"id":1,"name":"toni"}
               """.strip())
           .when(node -> new PureJson<>(Pojo.class).fromJson(node))
           .then(equalsTo(success(some(new Pojo(1, "toni"))))),
 
         it.should("parse a pojo")
           .given("""
-              {"id":1,"name":null} 
+              {"id":1,"name":null}
               """.strip())
           .when(node -> new PureJson<>(Pojo.class).fromJson(node))
           .then(equalsTo(success(some(new Pojo(1, null))))),
@@ -524,7 +524,7 @@ class PureJsonTest extends IOTestSpec<String> {
           .given("null")
           .when(node -> new PureJson<>(Pojo.class).fromJson(node))
           .then(equalsTo(success(none())))
-        
+
         ).run().assertion();
   }
 
@@ -532,7 +532,7 @@ class PureJsonTest extends IOTestSpec<String> {
   void parseInnerSequence() {
 
     record Test(Sequence<String> values) {}
-    
+
     var string = """
         {"values":["one","two","three"]}
         """.strip();
@@ -546,7 +546,7 @@ class PureJsonTest extends IOTestSpec<String> {
   void parseInnerImmutableArray() {
 
     record Test(ImmutableArray<String> values) {}
-    
+
     var string = """
         {"values":["one","two","three"]}
         """.strip();
@@ -560,7 +560,7 @@ class PureJsonTest extends IOTestSpec<String> {
   void parseInnerImmutableList() {
 
     record Test(ImmutableList<String> values) {}
-    
+
     var string = """
         {"values":["one","two","three"]}
         """.strip();
@@ -574,7 +574,7 @@ class PureJsonTest extends IOTestSpec<String> {
   void parseInnerImmutableSet() {
 
     record Test(ImmutableSet<String> values) {}
-    
+
     var string = """
         {"values":["one","two","three"]}
         """.strip();
@@ -588,7 +588,7 @@ class PureJsonTest extends IOTestSpec<String> {
   void parseInnerImmutableTree() {
 
     record Test(ImmutableTree<String> values) {}
-    
+
     var string = """
         {"values":["one","two","three"]}
         """.strip();
@@ -602,7 +602,7 @@ class PureJsonTest extends IOTestSpec<String> {
   void parseInnerCollection() {
 
     record Test(Collection<String> values) {}
-    
+
     var string = """
         {"values":["one","two","three"]}
         """.strip();
@@ -616,14 +616,14 @@ class PureJsonTest extends IOTestSpec<String> {
   void parseInnerArray() {
 
     record Test(String[] values) {}
-    
+
     var string = """
         {"values":["one","two","three"]}
         """.strip();
 
     Try<Option<Test>> result = new PureJson<>(Test.class).fromJson(string);
 
-    assertArrayEquals(List.of("one", "two", "three").toArray(String[]::new), 
+    assertArrayEquals(List.of("one", "two", "three").toArray(String[]::new),
         result.getOrElseThrow().getOrElseThrow().values);
   }
 
@@ -631,7 +631,7 @@ class PureJsonTest extends IOTestSpec<String> {
   void parseInnerList() {
 
     record Test(List<String> values) {}
-    
+
     var string = """
         {"values":["one","two","three"]}
         """.strip();
@@ -645,7 +645,7 @@ class PureJsonTest extends IOTestSpec<String> {
   void parseInnerSet() {
 
     record Test(Set<String> values) {}
-    
+
     var string = """
         {"values":["one","two","three"]}
         """.strip();
@@ -659,7 +659,7 @@ class PureJsonTest extends IOTestSpec<String> {
   void parseInnerMap() {
 
     record Test(Map<String, String> values) {}
-    
+
     var string = """
         {"values":{"one":"1","two":"2","three":"3"}}
         """.strip();
@@ -759,44 +759,44 @@ class PureJsonTest extends IOTestSpec<String> {
     assertSuccessSome(singletonMap("toni", null), map4);
     assertEquals(success(none()), map5);
   }
-  
+
   @Test
   void failure() {
-    suite("failure", 
-//        
+    suite("failure",
+//
 //        it.should("fail when not supported")
 //          .given(List.of(1, 2, 3))
 //          .when(list -> new PureJson<>(new TypeToken<List<Integer>>() {}.getType()).toString(list))
 //          .then(instanceOf(UnsupportedOperationException.class).compose(Try::getCause)),
-        
+
         it.should("fail when invalid json syntax")
           .given("this is wrong")
           .when(json -> new PureJson<>(User.class).fromJson(json))
           .then(instanceOf(ParseException.class).compose(Try::getCause)),
-        
+
         it.should("fail when empty string")
           .given("")
           .when(json -> new PureJson<>(User.class).fromJson(json))
           .then(instanceOf(ParseException.class).compose(Try::getCause)),
-        
+
         it.should("fail when null string")
           .<String>givenNull()
           .when(json -> new PureJson<>(User.class).fromJson(json))
           .then(instanceOf(IllegalArgumentException.class).compose(Try::getCause)),
-        
+
         it.should("fail when type doesn't match with json")
           .given("""
-              {"id":1,"name":"toni"} 
+              {"id":1,"name":"toni"}
               """)
           .when(json -> new PureJson<>(new TypeToken<List<User>>() {}.getType()).fromJson(json))
           .then(instanceOf(IllegalArgumentException.class).compose(Try::getCause))
-        
+
         ).run().assertion();
   }
-  
+
   @Test
   void serializePrimitives() {
-    suite("serialize primitives", 
+    suite("serialize primitives",
 
         it.should("serialize null")
           .<String>givenNull()
@@ -865,10 +865,10 @@ class PureJsonTest extends IOTestSpec<String> {
 
         ).run().assertion();
   }
-  
+
   @Test
   void parsePrimitives() {
-    suite("parse primitives", 
+    suite("parse primitives",
 
         it.should("parse null")
           .given("null")
@@ -937,7 +937,7 @@ class PureJsonTest extends IOTestSpec<String> {
 
         ).run().assertion();
   }
-  
+
   private static <T> List<T> listWithNull() {
     var list = new ArrayList<T>();
     list.add(null);
@@ -945,6 +945,9 @@ class PureJsonTest extends IOTestSpec<String> {
   }
 
   private static <T> void assertSuccessSome(T valueOf, Try<Option<T>> fromJson) {
+    if (fromJson.isFailure()) {
+      fromJson.getCause().printStackTrace();
+    }
     assertEquals(success(some(valueOf)), fromJson);
   }
 }

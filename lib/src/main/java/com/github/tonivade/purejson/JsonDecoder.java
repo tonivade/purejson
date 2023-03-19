@@ -45,7 +45,7 @@ import com.github.tonivade.purefun.type.Try;
 public interface JsonDecoder<T> {
 
   T decode(JsonNode json);
-  
+
   default <R> JsonDecoder<R> map(Function1<? super T, ? extends R> map) {
     return json -> map.apply(decode(json));
   }
@@ -53,15 +53,15 @@ public interface JsonDecoder<T> {
   default Try<T> tryDecode(JsonNode json) {
     return Try.of(() -> decode(json));
   }
-  
+
   default <R> JsonDecoder<R> andThen(Function1<? super T, ? extends R> next) {
     return json -> next.apply(decode(json));
   }
-  
+
   static <T> JsonDecoder<T> decoder(Type type) {
     return nullSafe(JsonDecoder.<T>load(type).getOrElse(() -> create(type)));
   }
-  
+
   @SuppressWarnings("unchecked")
   static <T> Option<JsonDecoder<T>> load(Type type) {
     return JsonAdapter.load(type).map(d -> (JsonDecoder<T>) d);
@@ -71,7 +71,7 @@ public interface JsonDecoder<T> {
   static <T> JsonDecoder<T[]> arrayDecoder(Class<T> type) {
     var itemDecoder = decoder(type);
     return json -> {
-      if (json instanceof JsonNode.Array a) {
+      if (json instanceof JsonNode.JsonArray a) {
         var array = Array.newInstance(type, a.size());
         for (int i = 0; i < a.size(); i++) {
           Array.set(array, i, itemDecoder.decode(a.get(i)));
@@ -91,7 +91,7 @@ public interface JsonDecoder<T> {
         .map(f -> Tuple2.of(f, decoder(f.getGenericType())))
         .toList();
     return json -> {
-      if (json instanceof JsonNode.Object object) {
+      if (json instanceof JsonNode.JsonObject object) {
         var types = new ArrayList<Class<?>>();
         var values = new ArrayList<>();
         for (var pair : fields) {
@@ -118,7 +118,7 @@ public interface JsonDecoder<T> {
         .map(f -> Tuple2.of(f, decoder(f.getGenericType())))
         .toList();
     return json -> {
-      if (json instanceof JsonNode.Object object) {
+      if (json instanceof JsonNode.JsonObject object) {
         try {
           var constructor = findConstructor(clazz);
           if (constructor.trySetAccessible()) {
@@ -141,7 +141,7 @@ public interface JsonDecoder<T> {
   }
 
   static <T> T createPojoFromDefaultConstructor(Constructor<T> constructor, List<Tuple2<Field, JsonDecoder<Object>>> fields,
-      JsonNode.Object object) {
+      JsonNode.JsonObject object) {
     try {
       T value = constructor.newInstance();
       for (var pair : fields) {
@@ -155,17 +155,17 @@ public interface JsonDecoder<T> {
   }
 
   static <T> T createPojoFromAnnotatedConstructor(Constructor<T> constructor,
-      List<Tuple2<Field, JsonDecoder<Object>>> fields, JsonNode.Object object) {
+      List<Tuple2<Field, JsonDecoder<Object>>> fields, JsonNode.JsonObject object) {
     try {
-      var fieldsToDecode = 
+      var fieldsToDecode =
           fields.stream().collect(toUnmodifiableMap(t -> t.get1().getName(), Tuple2::get2));
-      
+
       var values = Arrays.stream(constructor.getParameters())
         .map(p -> p.getAnnotation(JsonProperty.class))
         .map(JsonProperty::value)
         .map(name -> fieldsToDecode.get(name).decode(object.get(name)))
         .toArray();
-      
+
       return constructor.newInstance(values);
     } catch (IllegalArgumentException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
       throw new IllegalStateException(e);
@@ -195,7 +195,7 @@ public interface JsonDecoder<T> {
 
   static <E> JsonDecoder<Iterable<E>> iterableDecoder(JsonDecoder<E> itemDecoder) {
     return json -> {
-      if (json instanceof JsonNode.Array array) {
+      if (json instanceof JsonNode.JsonArray array) {
         var list = new ArrayList<E>();
         for (var object : array) {
           list.add(itemDecoder.decode(object));
@@ -208,7 +208,7 @@ public interface JsonDecoder<T> {
 
   static <V> JsonDecoder<Map<String, V>> mapDecoder(JsonDecoder<V> itemEncoder) {
     return json -> {
-      if (json instanceof JsonNode.Object object) {
+      if (json instanceof JsonNode.JsonObject object) {
         var map = new LinkedHashMap<String, V>();
         for (Map.Entry<String, JsonNode> entry : object) {
           map.put(entry.getKey(), itemEncoder.decode(entry.getValue()));
@@ -218,11 +218,19 @@ public interface JsonDecoder<T> {
       throw new IllegalArgumentException(json.toString());
     };
   }
-  
+
   static <T> JsonDecoder<T> nullSafe(JsonDecoder<T> decoder) {
-    return json -> json instanceof JsonNode.Null ? null : decoder.decode(json);
+    return json -> {
+      if (json == null) {
+        return null;
+      }
+      if (json instanceof JsonNode.JsonNull) {
+        return null;
+      }
+      return decoder.decode(json);
+    };
   }
-  
+
   @SuppressWarnings({ "unchecked", "rawtypes" })
   private static <T> JsonDecoder<T> create(Type type) {
     if (type instanceof Class clazz) {
@@ -312,7 +320,7 @@ public interface JsonDecoder<T> {
       return pojoDecoder(type);
     }
   }
-  
+
   @SuppressWarnings("unchecked")
   private static <T> JsonDecoder<T> primitiveDecoder(Class<T> type) {
     if (type.equals(char.class)) {
@@ -386,7 +394,7 @@ public interface JsonDecoder<T> {
 }
 
 interface JsonDecoderModule {
-  
+
   JsonDecoder<String> STRING = JsonNode::asString;
   JsonDecoder<Character> CHAR = JsonNode::asCharacter;
   JsonDecoder<Byte> BYTE = JsonNode::asByte;

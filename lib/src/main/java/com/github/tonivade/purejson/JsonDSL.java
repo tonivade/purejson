@@ -4,11 +4,14 @@
  */
 package com.github.tonivade.purejson;
 
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.github.tonivade.purejson.JsonNode.JsonArray;
+import com.github.tonivade.purejson.JsonNode.JsonNumber;
+import com.github.tonivade.purejson.JsonNode.JsonObject;
+import com.github.tonivade.purejson.JsonNode.JsonString;
+import com.github.tonivade.purejson.JsonNode.Tuple;
 
 public final class JsonDSL {
 
@@ -19,52 +22,49 @@ public final class JsonDSL {
   }
 
   public static JsonNode array(Iterable<JsonNode> elements) {
-    var array = new ArrayList<JsonNode>();
-    for (var node : elements) {
-      array.add(node);
-    }
-    return new JsonNode.JsonArray(array);
+    var array = new JsonArray();
+    elements.forEach(array::add);
+    return array;
   }
 
-  @SafeVarargs
-  public static JsonNode object(Map.Entry<String, JsonNode>... elements) {
+  public static JsonNode object(Tuple... elements) {
     return object(List.of(elements));
   }
 
   public static JsonNode object(Map<String, JsonNode> elements) {
-    return object(elements.entrySet());
+    var object = new JsonObject();
+    elements.forEach(object::add);
+    return object;
   }
 
-  public static JsonNode object(Iterable<Map.Entry<String, JsonNode>> elements) {
-    var object = new HashMap<String, JsonNode>();
-    for (var entry : elements) {
-      object.put(entry.getKey(), entry.getValue());
-    }
-    return new JsonNode.JsonObject(object);
+  public static JsonNode object(Iterable<Tuple> elements) {
+    var object = new JsonObject();
+    elements.forEach(t -> object.add(t.key(), t.value()));
+    return object;
   }
 
-  public static Map.Entry<String, JsonNode> entry(String name, JsonNode value) {
-    return new AbstractMap.SimpleImmutableEntry<>(name, value);
+  public static Tuple entry(String name, JsonNode value) {
+    return new Tuple(name, value);
   }
 
   public static JsonNode string(String value) {
-    return new JsonNode.JsonString(value);
+    return new JsonString(value);
   }
 
   public static JsonNode number(int value) {
-    return new JsonNode.JsonNumber(value);
+    return new JsonNumber(value);
   }
 
   public static JsonNode number(long value) {
-    return new JsonNode.JsonNumber(value);
+    return new JsonNumber(value);
   }
 
   public static JsonNode number(float value) {
-    return new JsonNode.JsonNumber(value);
+    return new JsonNumber(value);
   }
 
   public static JsonNode number(double value) {
-    return new JsonNode.JsonNumber(value);
+    return new JsonNumber(value);
   }
 
   public static JsonNode bool(boolean value) {

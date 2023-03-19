@@ -6,6 +6,7 @@ package com.github.tonivade.purejson;
 
 import static com.github.tonivade.purefun.Precondition.checkNonNull;
 import static java.util.stream.Collectors.joining;
+
 import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -15,6 +16,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public sealed interface JsonNode extends Serializable {
 
@@ -112,8 +114,7 @@ public sealed interface JsonNode extends Serializable {
     @Serial
     private static final long serialVersionUID = -8863194563052037633L;
 
-    private JsonNull() {
-    }
+    private JsonNull() { }
 
     @Override
     public boolean isNull() {
@@ -141,8 +142,7 @@ public sealed interface JsonNode extends Serializable {
     @Serial
     private static final long serialVersionUID = -7635264761033363503L;
 
-    private JsonTrue() {
-    }
+    private JsonTrue() { }
 
     @Override
     public boolean isBoolean() {
@@ -170,8 +170,7 @@ public sealed interface JsonNode extends Serializable {
     @Serial
     private static final long serialVersionUID = -2101046256405859228L;
 
-    private JsonFalse() {
-    }
+    private JsonFalse() { }
 
     @Override
     public boolean isBoolean() {
@@ -194,14 +193,17 @@ public sealed interface JsonNode extends Serializable {
     }
   }
 
-  public static record JsonArray(List<JsonNode> value) implements JsonNode, Iterable<JsonNode> {
+  public static final class JsonArray implements JsonNode, Iterable<JsonNode> {
+    
+    @Serial
+    private static final long serialVersionUID = 2330798672175039020L;
 
-    public JsonArray {
-      checkNonNull(value);
-    }
+    private final List<JsonNode> value = new ArrayList<>();
 
-    public JsonArray() {
-      this(new ArrayList<>());
+    public JsonArray() { }
+
+    public JsonArray(Iterable<JsonNode> values) {
+      checkNonNull(values).forEach(value::add);
     }
 
     public int size() {
@@ -232,19 +234,39 @@ public sealed interface JsonNode extends Serializable {
     }
 
     @Override
+    public int hashCode() {
+      return Objects.hash(value);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj)
+        return true;
+      if (obj == null)
+        return false;
+      if (getClass() != obj.getClass())
+        return false;
+      JsonArray other = (JsonArray) obj;
+      return Objects.equals(value, other.value);
+    }
+
+    @Override
     public String toString() {
       return value.stream().map(JsonNode::toString).collect(joining(",", "[", "]"));
     }
   }
 
-  public static record JsonObject(Map<String, JsonNode> value) implements JsonNode, Iterable<Map.Entry<String, JsonNode>> {
+  public static final class JsonObject implements JsonNode, Iterable<Map.Entry<String, JsonNode>> {
+    
+    @Serial
+    private static final long serialVersionUID = -5023192121266472804L;
 
-    public JsonObject {
-      checkNonNull(value);
-    }
+    private final Map<String, JsonNode> value = new LinkedHashMap<>();
 
-    public JsonObject() {
-      this(new LinkedHashMap<>());
+    public JsonObject() { }
+
+    public JsonObject(Iterable<Tuple> values) {
+      checkNonNull(values).forEach(t -> value.put(t.key(), t.value()));
     }
 
     public JsonNode get(String name) {
@@ -268,6 +290,23 @@ public sealed interface JsonNode extends Serializable {
     @Override
     public JsonObject asObject() {
       return this;
+    }
+    
+    @Override
+    public int hashCode() {
+      return Objects.hash(value);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj)
+        return true;
+      if (obj == null)
+        return false;
+      if (getClass() != obj.getClass())
+        return false;
+      JsonObject other = (JsonObject) obj;
+      return Objects.equals(value, other.value);
     }
 
     @Override
@@ -368,4 +407,6 @@ public sealed interface JsonNode extends Serializable {
       return string;
     }
   }
+  
+  public static record Tuple(String key, JsonNode value) { }
 }

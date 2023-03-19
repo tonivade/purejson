@@ -11,13 +11,9 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
-
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
-import com.eclipsesource.json.JsonObject.Member;
 import com.eclipsesource.json.JsonValue;
 
 public abstract sealed class JsonNode {
@@ -29,19 +25,19 @@ public abstract sealed class JsonNode {
   private JsonNode(JsonValue element) {
     this.element = checkNonNull(element);
   }
-  
+
   public Array asArray() {
     return (Array) this;
   }
-  
+
   public Object asObject() {
     return (Object) this;
   }
-  
+
   public Primitive asPrimitive() {
     return (Primitive) this;
   }
-  
+
   public Null asNull() {
     return (Null) this;
   }
@@ -73,7 +69,7 @@ public abstract sealed class JsonNode {
   public boolean isNull() {
     return element.isNull();
   }
-  
+
   JsonValue unwrap() {
     return element;
   }
@@ -175,7 +171,7 @@ public abstract sealed class JsonNode {
     }
     throw new IllegalArgumentException(element.getClass().getName());
   }
-  
+
   public static final class Null extends JsonNode {
 
     private Null() {
@@ -192,10 +188,10 @@ public abstract sealed class JsonNode {
     public int size() {
       return asJsonArray().size();
     }
-    
+
     @Override
     public Iterator<JsonNode> iterator() {
-      return StreamSupport.stream(asJsonArray().spliterator(), false).map(JsonNode::from).iterator();
+      return asJsonArray().stream().map(JsonNode::from).iterator();
     }
 
     public JsonNode get(int i) {
@@ -204,7 +200,7 @@ public abstract sealed class JsonNode {
   }
 
   public static final class Object extends JsonNode implements Iterable<Map.Entry<String, JsonNode>> {
-    
+
     public Object(JsonObject object) {
       super(object);
     }
@@ -212,14 +208,15 @@ public abstract sealed class JsonNode {
     public JsonNode get(String name) {
       return JsonNode.from(asJsonObject().get(name));
     }
-    
+
     @Override
     public Iterator<Map.Entry<String, JsonNode>> iterator() {
-      Stream<Member> stream = StreamSupport.stream(asJsonObject().spliterator(), false);
-      return stream.map(member -> entry(member.getName(), JsonNode.from(member.getValue()))).iterator();
+      return asJsonObject().stream()
+        .map(member -> entry(member.getName(), JsonNode.from(member.getValue())))
+        .iterator();
     }
   }
-  
+
   public static final class Primitive extends JsonNode {
 
     public Primitive(String value) {

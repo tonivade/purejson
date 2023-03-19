@@ -283,7 +283,6 @@ public sealed interface JsonNode {
       checkNonNull(value);
     }
 
-
     @Override
     public boolean isNumber() {
       return true;

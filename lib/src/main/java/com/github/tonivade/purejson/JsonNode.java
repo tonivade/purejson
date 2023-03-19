@@ -6,6 +6,8 @@ package com.github.tonivade.purejson;
 
 import static com.github.tonivade.purefun.Precondition.checkNonNull;
 import static java.util.stream.Collectors.joining;
+import java.io.Serial;
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -14,7 +16,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public sealed interface JsonNode {
+public sealed interface JsonNode extends Serializable {
 
   JsonNode NULL = new JsonNull();
   JsonNode TRUE = new JsonTrue();
@@ -107,6 +109,9 @@ public sealed interface JsonNode {
 
   public static final class JsonNull implements JsonNode {
 
+    @Serial
+    private static final long serialVersionUID = -8863194563052037633L;
+
     private JsonNull() {
     }
 
@@ -124,9 +129,17 @@ public sealed interface JsonNode {
     public String toString() {
       return "null";
     }
+
+    @Serial
+    private Object readResolve() {
+      return NULL;
+    }
   }
 
   public static final class JsonTrue implements JsonNode {
+
+    @Serial
+    private static final long serialVersionUID = -7635264761033363503L;
 
     private JsonTrue() {
     }
@@ -145,9 +158,17 @@ public sealed interface JsonNode {
     public String toString() {
       return "true";
     }
+
+    @Serial
+    private Object readResolve() {
+      return TRUE;
+    }
   }
 
   public static final class JsonFalse implements JsonNode {
+
+    @Serial
+    private static final long serialVersionUID = -2101046256405859228L;
 
     private JsonFalse() {
     }
@@ -165,6 +186,11 @@ public sealed interface JsonNode {
     @Override
     public String toString() {
       return "false";
+    }
+
+    @Serial
+    private Object readResolve() {
+      return FALSE;
     }
   }
 

@@ -6,18 +6,18 @@ package com.github.tonivade.purejson;
 
 import com.eclipsesource.json.JsonHandler;
 
-class PureJsonHandler extends JsonHandler<JsonNode.Array, JsonNode.Object> {
+class PureJsonHandler extends JsonHandler<JsonNode.JsonArray, JsonNode.JsonObject> {
   
   private JsonNode value;
 
   @Override
-  public JsonNode.Array startArray() {
-    return new JsonNode.Array();
+  public JsonNode.JsonArray startArray() {
+    return new JsonNode.JsonArray();
   }
 
   @Override
-  public JsonNode.Object startObject() {
-    return new JsonNode.Object();
+  public JsonNode.JsonObject startObject() {
+    return new JsonNode.JsonObject();
   }
 
   @Override
@@ -32,31 +32,35 @@ class PureJsonHandler extends JsonHandler<JsonNode.Array, JsonNode.Object> {
 
   @Override
   public void endString(String string) {
-    value = new JsonNode.Primitive(string);
+    value = new JsonNode.JsonPrimitive(string);
   }
 
   @Override
   public void endNumber(String string) {
-    value = new JsonNode.Primitive(string);
+    try {
+      value = new JsonNode.JsonPrimitive(Long.parseLong(string));
+    } catch (NumberFormatException e) {
+      value = new JsonNode.JsonPrimitive(Double.parseDouble(string));
+    }
   }
 
   @Override
-  public void endArray(JsonNode.Array array) {
+  public void endArray(JsonNode.JsonArray array) {
     value = array;
   }
 
   @Override
-  public void endObject(JsonNode.Object object) {
+  public void endObject(JsonNode.JsonObject object) {
     value = object;
   }
 
   @Override
-  public void endArrayValue(JsonNode.Array array) {
+  public void endArrayValue(JsonNode.JsonArray array) {
     array.add(value);
   }
 
   @Override
-  public void endObjectValue(JsonNode.Object object, String name) {
+  public void endObjectValue(JsonNode.JsonObject object, String name) {
     object.add(name, value);
   }
 

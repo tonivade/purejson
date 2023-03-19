@@ -23,7 +23,7 @@ public final class JsonDSL {
     for (var node : elements) {
       array.add(node);
     }
-    return new JsonNode.Array(array);
+    return new JsonNode.JsonArray(array);
   }
 
   @SafeVarargs
@@ -40,7 +40,7 @@ public final class JsonDSL {
     for (var entry : elements) {
       object.put(entry.getKey(), entry.getValue());
     }
-    return new JsonNode.Object(object);
+    return new JsonNode.JsonObject(object);
   }
   
   public static Map.Entry<String, JsonNode> entry(String name, JsonNode value) {
@@ -48,26 +48,26 @@ public final class JsonDSL {
   }
 
   public static JsonNode string(String value) {
-    return new JsonNode.Primitive(value);
+    return new JsonNode.JsonPrimitive(value);
   }
 
   public static JsonNode number(int value) {
-    return new JsonNode.Primitive(value);
+    return new JsonNode.JsonPrimitive(value);
   }
 
   public static JsonNode number(long value) {
-    return new JsonNode.Primitive(value);
+    return new JsonNode.JsonPrimitive(value);
   }
 
   public static JsonNode number(float value) {
-    return new JsonNode.Primitive(value);
+    return new JsonNode.JsonPrimitive(value);
   }
 
   public static JsonNode number(double value) {
-    return new JsonNode.Primitive(value);
+    return new JsonNode.JsonPrimitive(value);
   }
 
   public static JsonNode bool(boolean value) {
-    return new JsonNode.Primitive(value);
+    return new JsonNode.JsonPrimitive(value);
   }
 }

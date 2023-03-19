@@ -52,7 +52,7 @@ public interface JsonEncoder<T> {
   static <T> JsonEncoder<T> arrayEncoder(Type type) {
     var arrayEncoder = encoder(type);
     return value -> {
-      var array = new JsonNode.Array();
+      var array = new JsonNode.JsonArray();
       for (var item : (Object[]) value) {
         array.add(arrayEncoder.encode(item));
       }
@@ -68,7 +68,7 @@ public interface JsonEncoder<T> {
         .map(f -> Tuple2.of(f, encoder(f.getGenericType())))
         .toList();
     return value -> {
-      var object = new JsonNode.Object();
+      var object = new JsonNode.JsonObject();
       for (var pair : fields) {
         try {
           object.add(pair.get1().getName(), pair.get2().encode(pair.get1().get(value)));
@@ -85,7 +85,7 @@ public interface JsonEncoder<T> {
         .map(f -> Tuple2.of(f, encoder(f.getGenericType())))
         .toList();
     return value -> {
-      var object = new JsonNode.Object();
+      var object = new JsonNode.JsonObject();
       for (var pair : fields) {
         try {
           var field = pair.get1().getAccessor().invoke(value);
@@ -100,7 +100,7 @@ public interface JsonEncoder<T> {
 
   static <E> JsonEncoder<Iterable<E>> iterableEncoder(JsonEncoder<E> itemEncoder) {
     return value -> {
-      var array = new JsonNode.Array();
+      var array = new JsonNode.JsonArray();
       for (E item : value) {
         array.add(itemEncoder.encode(item));
       }
@@ -110,7 +110,7 @@ public interface JsonEncoder<T> {
 
   static <V> JsonEncoder<Map<String, V>> mapEncoder(JsonEncoder<V> valueEncoder) {
     return value -> {
-      var object = new JsonNode.Object();
+      var object = new JsonNode.JsonObject();
       for (var entry : value.entrySet()) {
         object.add(entry.getKey(), valueEncoder.encode(entry.getValue()));
       }

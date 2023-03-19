@@ -71,7 +71,7 @@ public interface JsonDecoder<T> {
   static <T> JsonDecoder<T[]> arrayDecoder(Class<T> type) {
     var itemDecoder = decoder(type);
     return json -> {
-      if (json instanceof JsonNode.Array a) {
+      if (json instanceof JsonNode.JsonArray a) {
         var array = Array.newInstance(type, a.size());
         for (int i = 0; i < a.size(); i++) {
           Array.set(array, i, itemDecoder.decode(a.get(i)));
@@ -91,7 +91,7 @@ public interface JsonDecoder<T> {
         .map(f -> Tuple2.of(f, decoder(f.getGenericType())))
         .toList();
     return json -> {
-      if (json instanceof JsonNode.Object object) {
+      if (json instanceof JsonNode.JsonObject object) {
         var types = new ArrayList<Class<?>>();
         var values = new ArrayList<>();
         for (var pair : fields) {
@@ -118,7 +118,7 @@ public interface JsonDecoder<T> {
         .map(f -> Tuple2.of(f, decoder(f.getGenericType())))
         .toList();
     return json -> {
-      if (json instanceof JsonNode.Object object) {
+      if (json instanceof JsonNode.JsonObject object) {
         try {
           var constructor = findConstructor(clazz);
           if (constructor.trySetAccessible()) {
@@ -141,7 +141,7 @@ public interface JsonDecoder<T> {
   }
 
   static <T> T createPojoFromDefaultConstructor(Constructor<T> constructor, List<Tuple2<Field, JsonDecoder<Object>>> fields,
-      JsonNode.Object object) {
+      JsonNode.JsonObject object) {
     try {
       T value = constructor.newInstance();
       for (var pair : fields) {
@@ -155,7 +155,7 @@ public interface JsonDecoder<T> {
   }
 
   static <T> T createPojoFromAnnotatedConstructor(Constructor<T> constructor,
-      List<Tuple2<Field, JsonDecoder<Object>>> fields, JsonNode.Object object) {
+      List<Tuple2<Field, JsonDecoder<Object>>> fields, JsonNode.JsonObject object) {
     try {
       var fieldsToDecode = 
           fields.stream().collect(toUnmodifiableMap(t -> t.get1().getName(), Tuple2::get2));
@@ -195,7 +195,7 @@ public interface JsonDecoder<T> {
 
   static <E> JsonDecoder<Iterable<E>> iterableDecoder(JsonDecoder<E> itemDecoder) {
     return json -> {
-      if (json instanceof JsonNode.Array array) {
+      if (json instanceof JsonNode.JsonArray array) {
         var list = new ArrayList<E>();
         for (var object : array) {
           list.add(itemDecoder.decode(object));
@@ -208,7 +208,7 @@ public interface JsonDecoder<T> {
 
   static <V> JsonDecoder<Map<String, V>> mapDecoder(JsonDecoder<V> itemEncoder) {
     return json -> {
-      if (json instanceof JsonNode.Object object) {
+      if (json instanceof JsonNode.JsonObject object) {
         var map = new LinkedHashMap<String, V>();
         for (Map.Entry<String, JsonNode> entry : object) {
           map.put(entry.getKey(), itemEncoder.decode(entry.getValue()));
@@ -220,7 +220,7 @@ public interface JsonDecoder<T> {
   }
   
   static <T> JsonDecoder<T> nullSafe(JsonDecoder<T> decoder) {
-    return json -> json instanceof JsonNode.Null ? null : decoder.decode(json);
+    return json -> json instanceof JsonNode.JsonNull ? null : decoder.decode(json);
   }
   
   @SuppressWarnings({ "unchecked", "rawtypes" })

@@ -13,27 +13,26 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 public sealed interface JsonNode {
 
-  JsonNode NULL = new Null();
-  JsonNode TRUE = new Primitive(true);
-  JsonNode FALSE = new Primitive(false);
+  JsonNode NULL = new JsonNull();
+  JsonNode TRUE = new JsonPrimitive(true);
+  JsonNode FALSE = new JsonPrimitive(false);
 
-  default Array asArray() {
+  default JsonArray asArray() {
     throw new UnsupportedOperationException();
   }
 
-  default Object asObject() {
+  default JsonObject asObject() {
     throw new UnsupportedOperationException();
   }
 
-  default Primitive asPrimitive() {
+  default JsonPrimitive asPrimitive() {
     throw new UnsupportedOperationException();
   }
 
-  default Null asNull() {
+  default JsonNull asNull() {
     throw new UnsupportedOperationException();
   }
 
@@ -114,9 +113,9 @@ public sealed interface JsonNode {
     throw new UnsupportedOperationException();
   }
 
-  public static final class Null implements JsonNode {
+  public static final class JsonNull implements JsonNode {
 
-    private Null() {
+    private JsonNull() {
     }
     
     @Override
@@ -125,21 +124,19 @@ public sealed interface JsonNode {
     }
     
     @Override
-    public Null asNull() {
+    public JsonNull asNull() {
       return this;
     }
   }
 
-  public static final class Array implements JsonNode, Iterable<JsonNode> {
-    
-    private final List<JsonNode> value;
-    
-    public Array() {
-      this(new ArrayList<>());
-    }
+  public static record JsonArray(List<JsonNode> value) implements JsonNode, Iterable<JsonNode> {
 
-    public Array(List<JsonNode> value) {
-      this.value = checkNonNull(value);
+    public JsonArray {
+      checkNonNull(value);
+    }
+    
+    public JsonArray() {
+      this(new ArrayList<>());
     }
 
     public int size() {
@@ -165,21 +162,19 @@ public sealed interface JsonNode {
     }
     
     @Override
-    public Array asArray() {
+    public JsonArray asArray() {
       return this;
     }
   }
 
-  public static final class Object implements JsonNode, Iterable<Map.Entry<String, JsonNode>> {
+  public static record JsonObject(Map<String, JsonNode> value) implements JsonNode, Iterable<Map.Entry<String, JsonNode>> {
 
-    private final Map<String, JsonNode> value;
-
-    public Object() {
-      this(new HashMap<>());
+    public JsonObject {
+      checkNonNull(value);
     }
 
-    public Object(Map<String, JsonNode> value) {
-      this.value = checkNonNull(value);
+    public JsonObject() {
+      this(new HashMap<>());
     }
 
     public JsonNode get(String name) {
@@ -201,61 +196,39 @@ public sealed interface JsonNode {
     }
     
     @Override
-    public Object asObject() {
+    public JsonObject asObject() {
       return this;
-    }
-    
-    @Override
-    public int hashCode() {
-      return Objects.hash(value);
-    }
-
-    @Override
-    public boolean equals(java.lang.Object obj) {
-      if (this == obj)
-        return true;
-      if (obj == null)
-        return false;
-      if (getClass() != obj.getClass())
-        return false;
-      Object other = (Object) obj;
-      return Objects.equals(value, other.value);
-    }
-
-    @Override
-    public String toString() {
-      return "JsonObject [value=" + value + "]";
     }
   }
 
-  public record Primitive(java.lang.Object value) implements JsonNode {
+  public record JsonPrimitive(java.lang.Object value) implements JsonNode {
     
-    public Primitive {
+    public JsonPrimitive {
       checkNonNull(value);
     }
     
-    public Primitive(String value) {
-      this((java.lang.Object) value);
+    public JsonPrimitive(String value) {
+      this((Object) value);
     }
 
-    public Primitive(boolean value) {
-      this((java.lang.Object) value);
+    public JsonPrimitive(boolean value) {
+      this((Boolean) value);
     }
 
-    public Primitive(int value) {
-      this((java.lang.Object) value);
+    public JsonPrimitive(int value) {
+      this(((Integer) value).longValue());
     }
 
-    public Primitive(long value) {
-      this((java.lang.Object) value);
+    public JsonPrimitive(long value) {
+      this((Long) value);
     }
 
-    public Primitive(float value) {
-      this((java.lang.Object) value);
+    public JsonPrimitive(float value) {
+      this(((Float) value).doubleValue());
     }
 
-    public Primitive(double value) {
-      this((java.lang.Object) value);
+    public JsonPrimitive(double value) {
+      this((Double) value);
     }
     
     @Override
@@ -280,7 +253,7 @@ public sealed interface JsonNode {
     
     @Override
     public int asInt() {
-      return (int) value;
+      return (int) asLong();
     }
     
     @Override
@@ -290,7 +263,7 @@ public sealed interface JsonNode {
     
     @Override
     public float asFloat() {
-      return (float) value;
+      return (float) asDouble();
     }
     
     @Override
@@ -300,12 +273,12 @@ public sealed interface JsonNode {
     
     @Override
     public short asShort() {
-      return (short) value;
+      return (short) asInt();
     }
     
     @Override
     public byte asByte() {
-      return (byte) value;
+      return (byte) asInt();
     }
     
     @Override
@@ -339,7 +312,7 @@ public sealed interface JsonNode {
     }
     
     @Override
-    public Primitive asPrimitive() {
+    public JsonPrimitive asPrimitive() {
       return this;
     }
   }

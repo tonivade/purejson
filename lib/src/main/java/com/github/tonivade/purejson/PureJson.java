@@ -43,7 +43,7 @@ public final class PureJson<T> {
   }
 
   public Try<Option<T>> fromJson(JsonNode node) {
-    if (node instanceof JsonNode.Null) {
+    if (node instanceof JsonNode.JsonNull) {
       return Try.success(Option.none());
     }
     return adapter.tryDecode(node).map(Option::some);

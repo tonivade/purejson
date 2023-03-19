@@ -11,9 +11,9 @@ import java.util.List;
 import java.util.Map;
 
 public final class JsonDSL {
-  
+
   private JsonDSL() {}
-  
+
   public static JsonNode array(JsonNode... elements) {
     return array(List.of(elements));
   }
@@ -30,7 +30,7 @@ public final class JsonDSL {
   public static JsonNode object(Map.Entry<String, JsonNode>... elements) {
     return object(List.of(elements));
   }
-  
+
   public static JsonNode object(Map<String, JsonNode> elements) {
     return object(elements.entrySet());
   }
@@ -42,32 +42,32 @@ public final class JsonDSL {
     }
     return new JsonNode.JsonObject(object);
   }
-  
+
   public static Map.Entry<String, JsonNode> entry(String name, JsonNode value) {
     return new AbstractMap.SimpleImmutableEntry<>(name, value);
   }
 
   public static JsonNode string(String value) {
-    return new JsonNode.JsonPrimitive(value);
+    return new JsonNode.JsonString(value);
   }
 
   public static JsonNode number(int value) {
-    return new JsonNode.JsonPrimitive(value);
+    return new JsonNode.JsonNumber(value);
   }
 
   public static JsonNode number(long value) {
-    return new JsonNode.JsonPrimitive(value);
+    return new JsonNode.JsonNumber(value);
   }
 
   public static JsonNode number(float value) {
-    return new JsonNode.JsonPrimitive(value);
+    return new JsonNode.JsonNumber(value);
   }
 
   public static JsonNode number(double value) {
-    return new JsonNode.JsonPrimitive(value);
+    return new JsonNode.JsonNumber(value);
   }
 
   public static JsonNode bool(boolean value) {
-    return new JsonNode.JsonPrimitive(value);
+    return value ? JsonNode.TRUE : JsonNode.FALSE;
   }
 }

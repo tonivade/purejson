@@ -5,30 +5,26 @@
 package com.github.tonivade.purejson;
 
 import static com.github.tonivade.purefun.Precondition.checkNonNull;
-
+import static java.util.stream.Collectors.joining;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 public sealed interface JsonNode {
 
   JsonNode NULL = new JsonNull();
-  JsonNode TRUE = new JsonPrimitive(true);
-  JsonNode FALSE = new JsonPrimitive(false);
+  JsonNode TRUE = new JsonTrue();
+  JsonNode FALSE = new JsonFalse();
 
   default JsonArray asArray() {
     throw new UnsupportedOperationException();
   }
 
   default JsonObject asObject() {
-    throw new UnsupportedOperationException();
-  }
-
-  default JsonPrimitive asPrimitive() {
     throw new UnsupportedOperationException();
   }
 
@@ -41,10 +37,6 @@ public sealed interface JsonNode {
   }
 
   default boolean isObject() {
-    throw new UnsupportedOperationException();
-  }
-
-  default boolean isPrimitive() {
     throw new UnsupportedOperationException();
   }
 
@@ -117,15 +109,62 @@ public sealed interface JsonNode {
 
     private JsonNull() {
     }
-    
+
     @Override
     public boolean isNull() {
       return true;
     }
-    
+
     @Override
     public JsonNull asNull() {
       return this;
+    }
+
+    @Override
+    public String toString() {
+      return "null";
+    }
+  }
+
+  public static final class JsonTrue implements JsonNode {
+
+    private JsonTrue() {
+    }
+
+    @Override
+    public boolean isBoolean() {
+      return true;
+    }
+
+    @Override
+    public boolean asBoolean() {
+      return true;
+    }
+
+    @Override
+    public String toString() {
+      return "true";
+    }
+  }
+
+  public static final class JsonFalse implements JsonNode {
+
+    private JsonFalse() {
+    }
+
+    @Override
+    public boolean isBoolean() {
+      return true;
+    }
+
+    @Override
+    public boolean asBoolean() {
+      return false;
+    }
+
+    @Override
+    public String toString() {
+      return "false";
     }
   }
 
@@ -134,7 +173,7 @@ public sealed interface JsonNode {
     public JsonArray {
       checkNonNull(value);
     }
-    
+
     public JsonArray() {
       this(new ArrayList<>());
     }
@@ -155,15 +194,20 @@ public sealed interface JsonNode {
     void add(JsonNode value) {
       this.value.add(value);
     }
-    
+
     @Override
     public boolean isArray() {
       return true;
     }
-    
+
     @Override
     public JsonArray asArray() {
       return this;
+    }
+
+    @Override
+    public String toString() {
+      return value.stream().map(JsonNode::toString).collect(joining(",", "[", "]"));
     }
   }
 
@@ -174,7 +218,7 @@ public sealed interface JsonNode {
     }
 
     public JsonObject() {
-      this(new HashMap<>());
+      this(new LinkedHashMap<>());
     }
 
     public JsonNode get(String name) {
@@ -189,131 +233,114 @@ public sealed interface JsonNode {
     void add(String name, JsonNode value) {
       this.value.put(name, value);
     }
-    
+
     @Override
     public boolean isObject() {
       return true;
     }
-    
+
     @Override
     public JsonObject asObject() {
       return this;
     }
+
+    @Override
+    public String toString() {
+      return value.entrySet().stream().map(entry -> "\"" + entry.getKey() + "\":" + entry.getValue()).collect(joining(",", "{", "}"));
+    }
   }
 
-  public record JsonPrimitive(java.lang.Object value) implements JsonNode {
-    
-    public JsonPrimitive {
+  public record JsonString(String value) implements JsonNode {
+
+    public JsonString {
       checkNonNull(value);
     }
-    
-    public JsonPrimitive(String value) {
-      this((Object) value);
-    }
 
-    public JsonPrimitive(boolean value) {
-      this((Boolean) value);
-    }
-
-    public JsonPrimitive(int value) {
-      this(((Integer) value).longValue());
-    }
-
-    public JsonPrimitive(long value) {
-      this((Long) value);
-    }
-
-    public JsonPrimitive(float value) {
-      this(((Float) value).doubleValue());
-    }
-
-    public JsonPrimitive(double value) {
-      this((Double) value);
-    }
-    
-    @Override
-    public boolean isPrimitive() {
-      return true;
-    }
-    
-    @Override
-    public boolean isNumber() {
-      return value instanceof Number;
-    }
-    
     @Override
     public boolean isString() {
       return value instanceof String;
     }
-    
+
     @Override
-    public boolean isBoolean() {
-      return value instanceof Boolean;
+    public String asString() {
+      return value;
     }
-    
-    @Override
-    public int asInt() {
-      return (int) asLong();
-    }
-    
-    @Override
-    public long asLong() {
-      return (long) value;
-    }
-    
-    @Override
-    public float asFloat() {
-      return (float) asDouble();
-    }
-    
-    @Override
-    public double asDouble() {
-      return (double) value;
-    }
-    
-    @Override
-    public short asShort() {
-      return (short) asInt();
-    }
-    
-    @Override
-    public byte asByte() {
-      return (byte) asInt();
-    }
-    
-    @Override
-    public BigDecimal asBigDecimal() {
-      return BigDecimal.valueOf(asDouble());
-    }
-    
-    @Override
-    public BigInteger asBigInteger() {
-      return BigInteger.valueOf(asLong());
-    }
-    
+
     @Override
     public char asCharacter() {
       return asString().charAt(0);
     }
-    
+
     @Override
-    public boolean asBoolean() {
-      return (boolean) value;
+    public String toString() {
+      return "\"" + value + "\"";
     }
-    
+  }
+
+  public record JsonNumber(Number value) implements JsonNode {
+
+    public JsonNumber {
+      checkNonNull(value);
+    }
+
+
     @Override
-    public String asString() {
-      return (String) value;
+    public boolean isNumber() {
+      return true;
     }
-    
+
+    @Override
+    public int asInt() {
+      return value.intValue();
+    }
+
+    @Override
+    public long asLong() {
+      return value.longValue();
+    }
+
+    @Override
+    public float asFloat() {
+      return value.floatValue();
+    }
+
+    @Override
+    public double asDouble() {
+      return value.doubleValue();
+    }
+
+    @Override
+    public short asShort() {
+      return value.shortValue();
+    }
+
+    @Override
+    public byte asByte() {
+      return value.byteValue();
+    }
+
+    @Override
+    public BigDecimal asBigDecimal() {
+      return BigDecimal.valueOf(asDouble());
+    }
+
+    @Override
+    public BigInteger asBigInteger() {
+      return BigInteger.valueOf(asLong());
+    }
+
     @Override
     public Number asNumber() {
-      return (Number) value;
+      return value;
     }
-    
+
     @Override
-    public JsonPrimitive asPrimitive() {
-      return this;
+    public String toString() {
+      String string = value.toString();
+      if (string.endsWith(".0")) {
+        return string.substring(0, string.length() - 2);
+      }
+      return string;
     }
   }
 }

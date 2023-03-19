@@ -7,7 +7,7 @@ package com.github.tonivade.purejson;
 import com.eclipsesource.json.JsonHandler;
 
 class PureJsonHandler extends JsonHandler<JsonNode.JsonArray, JsonNode.JsonObject> {
-  
+
   private JsonNode value;
 
   @Override
@@ -32,15 +32,15 @@ class PureJsonHandler extends JsonHandler<JsonNode.JsonArray, JsonNode.JsonObjec
 
   @Override
   public void endString(String string) {
-    value = new JsonNode.JsonPrimitive(string);
+    value = new JsonNode.JsonString(string);
   }
 
   @Override
   public void endNumber(String string) {
     try {
-      value = new JsonNode.JsonPrimitive(Long.parseLong(string));
+      value = new JsonNode.JsonNumber(Long.parseLong(string));
     } catch (NumberFormatException e) {
-      value = new JsonNode.JsonPrimitive(Double.parseDouble(string));
+      value = new JsonNode.JsonNumber(Double.parseDouble(string));
     }
   }
 

@@ -32,14 +32,14 @@ specific type, then the adapter is used instead of reflection.
 
 - Java POJOs: with empty constructor and setter/getters. Fields are populated using reflection.
 - Java Value Objects: without empty constructor and setters (immutables). Constructor with parameters is used to create new instances.
-- Java Records (Java 16+): canonical constructor is used to create new instances.
+- Java Records (Java 17+): canonical constructor is used to create new instances.
 
 ### Annotation Processor
 
 You can annotate your classes with `@Json` and an adapter for this class will be generated.
 
 - Java Value Objects
-- Java Records (Java 16+)
+- Java Records (Java 17+)
 
 ## Performance
 
@@ -50,36 +50,36 @@ Tested on my laptop:
 
 ```
 Performance parse pojo
-name  tot   min max mean p50 p90 p95 p99
-refl  85617 15  52  17   16  18  20  32
-buil  20796 3   36   4    3   4   8  11
-adho  17443 2   32   3    3   3   5  9
-gson  10485 1   31   2    1   2   4  4
-```
-
-```
-Performance serialize record
-name  tot   min max mean p50 p90 p95 p99
-refl  13004 2   20  2    2   2   3   4
-buil  13115 2   19  2    2   3   4   4
-adho  12195 2   18  2    2   2   3   4
-gson  22594 4   21  4    4   5   5   6
-```
-
-```
-Performance serialize pojo
-name  tot   min max mean p50 p90 p95 p99
-refl  12229 2   20  2    2   2   4   4
-buil  13821 2   20  2    2   3   4   4
-adho  12565 2   22  2    2   2   4   4
-gson  22084 4   22  4    4   4   5   5
+name  tot   min max mean  p50 p90 p95 p99
+refl  60349 9   59  12    11  13  15  23
+buil  16858 2   39  3     2   5   5   7
+adho  14996 2   38  2     2   4   5   6
+gson  10485 1   36  2     1   3   3   4
 ```
 
 ```
 Performance parse record
 name  tot   min max mean p50 p90 p95 p99
-refl  12360 1   55  2    2   2   3   5
-buil  12654 1   55  2    2   2   4   5
-adho  17089 2   56  3    3   3   4   7
-gson  10784 1   55  2    1   2   2   4
+refl  16542 2   50  3    2   5   5   6
+buil  16306 2   50  3    2   5   5   6
+adho  17670 2   51  3    3   3   5   7
+gson  13903 2   50  2    2   3   5   5
+```
+
+```
+Performance serialize pojo
+name  tot   min max mean p50 p90 p95 p99
+refl  31824 5   22  6    6   6   8   11
+buil  34202 3   25  6    6   10  11  12
+adho  32495 4   21  6    6   7   10  11
+gson  26533 4   18  5    5   6   6   6
+```
+
+```
+Performance serialize record
+name  tot   min max mean p50 p90 p95 p99
+refl  33065 4   23  6    6   8   10  12
+buil  33042 4   24  6    6   8   10  12
+adho  32888 5   23  6    5   8   10  12
+gson  27768 4   25  5    5   6   6   6
 ```

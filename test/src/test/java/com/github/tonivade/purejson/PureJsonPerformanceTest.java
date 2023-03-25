@@ -24,12 +24,12 @@ import org.junit.jupiter.api.Test;
 import com.github.tonivade.purecheck.PerfCase.Stats;
 import com.github.tonivade.purefun.Equal;
 import com.github.tonivade.purefun.Function1;
-import com.github.tonivade.purefun.Kind;
 import com.github.tonivade.purefun.Producer;
 import com.github.tonivade.purefun.data.Sequence;
-import com.github.tonivade.purefun.instances.IOInstances;
-import com.github.tonivade.purefun.instances.SequenceInstances;
+import com.github.tonivade.purefun.data.Sequence_;
+import com.github.tonivade.purefun.monad.IO;
 import com.github.tonivade.purefun.monad.IO_;
+import com.github.tonivade.purefun.typeclasses.Instances;
 import com.google.gson.GsonBuilder;
 
 @Tag("performance")
@@ -46,7 +46,9 @@ class PureJsonPerformanceTest {
     private Integer id;
     private String name;
 
-    public Pojo() {}
+    public Pojo() {
+      // default constructor is need to instance using reflection
+    }
 
     public Pojo(Integer id, String name) {
       this.id = id;
@@ -151,9 +153,9 @@ class PureJsonPerformanceTest {
     runPerf("serialize pojo", listOf(stats1, stats2, stats3, stats4));
   }
 
-  private void runPerf(String name, Sequence<Kind<IO_, Stats>> stats) {
-    printStats(name, SequenceInstances.traverse().sequence(
-      IOInstances.applicative(), stats).fix(toIO()).unsafeRunSync().fix(toSequence()));
+  private void runPerf(String name, Sequence<IO<Stats>> stats) {
+    printStats(name, Instances.traverse(Sequence_.class).sequence(
+      Instances.applicative(IO_.class), stats).fix(toIO()).unsafeRunSync().fix(toSequence()));
   }
 
   private <T, R> Producer<R> serializeTask(Producer<T> supplier, Function1<List<T>, R> serializer) {

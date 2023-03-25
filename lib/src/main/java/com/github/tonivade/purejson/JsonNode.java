@@ -24,6 +24,30 @@ public sealed interface JsonNode extends Serializable {
   JsonNode TRUE = new JsonTrue();
   JsonNode FALSE = new JsonFalse();
 
+  default boolean isArray() {
+    return false;
+  }
+
+  default boolean isObject() {
+    return false;
+  }
+
+  default boolean isString() {
+    return false;
+  }
+
+  default boolean isNumber() {
+    return false;
+  }
+
+  default boolean isBoolean() {
+    return false;
+  }
+
+  default boolean isNull() {
+    return false;
+  }
+
   default JsonArray asArray() {
     throw new UnsupportedOperationException();
   }
@@ -33,30 +57,6 @@ public sealed interface JsonNode extends Serializable {
   }
 
   default JsonNull asNull() {
-    throw new UnsupportedOperationException();
-  }
-
-  default boolean isArray() {
-    throw new UnsupportedOperationException();
-  }
-
-  default boolean isObject() {
-    throw new UnsupportedOperationException();
-  }
-
-  default boolean isString() {
-    throw new UnsupportedOperationException();
-  }
-
-  default boolean isNumber() {
-    throw new UnsupportedOperationException();
-  }
-
-  default boolean isBoolean() {
-    throw new UnsupportedOperationException();
-  }
-
-  default boolean isNull() {
     throw new UnsupportedOperationException();
   }
 
@@ -194,7 +194,7 @@ public sealed interface JsonNode extends Serializable {
   }
 
   public static final class JsonArray implements JsonNode, Iterable<JsonNode> {
-    
+
     @Serial
     private static final long serialVersionUID = 2330798672175039020L;
 
@@ -257,7 +257,7 @@ public sealed interface JsonNode extends Serializable {
   }
 
   public static final class JsonObject implements JsonNode, Iterable<Map.Entry<String, JsonNode>> {
-    
+
     @Serial
     private static final long serialVersionUID = -5023192121266472804L;
 
@@ -291,7 +291,7 @@ public sealed interface JsonNode extends Serializable {
     public JsonObject asObject() {
       return this;
     }
-    
+
     @Override
     public int hashCode() {
       return Objects.hash(value);
@@ -407,6 +407,6 @@ public sealed interface JsonNode extends Serializable {
       return string;
     }
   }
-  
+
   public static record Tuple(String key, JsonNode value) { }
 }

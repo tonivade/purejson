@@ -9,6 +9,7 @@ import static java.lang.reflect.Modifier.isStatic;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.toUnmodifiableMap;
+
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -29,6 +30,7 @@ import java.util.Map;
 import java.util.NavigableSet;
 import java.util.Queue;
 import java.util.Set;
+
 import com.github.tonivade.purefun.Function1;
 import com.github.tonivade.purefun.Tuple2;
 import com.github.tonivade.purefun.data.ImmutableArray;
@@ -40,6 +42,7 @@ import com.github.tonivade.purefun.data.ImmutableTreeMap;
 import com.github.tonivade.purefun.data.Sequence;
 import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Try;
+import com.github.tonivade.purejson.JsonNode.Tuple;
 
 @FunctionalInterface
 public interface JsonDecoder<T> {
@@ -210,8 +213,8 @@ public interface JsonDecoder<T> {
     return json -> {
       if (json instanceof JsonNode.JsonObject object) {
         var map = new LinkedHashMap<String, V>();
-        for (Map.Entry<String, JsonNode> entry : object) {
-          map.put(entry.getKey(), itemEncoder.decode(entry.getValue()));
+        for (Tuple tuple : object) {
+          map.put(tuple.key(), itemEncoder.decode(tuple.value()));
         }
         return unmodifiableMap(map);
       }

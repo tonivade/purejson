@@ -256,7 +256,7 @@ public sealed interface JsonNode extends Serializable {
     }
   }
 
-  public static final class JsonObject implements JsonNode, Iterable<Map.Entry<String, JsonNode>> {
+  public static final class JsonObject implements JsonNode, Iterable<Tuple> {
 
     @Serial
     private static final long serialVersionUID = -5023192121266472804L;
@@ -274,8 +274,8 @@ public sealed interface JsonNode extends Serializable {
     }
 
     @Override
-    public Iterator<Map.Entry<String, JsonNode>> iterator() {
-      return value.entrySet().stream().iterator();
+    public Iterator<Tuple> iterator() {
+      return value.entrySet().stream().map(entry -> new Tuple(entry.getKey(), entry.getValue())).iterator();
     }
 
     void add(String name, JsonNode value) {
@@ -311,7 +311,9 @@ public sealed interface JsonNode extends Serializable {
 
     @Override
     public String toString() {
-      return value.entrySet().stream().map(entry -> "\"" + entry.getKey() + "\":" + entry.getValue()).collect(joining(",", "{", "}"));
+      return value.entrySet().stream()
+          .map(entry -> "\"" + entry.getKey() + "\":" + entry.getValue())
+          .collect(joining(",", "{", "}"));
     }
   }
 

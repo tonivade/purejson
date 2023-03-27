@@ -5,10 +5,12 @@
 package com.github.tonivade.purejson;
 
 import static com.github.tonivade.purefun.Precondition.checkNonNull;
+import static com.github.tonivade.purefun.Unit.unit;
 import static java.util.stream.Collectors.joining;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.io.Writer;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -18,11 +20,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import com.github.tonivade.purefun.Unit;
+import com.github.tonivade.purefun.type.Try;
+
 public sealed interface JsonNode extends Serializable {
 
   JsonNode NULL = new JsonNull();
   JsonNode TRUE = new JsonTrue();
   JsonNode FALSE = new JsonFalse();
+
+  default Try<Unit> writeTo(Writer writer) {
+    return Try.of(() -> {
+      writer.write(toString());
+      return unit();
+    });
+  }
 
   default boolean isArray() {
     return false;

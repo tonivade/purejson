@@ -7,9 +7,12 @@ package com.github.tonivade.purejson;
 import static com.github.tonivade.purefun.Precondition.checkNonNull;
 import static com.github.tonivade.purejson.JsonAdapter.adapter;
 
+import java.io.Reader;
+import java.io.Writer;
 import java.lang.reflect.Type;
 
 import com.eclipsesource.json.JsonParser;
+import com.github.tonivade.purefun.Unit;
 import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Try;
 
@@ -33,8 +36,17 @@ public final class PureJson<T> {
     return Try.of(node::toString);
   }
 
+  public static Try<Unit> serialize(JsonNode node, Writer writer) {
+    return node.writeTo(writer);
+  }
+
   public static Try<JsonNode> parse(String json) {
     return Option.of(json).fold(Try::<String>illegalArgumentException, Try::success)
+        .flatMap(PureJson::tryParse);
+  }
+
+  public static Try<JsonNode> parse(Reader json) {
+    return Option.of(json).fold(Try::<Reader>illegalArgumentException, Try::success)
         .flatMap(PureJson::tryParse);
   }
 
@@ -64,6 +76,14 @@ public final class PureJson<T> {
     return Try.of(() -> {
       var handler = new PureJsonHandler();
       new JsonParser(handler).parse(json);
+      return handler.getValue();
+    });
+  }
+
+  private static Try<JsonNode> tryParse(Reader reader) {
+    return Try.of(() -> {
+      var handler = new PureJsonHandler();
+      new JsonParser(handler).parse(reader);
       return handler.getValue();
     });
   }

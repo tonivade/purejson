@@ -19,8 +19,10 @@ import static java.util.stream.Collectors.toList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
+
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+
 import com.github.tonivade.purecheck.PerfCase.Stats;
 import com.github.tonivade.purefun.Equal;
 import com.github.tonivade.purefun.Function1;
@@ -46,6 +48,7 @@ class PureJsonPerformanceTest {
     private Integer id;
     private String name;
 
+    @SuppressWarnings("unused")
     public Pojo() {
       // default constructor is need to instance using reflection
     }

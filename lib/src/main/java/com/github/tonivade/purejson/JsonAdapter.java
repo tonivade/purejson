@@ -76,19 +76,16 @@ public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
    */
   @SuppressWarnings("unchecked")
   static <T> Option<JsonAdapter<T>> load(Type type) {
-    if (type instanceof Class<?>) {
-      Class<?> clazz = (Class<?>) type;
-      if (clazz.isAnnotationPresent(Json.class)) {
-        return Option.<Class<?>>of(() -> clazz.getAnnotation(Json.class).value())
-            .filterNot(is(Void.class))
-            .toTry()
-            .recover(error -> Class.forName(type.getTypeName() + "Adapter"))
-            .filter(Class::isEnum)
-            .map(c -> c.getEnumConstants()[0])
-            .map(e -> (JsonAdapter<T>) e)
-            .map(JsonAdapter::nullSafe)
-            .toOption();
-      }
+    if (type instanceof Class<?> clazz && clazz.isAnnotationPresent(Json.class)) {
+      return Option.<Class<?>>of(() -> clazz.getAnnotation(Json.class).value())
+          .filterNot(is(Void.class))
+          .toTry()
+          .recover(error -> Class.forName(type.getTypeName() + "Adapter"))
+          .filter(Class::isEnum)
+          .map(c -> c.getEnumConstants()[0])
+          .map(e -> (JsonAdapter<T>) e)
+          .map(JsonAdapter::nullSafe)
+          .toOption();
     }
     return Option.none();
   }

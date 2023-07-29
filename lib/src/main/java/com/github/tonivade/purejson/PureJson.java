@@ -28,6 +28,11 @@ public final class PureJson<T> {
     this(adapter(type));
   }
 
+  @SafeVarargs
+  public PureJson(T... reified) {
+    this(getClassOf(reified));
+  }
+
   public PureJson(JsonAdapter<T> adapter) {
     this.adapter = checkNonNull(adapter);
   }
@@ -86,5 +91,13 @@ public final class PureJson<T> {
       new JsonParser(handler).parse(reader);
       return handler.getValue();
     });
+  }
+  
+  @SuppressWarnings("unchecked")
+  private static <T> Class<T> getClassOf(T... reified) {
+    if (reified.length > 0) {
+      throw new IllegalArgumentException("do not pass arguments to this function, it's just a trick to get refied types");
+    }
+    return (Class<T>) reified.getClass().getComponentType();
   }
 }

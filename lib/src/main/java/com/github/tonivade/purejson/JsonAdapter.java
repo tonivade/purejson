@@ -45,9 +45,17 @@ public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
    * Alias for {@link #adapter(Type)} but, for {@code Class<T>} in order to help type inference.
    * 
    * @param <T>
-   * @param type
    * @return
    */
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
+  static <T> JsonAdapter<T> adapter(T... reified) {
+    if (reified.length > 0) {
+      throw new IllegalArgumentException("do not pass arguments to this function, it's just a trick to get refied types");
+    }
+    return adapter((Class<T>) reified.getClass().getComponentType());
+  }
+
   static <T> JsonAdapter<T> adapter(Class<T> type) {
     return adapter((Type) type);
   }

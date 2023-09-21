@@ -22,7 +22,7 @@ class ExampleAdapterTest {
   public enum RoleAdapter implements JsonAdapter<Role> {
     INSTANCE;
 
-    private static final JsonAdapter<String> NAME_ADAPTER = adapter(String.class);
+    private static final JsonAdapter<String> NAME_ADAPTER = JsonAdapter.<String>adapter();
     
     @Override
     public JsonNode encode(Role value) {
@@ -38,8 +38,8 @@ class ExampleAdapterTest {
   public enum UserAdapter implements JsonAdapter<User> {
     INSTANCE;
 
-    private static final JsonAdapter<Integer> ID_ADAPTER = adapter(int.class);
-    private static final JsonAdapter<String> NAME_ADAPTER = adapter(String.class);
+    private static final JsonAdapter<Integer> ID_ADAPTER = JsonAdapter.<Integer>adapter();
+    private static final JsonAdapter<String> NAME_ADAPTER = JsonAdapter.<String>adapter();
     private static final JsonAdapter<List<Role>> ROLES_ADAPTER = adapter(new TypeToken<List<Role>>(){}.getType());
 
     @Override

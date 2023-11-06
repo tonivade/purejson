@@ -2,7 +2,7 @@
 purefunVersion = "4.2-SNAPSHOT"
 minimalJsonVersion = "0.10.0"
 javapoetVersion = "1.13.0"
-junitEngineVersion = "5.10.0"
+junitEngineVersion = "5.10.1"
 junitPlatformVersion = "1.10.0"
 equalsVerifierVersion = "3.15.1"
 compileTestingVersion = "0.21.0"

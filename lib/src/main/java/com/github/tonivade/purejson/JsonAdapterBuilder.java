@@ -76,8 +76,7 @@ public final class JsonAdapterBuilder<T> {
         },
 
         json -> {
-          if (json instanceof JsonNode.JsonObject) {
-            JsonNode.JsonObject o = (JsonNode.JsonObject) json;
+          if (json instanceof JsonNode.JsonObject o) {
             var params = new ArrayList<>();
             for (var entry : decoders.entrySet()) {
               JsonNode element = o.get(entry.getKey());

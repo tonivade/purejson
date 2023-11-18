@@ -7,7 +7,6 @@ test {
 
 dependencies {
   implementation projects.purejsonLib
-  testImplementation libs.compileTesting
   testImplementation libs.junitJupiter
   testImplementation libs.junitRunner
   testImplementation libs.purecheck

@@ -30,7 +30,7 @@ public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
   JsonAdapter<Boolean> BOOLEAN = adapter(Boolean.class);
 
   /**
-   * It creates an adapter builder. You can define each field step by step with it's proper 
+   * It creates an adapter builder. You can define each field step by step with its proper
    * accessor and create an adapter.
    * 
    * @param <T>

@@ -121,7 +121,7 @@ public sealed interface JsonNode extends Serializable {
     throw new UnsupportedOperationException();
   }
 
-  public static final class JsonNull implements JsonNode {
+  final class JsonNull implements JsonNode {
 
     @Serial
     private static final long serialVersionUID = -8863194563052037633L;
@@ -149,7 +149,7 @@ public sealed interface JsonNode extends Serializable {
     }
   }
 
-  public static final class JsonTrue implements JsonNode {
+  final class JsonTrue implements JsonNode {
 
     @Serial
     private static final long serialVersionUID = -7635264761033363503L;
@@ -177,7 +177,7 @@ public sealed interface JsonNode extends Serializable {
     }
   }
 
-  public static final class JsonFalse implements JsonNode {
+  final class JsonFalse implements JsonNode {
 
     @Serial
     private static final long serialVersionUID = -2101046256405859228L;
@@ -205,7 +205,7 @@ public sealed interface JsonNode extends Serializable {
     }
   }
 
-  public static final class JsonArray implements JsonNode, Iterable<JsonNode> {
+  final class JsonArray implements JsonNode, Iterable<JsonNode> {
 
     @Serial
     private static final long serialVersionUID = 2330798672175039020L;
@@ -268,7 +268,7 @@ public sealed interface JsonNode extends Serializable {
     }
   }
 
-  public static final class JsonObject implements JsonNode, Iterable<Tuple> {
+  final class JsonObject implements JsonNode, Iterable<Tuple> {
 
     @Serial
     private static final long serialVersionUID = -5023192121266472804L;
@@ -329,7 +329,7 @@ public sealed interface JsonNode extends Serializable {
     }
   }
 
-  public record JsonString(String value) implements JsonNode {
+  record JsonString(String value) implements JsonNode {
 
     public JsonString {
       checkNonNull(value);
@@ -337,7 +337,7 @@ public sealed interface JsonNode extends Serializable {
 
     @Override
     public boolean isString() {
-      return value instanceof String;
+      return true;
     }
 
     @Override
@@ -356,7 +356,7 @@ public sealed interface JsonNode extends Serializable {
     }
   }
 
-  public record JsonNumber(Number value) implements JsonNode {
+  record JsonNumber(Number value) implements JsonNode {
 
     public JsonNumber {
       checkNonNull(value);
@@ -422,5 +422,5 @@ public sealed interface JsonNode extends Serializable {
     }
   }
 
-  public static record Tuple(String key, JsonNode value) { }
+  record Tuple(String key, JsonNode value) { }
 }

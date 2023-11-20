@@ -1,5 +1,5 @@
 [versions]
-purefunVersion = "4.2-SNAPSHOT"
+purefunVersion = "5.0-SNAPSHOT"
 minimalJsonVersion = "0.10.0"
 javapoetVersion = "1.13.0"
 junitEngineVersion = "5.10.1"

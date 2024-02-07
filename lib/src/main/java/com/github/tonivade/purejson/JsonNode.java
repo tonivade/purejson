@@ -25,9 +25,9 @@ import com.github.tonivade.purefun.type.Try;
 
 public sealed interface JsonNode extends Serializable {
 
-  JsonNode NULL = new JsonNull();
-  JsonNode TRUE = new JsonTrue();
-  JsonNode FALSE = new JsonFalse();
+  JsonNode NULL = JsonNull.NULL;
+  JsonNode TRUE = JsonBoolean.TRUE;
+  JsonNode FALSE = JsonBoolean.TRUE;
 
   default Try<Unit> writeTo(Writer writer) {
     return Try.of(() -> {
@@ -121,12 +121,8 @@ public sealed interface JsonNode extends Serializable {
     throw new UnsupportedOperationException();
   }
 
-  final class JsonNull implements JsonNode {
-
-    @Serial
-    private static final long serialVersionUID = -8863194563052037633L;
-
-    private JsonNull() { }
+  enum JsonNull implements JsonNode {
+    NULL;
 
     @Override
     public boolean isNull() {
@@ -142,67 +138,41 @@ public sealed interface JsonNode extends Serializable {
     public String toString() {
       return "null";
     }
-
-    @Serial
-    private Object readResolve() {
-      return NULL;
-    }
   }
 
-  final class JsonTrue implements JsonNode {
+  enum JsonBoolean implements JsonNode {
+    TRUE() {
+      @Override
+      public boolean isBoolean() {
+        return true;
+      }
 
-    @Serial
-    private static final long serialVersionUID = -7635264761033363503L;
+      @Override
+      public boolean asBoolean() {
+        return true;
+      }
 
-    private JsonTrue() { }
+      @Override
+      public String toString() {
+        return "true";
+      }
+    },
+    FALSE() {
+      @Override
+      public boolean isBoolean() {
+        return true;
+      }
 
-    @Override
-    public boolean isBoolean() {
-      return true;
-    }
+      @Override
+      public boolean asBoolean() {
+        return false;
+      }
 
-    @Override
-    public boolean asBoolean() {
-      return true;
-    }
-
-    @Override
-    public String toString() {
-      return "true";
-    }
-
-    @Serial
-    private Object readResolve() {
-      return TRUE;
-    }
-  }
-
-  final class JsonFalse implements JsonNode {
-
-    @Serial
-    private static final long serialVersionUID = -2101046256405859228L;
-
-    private JsonFalse() { }
-
-    @Override
-    public boolean isBoolean() {
-      return true;
-    }
-
-    @Override
-    public boolean asBoolean() {
-      return false;
-    }
-
-    @Override
-    public String toString() {
-      return "false";
-    }
-
-    @Serial
-    private Object readResolve() {
-      return FALSE;
-    }
+      @Override
+      public String toString() {
+        return "false";
+      }
+    };
   }
 
   final class JsonArray implements JsonNode, Iterable<JsonNode> {

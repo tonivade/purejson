@@ -39,7 +39,7 @@ public final class JsonDSL {
 
   public static JsonNode object(Iterable<Tuple> elements) {
     var object = new JsonObject();
-    elements.forEach(t -> object.add(t.key(), t.value()));
+    elements.forEach(object::add);
     return object;
   }
 

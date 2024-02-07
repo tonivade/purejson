@@ -32,7 +32,7 @@ public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
   /**
    * It creates an adapter builder. You can define each field step by step with its proper
    * accessor and create an adapter.
-   * 
+   *
    * @param <T>
    * @param target
    * @return
@@ -43,7 +43,7 @@ public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
 
   /**
    * Alias for {@link #adapter(Type)} but, for {@code Class<T>} in order to help type inference.
-   * 
+   *
    * @param <T>
    * @return
    */
@@ -63,9 +63,9 @@ public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
   /**
    * <p>First, it tries to load the instance of an adapter generated using annotation processor,
    * or else it will try to generate an adapter using reflection.
-   * 
+   *
    * <p>if the type is not supported it will throw an {@code UnsupportedOperationException}.
-   * 
+   *
    * @param <T>
    * @param type
    * @return
@@ -73,11 +73,11 @@ public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
   static <T> JsonAdapter<T> adapter(Type type) {
     return JsonAdapter.<T>load(type).getOrElse(() -> of(encoder(type), decoder(type)));
   }
-  
+
   /**
    * Try to load the instance of an adapter generated using annotation processor via
    * {@code @Json}.
-   * 
+   *
    * @param <T>
    * @param type
    * @return
@@ -100,7 +100,7 @@ public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
 
   /**
    * It creates an adapter with the given encoder and decoder.
-   * 
+   *
    * @param <T>
    * @param encoder
    * @param decoder
@@ -113,7 +113,7 @@ public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
       public JsonNode encode(T value) {
         return encoder.encode(value);
       }
-      
+
       @Override
       public T decode(JsonNode json) {
         return decoder.decode(json);
@@ -123,7 +123,7 @@ public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
 
   /**
    * It creates an adapter for any class that implements {@link java.lang.Iterable}.
-   * 
+   *
    * @param <E>
    * @param itemAdapter the adapter for the item type
    * @return
@@ -135,7 +135,7 @@ public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
 
   /**
    * It creates an adapter for a {@code Map}
-   * 
+   *
    * @param <V>
    * @param valueAdapter the adapter for the value type
    * @return
@@ -143,11 +143,11 @@ public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
   static <V> JsonAdapter<Map<String, V>> mapAdapter(JsonAdapter<V> valueAdapter) {
     return of(JsonEncoder.mapEncoder(valueAdapter), JsonDecoder.mapDecoder(valueAdapter));
   }
-  
+
   /**
    * Helper function to convert any adapter to null safe, in case of receive a null value it will
    * generate a correct ADT value.
-   * 
+   *
    * @param <T>
    * @param adapter
    * @return

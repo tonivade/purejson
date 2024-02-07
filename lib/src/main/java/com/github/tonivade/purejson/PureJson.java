@@ -92,7 +92,7 @@ public final class PureJson<T> {
       return handler.getValue();
     });
   }
-  
+
   @SuppressWarnings("unchecked")
   private static <T> Class<T> getClassOf(T... reified) {
     if (reified.length > 0) {

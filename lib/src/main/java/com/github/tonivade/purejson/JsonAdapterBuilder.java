@@ -80,7 +80,7 @@ public final class JsonAdapterBuilder<T> {
             var params = new ArrayList<>();
             for (var entry : decoders.entrySet()) {
               JsonNode element = o.get(entry.getKey());
-              
+
               params.add(entry.getValue().decode(element));
             }
 

@@ -25,9 +25,9 @@ import com.github.tonivade.purefun.type.Try;
 
 @FunctionalInterface
 public interface JsonEncoder<T> {
-  
+
   JsonNode encode(T value);
-  
+
   default <R> JsonEncoder<R> contramap(Function1<? super R, ? extends T> contramap) {
     return value -> encode(contramap.apply(value));
   }
@@ -35,15 +35,15 @@ public interface JsonEncoder<T> {
   default Try<JsonNode> tryEncode(T value) {
     return Try.of(() -> encode(value));
   }
-  
+
   default <R> JsonEncoder<R> compose(Function1<? super R, ? extends T> accesor) {
     return value -> encode(accesor.apply(value));
   }
-  
+
   static <T> JsonEncoder<T> encoder(Type type) {
     return nullSafe(JsonEncoder.<T>load(type).getOrElse(() -> create(type)));
   }
-  
+
   @SuppressWarnings("unchecked")
   static <T> Option<JsonEncoder<T>> load(Type type) {
     return JsonAdapter.load(type).map(e -> (JsonEncoder<T>) e);
@@ -121,7 +121,7 @@ public interface JsonEncoder<T> {
   static <V> JsonEncoder<ImmutableMap<String, V>> immutableMapEncoder(JsonEncoder<V> valueEncoder) {
     return mapEncoder(valueEncoder).compose(ImmutableMap::toMap);
   }
-  
+
   static <T> JsonEncoder<T> nullSafe(JsonEncoder<T> encoder) {
     return value -> value == null ? JsonNode.NULL : encoder.encode(value);
   }
@@ -242,7 +242,7 @@ public interface JsonEncoder<T> {
 }
 
 interface JsonEncoderModule {
-  
+
   JsonEncoder<String> STRING = JsonDSL::string;
   JsonEncoder<Character> CHAR = STRING.compose(Object::toString);
   JsonEncoder<Byte> BYTE = JsonDSL::number;

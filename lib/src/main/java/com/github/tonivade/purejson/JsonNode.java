@@ -180,29 +180,23 @@ public sealed interface JsonNode extends Serializable {
     @Serial
     private static final long serialVersionUID = 2330798672175039020L;
 
-    private final List<JsonNode> value = new ArrayList<>();
-
-    public JsonArray() { }
-
-    public JsonArray(Iterable<JsonNode> values) {
-      checkNonNull(values).forEach(value::add);
-    }
+    private final List<JsonNode> values = new ArrayList<>();
 
     public int size() {
-      return value.size();
+      return values.size();
     }
 
     @Override
     public Iterator<JsonNode> iterator() {
-      return value.stream().iterator();
+      return values.stream().iterator();
     }
 
     public JsonNode get(int i) {
-      return value.get(i);
+      return values.get(i);
     }
 
     void add(JsonNode value) {
-      this.value.add(value);
+      values.add(value);
     }
 
     @Override
@@ -217,24 +211,20 @@ public sealed interface JsonNode extends Serializable {
 
     @Override
     public int hashCode() {
-      return Objects.hash(value);
+      return Objects.hash(values);
     }
 
     @Override
     public boolean equals(Object obj) {
-      if (this == obj)
-        return true;
-      if (obj == null)
-        return false;
-      if (getClass() != obj.getClass())
-        return false;
-      JsonArray other = (JsonArray) obj;
-      return Objects.equals(value, other.value);
+      if (obj instanceof JsonArray other) {
+        return Objects.equals(this.values, other.values);
+      }
+      return false;
     }
 
     @Override
     public String toString() {
-      return value.stream().map(JsonNode::toString).collect(joining(",", "[", "]"));
+      return values.stream().map(JsonNode::toString).collect(joining(",", "[", "]"));
     }
   }
 
@@ -243,25 +233,23 @@ public sealed interface JsonNode extends Serializable {
     @Serial
     private static final long serialVersionUID = -5023192121266472804L;
 
-    private final Map<String, JsonNode> value = new LinkedHashMap<>();
-
-    public JsonObject() { }
-
-    public JsonObject(Iterable<Tuple> values) {
-      checkNonNull(values).forEach(t -> value.put(t.key(), t.value()));
-    }
+    private final Map<String, JsonNode> values = new LinkedHashMap<>();
 
     public JsonNode get(String name) {
-      return value.get(name);
+      return values.get(name);
     }
 
     @Override
     public Iterator<Tuple> iterator() {
-      return value.entrySet().stream().map(entry -> new Tuple(entry.getKey(), entry.getValue())).iterator();
+      return values.entrySet().stream().map(Tuple::new).iterator();
+    }
+
+    void add(Tuple tuple) {
+      add(tuple.key(), tuple.value());
     }
 
     void add(String name, JsonNode value) {
-      this.value.put(name, value);
+      values.put(name, value);
     }
 
     @Override
@@ -276,24 +264,20 @@ public sealed interface JsonNode extends Serializable {
 
     @Override
     public int hashCode() {
-      return Objects.hash(value);
+      return Objects.hash(values);
     }
 
     @Override
     public boolean equals(Object obj) {
-      if (this == obj)
-        return true;
-      if (obj == null)
-        return false;
-      if (getClass() != obj.getClass())
-        return false;
-      JsonObject other = (JsonObject) obj;
-      return Objects.equals(value, other.value);
+      if (obj instanceof JsonObject other) {
+        return Objects.equals(this.values, other.values);
+      }
+      return false;
     }
 
     @Override
     public String toString() {
-      return value.entrySet().stream()
+      return values.entrySet().stream()
           .map(entry -> "\"" + entry.getKey() + "\":" + entry.getValue())
           .collect(joining(",", "{", "}"));
     }
@@ -392,5 +376,10 @@ public sealed interface JsonNode extends Serializable {
     }
   }
 
-  record Tuple(String key, JsonNode value) { }
+  record Tuple(String key, JsonNode value) {
+
+    Tuple(Map.Entry<String, JsonNode> entry) {
+      this(entry.getKey(), entry.getValue());
+    }
+  }
 }

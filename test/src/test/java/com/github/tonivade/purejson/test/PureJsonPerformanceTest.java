@@ -2,7 +2,7 @@
  * Copyright (c) 2020-2024, Antonio Gabriel Muñoz Conejo <me at tonivade dot es>
  * Distributed under the terms of the MIT License
  */
-package com.github.tonivade.purejson;
+package com.github.tonivade.purejson.test;
 
 import static com.github.tonivade.purecheck.PerfCase.ioPerfCase;
 import static com.github.tonivade.purefun.data.Sequence.listOf;
@@ -22,6 +22,10 @@ import com.github.tonivade.purefun.data.SequenceOf;
 import com.github.tonivade.purefun.monad.IO;
 import com.github.tonivade.purefun.monad.IOOf;
 import com.github.tonivade.purefun.typeclasses.Instances;
+import com.github.tonivade.purejson.JsonAdapter;
+import com.github.tonivade.purejson.JsonNode;
+import com.github.tonivade.purejson.PureJson;
+import com.github.tonivade.purejson.TypeToken;
 import com.google.gson.GsonBuilder;
 import java.util.List;
 import java.util.Objects;

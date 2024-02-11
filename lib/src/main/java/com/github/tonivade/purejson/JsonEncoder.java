@@ -17,8 +17,8 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Map;
 
-import com.github.tonivade.purefun.Function1;
-import com.github.tonivade.purefun.Tuple2;
+import com.github.tonivade.purefun.core.Function1;
+import com.github.tonivade.purefun.core.Tuple2;
 import com.github.tonivade.purefun.data.ImmutableMap;
 import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Try;

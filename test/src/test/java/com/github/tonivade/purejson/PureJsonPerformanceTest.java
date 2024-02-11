@@ -24,9 +24,9 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import com.github.tonivade.purecheck.PerfCase.Stats;
-import com.github.tonivade.purefun.Equal;
-import com.github.tonivade.purefun.Function1;
-import com.github.tonivade.purefun.Producer;
+import com.github.tonivade.purefun.core.Equal;
+import com.github.tonivade.purefun.core.Function1;
+import com.github.tonivade.purefun.core.Producer;
 import com.github.tonivade.purefun.data.Sequence;
 import com.github.tonivade.purefun.data.Sequence_;
 import com.github.tonivade.purefun.monad.IO;

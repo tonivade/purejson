@@ -31,8 +31,8 @@ import java.util.NavigableSet;
 import java.util.Queue;
 import java.util.Set;
 
-import com.github.tonivade.purefun.Function1;
-import com.github.tonivade.purefun.Tuple2;
+import com.github.tonivade.purefun.core.Function1;
+import com.github.tonivade.purefun.core.Tuple2;
 import com.github.tonivade.purefun.data.ImmutableArray;
 import com.github.tonivade.purefun.data.ImmutableList;
 import com.github.tonivade.purefun.data.ImmutableMap;

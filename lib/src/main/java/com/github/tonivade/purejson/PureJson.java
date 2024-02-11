@@ -4,7 +4,7 @@
  */
 package com.github.tonivade.purejson;
 
-import static com.github.tonivade.purefun.Precondition.checkNonNull;
+import static com.github.tonivade.purefun.core.Precondition.checkNonNull;
 import static com.github.tonivade.purejson.JsonAdapter.adapter;
 
 import java.io.Reader;
@@ -12,7 +12,7 @@ import java.io.Writer;
 import java.lang.reflect.Type;
 
 import com.eclipsesource.json.JsonParser;
-import com.github.tonivade.purefun.Unit;
+import com.github.tonivade.purefun.core.Unit;
 import com.github.tonivade.purefun.type.Option;
 import com.github.tonivade.purefun.type.Try;
 

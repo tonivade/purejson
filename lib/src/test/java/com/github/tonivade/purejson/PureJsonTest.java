@@ -4,8 +4,8 @@
  */
 package com.github.tonivade.purejson;
 
-import static com.github.tonivade.purefun.Validator.equalsTo;
-import static com.github.tonivade.purefun.Validator.instanceOf;
+import static com.github.tonivade.purefun.core.Validator.equalsTo;
+import static com.github.tonivade.purefun.core.Validator.instanceOf;
 import static com.github.tonivade.purefun.data.Sequence.arrayOf;
 import static com.github.tonivade.purefun.data.Sequence.emptyArray;
 import static com.github.tonivade.purefun.data.Sequence.emptyList;
@@ -35,7 +35,7 @@ import org.junit.jupiter.api.Test;
 
 import com.eclipsesource.json.ParseException;
 import com.github.tonivade.purecheck.spec.IOTestSpec;
-import com.github.tonivade.purefun.Equal;
+import com.github.tonivade.purefun.core.Equal;
 import com.github.tonivade.purefun.data.ImmutableArray;
 import com.github.tonivade.purefun.data.ImmutableList;
 import com.github.tonivade.purefun.data.ImmutableMap;

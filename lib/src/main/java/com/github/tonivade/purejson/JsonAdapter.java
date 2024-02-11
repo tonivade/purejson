@@ -4,7 +4,7 @@
  */
 package com.github.tonivade.purejson;
 
-import static com.github.tonivade.purefun.Matcher1.is;
+import static com.github.tonivade.purefun.core.Matcher1.is;
 import static com.github.tonivade.purejson.JsonDecoder.decoder;
 import static com.github.tonivade.purejson.JsonEncoder.encoder;
 

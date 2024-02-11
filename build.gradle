@@ -38,6 +38,9 @@ allprojects {
   compileJava {
     options.compilerArgs << '-Xlint:unchecked'
     options.compilerArgs << '-Xlint:rawtypes'
+    options.compilerArgs << '-Xlint:module'
+    options.compilerArgs << '-Xlint:exports'
+    options.compilerArgs << '-Xlint:opens'
     options.release = 21
   }
 
@@ -71,6 +74,12 @@ subprojects {
     }
 
     reports.html.required = true
+  }
+
+  javadoc {
+    modularity.inferModulePath = false
+
+    exclude "module-info.java"
   }
 
   publishing {

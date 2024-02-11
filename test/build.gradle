@@ -7,11 +7,11 @@ test {
 
 dependencies {
   implementation projects.purejsonLib
-  testImplementation libs.compileTesting
   testImplementation libs.junitJupiter
   testImplementation libs.junitRunner
   testImplementation libs.purecheck
   testImplementation libs.purefunMonad
+  testImplementation libs.purefunEffect
   testImplementation libs.purefunInstances
   testImplementation libs.gson
 }

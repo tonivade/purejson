@@ -7,7 +7,7 @@ module com.github.tonivade.purejson {
 
   requires transitive com.github.tonivade.purefun;
   requires transitive com.github.tonivade.purefun.core;
-  requires transitive com.squareup.javapoet;
+  requires com.squareup.javapoet;
   requires transitive java.compiler;
-  requires transitive com.eclipsesource.json;
+  requires com.eclipsesource.json;
 }

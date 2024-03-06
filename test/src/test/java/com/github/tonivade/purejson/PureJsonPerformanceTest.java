@@ -235,10 +235,10 @@ class PureJsonPerformanceTest {
         s.min().toMillis(),
         s.max().toMillis(),
         s.mean().toMillis(),
-        s.getPercentile(50).getOrElseThrow().toMillis(),
-        s.getPercentile(90).getOrElseThrow().toMillis(),
-        s.getPercentile(95).getOrElseThrow().toMillis(),
-        s.getPercentile(99).getOrElseThrow().toMillis());
+        s.getPercentile(50).toMillis(),
+        s.getPercentile(90).toMillis(),
+        s.getPercentile(95).toMillis(),
+        s.getPercentile(99).toMillis());
     }
   }
 }

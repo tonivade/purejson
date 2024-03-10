@@ -236,7 +236,7 @@ public sealed interface JsonNode extends Serializable {
     private final Map<String, JsonNode> values = new LinkedHashMap<>();
 
     public JsonNode get(String name) {
-      return values.get(name);
+      return values.getOrDefault(name, NULL);
     }
 
     @Override

@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Map;
 
+import com.github.tonivade.purefun.Nullable;
 import com.github.tonivade.purefun.type.Option;
 
 public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
@@ -115,6 +116,7 @@ public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {
       }
 
       @Override
+      @Nullable
       public T decode(JsonNode json) {
         return decoder.decode(json);
       }

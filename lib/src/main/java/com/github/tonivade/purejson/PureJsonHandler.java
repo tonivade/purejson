@@ -8,6 +8,7 @@ import com.eclipsesource.json.JsonHandler;
 
 class PureJsonHandler extends JsonHandler<JsonNode.JsonArray, JsonNode.JsonObject> {
 
+  @SuppressWarnings("NullAway")
   private JsonNode value;
 
   @Override

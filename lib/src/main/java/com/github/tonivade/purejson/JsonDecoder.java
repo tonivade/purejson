@@ -31,6 +31,7 @@ import java.util.NavigableSet;
 import java.util.Queue;
 import java.util.Set;
 
+import com.github.tonivade.purefun.Nullable;
 import com.github.tonivade.purefun.core.Function1;
 import com.github.tonivade.purefun.core.Tuple2;
 import com.github.tonivade.purefun.data.ImmutableArray;
@@ -47,6 +48,8 @@ import com.github.tonivade.purejson.JsonNode.Tuple;
 @FunctionalInterface
 public interface JsonDecoder<T> {
 
+
+  @Nullable
   T decode(JsonNode json);
 
   default <R> JsonDecoder<R> map(Function1<? super T, ? extends R> map) {
@@ -166,7 +169,7 @@ public interface JsonDecoder<T> {
       var values = Arrays.stream(constructor.getParameters())
         .map(p -> p.getAnnotation(JsonProperty.class))
         .map(JsonProperty::value)
-        .map(name -> fieldsToDecode.get(name).decode(object.get(name)))
+        .map(name -> fieldsToDecode.getOrDefault(name, JsonDecoderModule.NULL).decode(object.get(name)))
         .toArray();
 
       return constructor.newInstance(values);
@@ -398,6 +401,7 @@ public interface JsonDecoder<T> {
 
 interface JsonDecoderModule {
 
+  JsonDecoder<Object> NULL = ignore -> null;
   JsonDecoder<String> STRING = JsonNode::asString;
   JsonDecoder<Character> CHAR = JsonNode::asCharacter;
   JsonDecoder<Byte> BYTE = JsonNode::asByte;

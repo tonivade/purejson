@@ -5,6 +5,7 @@ plugins {
   id 'signing'
   alias(libs.plugins.nexus)
   alias(libs.plugins.versions)
+  alias(libs.plugins.errorprone)
 }
 
 allprojects {
@@ -12,6 +13,7 @@ allprojects {
   apply plugin: 'jacoco'
   apply plugin: 'maven-publish'
   apply plugin: 'signing'
+  apply plugin: 'net.ltgt.errorprone'
 
   group = 'com.github.tonivade'
 
@@ -71,6 +73,26 @@ subprojects {
     }
 
     reports.html.required = true
+  }
+  
+  tasks.withType(JavaCompile) {
+    if (!name.toLowerCase().contains("test")) {
+      options.errorprone {
+        check("NullAway", net.ltgt.gradle.errorprone.CheckSeverity.ERROR)
+        option("NullAway:AnnotatedPackages", "com.github.tonivade.purejson")
+        option("NullAway:SuggestSuppressions", "true")
+      }
+    } else {
+      options.errorprone {
+        option("NullAway:AnnotatedPackages", "com.github.tonivade.purejson")
+        option("ExcludedPaths", ".*/src/test/java/.*")
+      }
+    }
+  }
+
+  dependencies {
+    errorprone libs.nullaway
+    errorprone libs.errorprone
   }
 
   publishing {

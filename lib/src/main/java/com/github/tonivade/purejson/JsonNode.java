@@ -143,11 +143,6 @@ public sealed interface JsonNode extends Serializable {
   enum JsonBoolean implements JsonNode {
     TRUE() {
       @Override
-      public boolean isBoolean() {
-        return true;
-      }
-
-      @Override
       public boolean asBoolean() {
         return true;
       }
@@ -159,11 +154,6 @@ public sealed interface JsonNode extends Serializable {
     },
     FALSE() {
       @Override
-      public boolean isBoolean() {
-        return true;
-      }
-
-      @Override
       public boolean asBoolean() {
         return false;
       }
@@ -173,6 +163,11 @@ public sealed interface JsonNode extends Serializable {
         return "false";
       }
     };
+
+    @Override
+    public boolean isBoolean() {
+      return true;
+    }
   }
 
   final class JsonArray implements JsonNode, Iterable<JsonNode> {

@@ -156,7 +156,7 @@ class PureJsonPerformanceTest {
 
   private void runPerf(String name, Sequence<IO<Stats>> stats) {
     printStats(name, Instances.<Sequence<?>>traverse().sequence(
-      Instances.<IO<?>>applicative(), stats).fix(toIO()).unsafeRunSync().fix(toSequence()));
+      Instances.applicative(), stats).fix(toIO()).unsafeRunSync().fix(toSequence()));
   }
 
   private <T, R> Producer<R> serializeTask(Producer<T> supplier, Function1<List<T>, R> serializer) {

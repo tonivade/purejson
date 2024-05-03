@@ -28,9 +28,7 @@ import com.github.tonivade.purefun.core.Equal;
 import com.github.tonivade.purefun.core.Function1;
 import com.github.tonivade.purefun.core.Producer;
 import com.github.tonivade.purefun.data.Sequence;
-import com.github.tonivade.purefun.data.Sequence_;
 import com.github.tonivade.purefun.monad.IO;
-import com.github.tonivade.purefun.monad.IO_;
 import com.github.tonivade.purefun.typeclasses.Instances;
 import com.google.gson.GsonBuilder;
 
@@ -157,8 +155,8 @@ class PureJsonPerformanceTest {
   }
 
   private void runPerf(String name, Sequence<IO<Stats>> stats) {
-    printStats(name, Instances.traverse(Sequence_.class).sequence(
-      Instances.applicative(IO_.class), stats).fix(toIO()).unsafeRunSync().fix(toSequence()));
+    printStats(name, Instances.<Sequence<?>>traverse().sequence(
+      Instances.<IO<?>>applicative(), stats).fix(toIO()).unsafeRunSync().fix(toSequence()));
   }
 
   private <T, R> Producer<R> serializeTask(Producer<T> supplier, Function1<List<T>, R> serializer) {

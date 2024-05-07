@@ -6,8 +6,6 @@ package com.github.tonivade.purejson;
 
 import static com.github.tonivade.purecheck.PerfCase.ioPerfCase;
 import static com.github.tonivade.purefun.data.Sequence.listOf;
-import static com.github.tonivade.purefun.data.SequenceOf.toSequence;
-import static com.github.tonivade.purefun.monad.IOOf.toIO;
 import static com.github.tonivade.purejson.JsonAdapter.INTEGER;
 import static com.github.tonivade.purejson.JsonAdapter.STRING;
 import static com.github.tonivade.purejson.JsonAdapter.iterableAdapter;
@@ -15,22 +13,21 @@ import static com.github.tonivade.purejson.JsonDSL.entry;
 import static com.github.tonivade.purejson.JsonDSL.object;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
-
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Stream;
-
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-
 import com.github.tonivade.purecheck.PerfCase.Stats;
 import com.github.tonivade.purefun.core.Equal;
 import com.github.tonivade.purefun.core.Function1;
 import com.github.tonivade.purefun.core.Producer;
 import com.github.tonivade.purefun.data.Sequence;
+import com.github.tonivade.purefun.data.SequenceOf;
 import com.github.tonivade.purefun.monad.IO;
+import com.github.tonivade.purefun.monad.IOOf;
 import com.github.tonivade.purefun.typeclasses.Instances;
 import com.google.gson.GsonBuilder;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 @Tag("performance")
 @Tag("slow")
@@ -156,7 +153,7 @@ class PureJsonPerformanceTest {
 
   private void runPerf(String name, Sequence<IO<Stats>> stats) {
     printStats(name, Instances.<Sequence<?>>traverse().sequence(
-      Instances.applicative(), stats).fix(toIO()).unsafeRunSync().fix(toSequence()));
+      Instances.applicative(), stats).fix(IOOf::toIO).unsafeRunSync().fix(SequenceOf::toSequence));
   }
 
   private <T, R> Producer<R> serializeTask(Producer<T> supplier, Function1<List<T>, R> serializer) {

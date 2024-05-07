@@ -48,7 +48,6 @@ import com.github.tonivade.purejson.JsonNode.Tuple;
 @FunctionalInterface
 public interface JsonDecoder<T> {
 
-
   @Nullable
   T decode(JsonNode json);
 
@@ -125,25 +124,29 @@ public interface JsonDecoder<T> {
         .toList();
     return json -> {
       if (json instanceof JsonNode.JsonObject object) {
-        try {
-          var constructor = findConstructor(clazz);
-          if (constructor.trySetAccessible()) {
-            if (constructor.getParameterCount() > 0 && constructor.isAnnotationPresent(JsonCreator.class)) {
-              return createPojoFromAnnotatedConstructor(constructor, fields, object);
-            } else if (constructor.getParameterCount() == 0) {
-              return createPojoFromDefaultConstructor(constructor, fields, object);
-            } else {
-              throw new IllegalStateException("no suitable constructor for type " + clazz.getName());
-            }
-          } else {
-            throw new IllegalStateException("cannot access to constructor: " + constructor);
-          }
-        } catch (NoSuchMethodException e) {
-          throw new IllegalStateException("no suitable constructor found for type: " + clazz.getName(), e);
-        }
+        return createPojo(clazz, fields, object);
       }
       throw new IllegalArgumentException(json.toString());
     };
+  }
+
+  static <T> T createPojo(Class<T> clazz, List<Tuple2<Field, JsonDecoder<Object>>> fields, JsonNode.JsonObject object) {
+    try {
+      var constructor = findConstructor(clazz);
+      if (constructor.trySetAccessible()) {
+        if (constructor.getParameterCount() > 0 && constructor.isAnnotationPresent(JsonCreator.class)) {
+          return createPojoFromAnnotatedConstructor(constructor, fields, object);
+        } else if (constructor.getParameterCount() == 0) {
+          return createPojoFromDefaultConstructor(constructor, fields, object);
+        } else {
+          throw new IllegalStateException("no suitable constructor for type " + clazz.getName());
+        }
+      } else {
+        throw new IllegalStateException("cannot access to constructor: " + constructor);
+      }
+    } catch (NoSuchMethodException e) {
+      throw new IllegalStateException("no suitable constructor found for type: " + clazz.getName(), e);
+    }
   }
 
   static <T> T createPojoFromDefaultConstructor(Constructor<T> constructor, List<Tuple2<Field, JsonDecoder<Object>>> fields,

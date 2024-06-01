@@ -283,8 +283,8 @@ public interface JsonDecoder<T> {
   @SuppressWarnings("unchecked")
   private static <T> JsonDecoder<T> create(GenericArrayType type) {
     Type genericComponentType = type.getGenericComponentType();
-    if (genericComponentType instanceof Class<?>) {
-      return (JsonDecoder<T>) arrayDecoder((Class<?>) genericComponentType);
+    if (genericComponentType instanceof Class<?> clazz) {
+      return (JsonDecoder<T>) arrayDecoder(clazz);
     }
     throw new UnsupportedOperationException("not implemented yet: " + type.getTypeName());
   }

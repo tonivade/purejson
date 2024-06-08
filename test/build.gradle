@@ -11,6 +11,7 @@ dependencies {
   testImplementation libs.junitRunner
   testImplementation libs.purecheck
   testImplementation libs.purefunMonad
+  testImplementation libs.purefunEffect
   testImplementation libs.purefunInstances
   testImplementation libs.gson
 }

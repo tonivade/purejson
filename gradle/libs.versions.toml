@@ -1,5 +1,5 @@
 [versions]
-purefunVersion = "5.0"
+purefunVersion = "6.0-SNAPSHOT"
 minimalJsonVersion = "0.11.0"
 javapoetVersion = "1.13.0"
 junitEngineVersion = "5.10.2"
@@ -7,7 +7,7 @@ junitPlatformVersion = "1.10.2"
 equalsVerifierVersion = "3.15.1"
 compileTestingVersion = "0.21.0"
 gsonVersion = "2.11.0"
-purecheckVersion = "1.0"
+purecheckVersion = "2.0-SNAPSHOT"
 versionsVersion = "0.51.0"
 nexusVersion = "2.0.0"
 errorproneVersion = "2.28.0"
@@ -17,6 +17,7 @@ nullawayVersion = "0.11.0"
 [libraries]
 purefunCore = { group = "com.github.tonivade", name = "purefun-core", version.ref = "purefunVersion" }
 purefunMonad = { group = "com.github.tonivade", name = "purefun-monad", version.ref = "purefunVersion" }
+purefunEffect = { group = "com.github.tonivade", name = "purefun-effect", version.ref = "purefunVersion" }
 purefunInstances = { group = "com.github.tonivade", name = "purefun-instances", version.ref = "purefunVersion" }
 purecheck = { group = "com.github.tonivade", name = "purecheck", version.ref = "purecheckVersion" }
 minimalJson = { group = "com.github.tonivade", name = "minimal-json", version.ref = "minimalJsonVersion" }

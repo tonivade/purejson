@@ -222,9 +222,9 @@ class PureJsonPerformanceTest {
 
   private void printStats(String name, Sequence<Stats> stats) {
     System.out.println("Performance " + name);
-    System.out.println("name\ttot\tmin\tmax\tmean\tp50\tp90\tp95\tp99");
+    System.out.println("name\ttot\tmin\tmax\tmean\tp50\tp90\tp95\tp99\trps");
     for (var s : stats) {
-      System.out.printf("%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d%n",
+      System.out.printf("%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d%n",
         s.name().substring(0, 4),
         s.total().toMillis(),
         s.min().toMillis(),
@@ -233,7 +233,8 @@ class PureJsonPerformanceTest {
         s.getPercentile(50).toMillis(),
         s.getPercentile(90).toMillis(),
         s.getPercentile(95).toMillis(),
-        s.getPercentile(99).toMillis());
+        s.getPercentile(99).toMillis(),
+        s.getRequestsPerSeconds());
     }
   }
 }

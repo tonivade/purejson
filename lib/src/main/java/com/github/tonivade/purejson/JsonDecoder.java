@@ -240,7 +240,7 @@ public interface JsonDecoder<T> {
     };
   }
 
-  @SuppressWarnings({ "unchecked", "rawtypes" })
+  @SuppressWarnings("unchecked")
   private static <T> JsonDecoder<T> create(Type type) {
     if (type instanceof Class clazz) {
       return create(clazz);
@@ -297,37 +297,50 @@ public interface JsonDecoder<T> {
   private static <T> JsonDecoder<T> create(Class<T> type) {
     if (type.isPrimitive()) {
       return primitiveDecoder(type);
-    } else if (type.equals(String.class)) {
-      return (JsonDecoder<T>) JsonDecoderModule.STRING;
-    } else if (type.equals(Character.class)) {
-      return (JsonDecoder<T>) JsonDecoderModule.CHAR;
-    } else if (type.equals(Byte.class)) {
-      return (JsonDecoder<T>) JsonDecoderModule.BYTE;
-    } else if (type.equals(Short.class)) {
-      return (JsonDecoder<T>) JsonDecoderModule.SHORT;
-    } else if (type.equals(Integer.class)) {
-      return (JsonDecoder<T>) JsonDecoderModule.INTEGER;
-    } else if (type.equals(Long.class)) {
-      return (JsonDecoder<T>) JsonDecoderModule.LONG;
-    } else if (type.equals(BigDecimal.class)) {
-      return (JsonDecoder<T>) JsonDecoderModule.BIG_DECIMAL;
-    } else if (type.equals(BigInteger.class)) {
-      return (JsonDecoder<T>) JsonDecoderModule.BIG_INTEGER;
-    } else if (type.equals(Float.class)) {
-      return (JsonDecoder<T>) JsonDecoderModule.FLOAT;
-    } else if (type.equals(Double.class)) {
-      return (JsonDecoder<T>) JsonDecoderModule.DOUBLE;
-    } else if (type.equals(Boolean.class)) {
-      return (JsonDecoder<T>) JsonDecoderModule.BOOLEAN;
-    } else if (type.isEnum()) {
-      return enumDecoder((Class) type);
-    } else if (type.isArray()) {
-      return arrayDecoder((Class) type.getComponentType());
-    } else if (type.isRecord()) {
-      return recordDecoder(type);
-    } else {
-      return pojoDecoder(type);
     }
+    if (type.equals(String.class)) {
+      return (JsonDecoder<T>) JsonDecoderModule.STRING;
+    }
+    if (type.equals(Character.class)) {
+      return (JsonDecoder<T>) JsonDecoderModule.CHAR;
+    }
+    if (type.equals(Byte.class)) {
+      return (JsonDecoder<T>) JsonDecoderModule.BYTE;
+    }
+    if (type.equals(Short.class)) {
+      return (JsonDecoder<T>) JsonDecoderModule.SHORT;
+    }
+    if (type.equals(Integer.class)) {
+      return (JsonDecoder<T>) JsonDecoderModule.INTEGER;
+    }
+    if (type.equals(Long.class)) {
+      return (JsonDecoder<T>) JsonDecoderModule.LONG;
+    }
+    if (type.equals(BigDecimal.class)) {
+      return (JsonDecoder<T>) JsonDecoderModule.BIG_DECIMAL;
+    }
+    if (type.equals(BigInteger.class)) {
+      return (JsonDecoder<T>) JsonDecoderModule.BIG_INTEGER;
+    }
+    if (type.equals(Float.class)) {
+      return (JsonDecoder<T>) JsonDecoderModule.FLOAT;
+    }
+    if (type.equals(Double.class)) {
+      return (JsonDecoder<T>) JsonDecoderModule.DOUBLE;
+    }
+    if (type.equals(Boolean.class)) {
+      return (JsonDecoder<T>) JsonDecoderModule.BOOLEAN;
+    }
+    if (type.isEnum()) {
+      return enumDecoder((Class) type);
+    }
+    if (type.isArray()) {
+      return arrayDecoder((Class) type.getComponentType());
+    }
+    if (type.isRecord()) {
+      return recordDecoder(type);
+    }
+    return pojoDecoder(type);
   }
 
   @SuppressWarnings("unchecked")

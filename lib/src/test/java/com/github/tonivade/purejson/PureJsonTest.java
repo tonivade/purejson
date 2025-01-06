@@ -51,6 +51,8 @@ class PureJsonTest extends IOTestSpec<String> {
 
   static final class Value {
 
+    private static final Equal<Value> EQUAL = Equal.<Value>of().comparing(Value::getId).comparing(Value::getName);
+
     @SuppressWarnings("unused")
     private static final int x = 1;
 
@@ -78,7 +80,7 @@ class PureJsonTest extends IOTestSpec<String> {
 
     @Override
     public boolean equals(Object obj) {
-      return Equal.<Value>of().comparing(Value::getId).comparing(Value::getName).applyTo(this, obj);
+      return EQUAL.applyTo(this, obj);
     }
 
     @Override
@@ -88,6 +90,8 @@ class PureJsonTest extends IOTestSpec<String> {
   }
 
   static final class Pojo {
+
+    private static final Equal<Pojo> EQUAL = Equal.<Pojo>of().comparing(Pojo::getId).comparing(Pojo::getName);
 
     @SuppressWarnings("unused")
     private static final int x = 1;
@@ -117,7 +121,7 @@ class PureJsonTest extends IOTestSpec<String> {
 
     @Override
     public boolean equals(Object obj) {
-      return Equal.<Pojo>of().comparing(Pojo::getId).comparing(Pojo::getName).applyTo(this, obj);
+      return EQUAL.applyTo(this, obj);
     }
 
     @Override

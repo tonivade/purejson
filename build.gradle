@@ -105,10 +105,6 @@ publishing {
   publications {
     mavenJava(MavenPublication) {
 
-      if (project.name == 'purejson-lib') {
-        artifactId = 'purejson'
-      }
-
       from components.java
 
       pom {

@@ -8,142 +8,150 @@ plugins {
   alias(libs.plugins.errorprone)
 }
 
-allprojects {
-  apply plugin: 'java-library'
-  apply plugin: 'jacoco'
-  apply plugin: 'maven-publish'
-  apply plugin: 'signing'
-  apply plugin: 'net.ltgt.errorprone'
+group = 'com.github.tonivade'
 
-  group = 'com.github.tonivade'
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(21)
+  }
+}
 
-  java {
-    toolchain {
-      languageVersion = JavaLanguageVersion.of(21)
-    }
+ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
+
+repositories {
+  mavenLocal()
+  mavenCentral()
+  maven {
+    url = 'https://oss.sonatype.org/content/repositories/snapshots'
+  }
+}
+
+jacoco {
+  toolVersion = '0.8.11'
+}
+
+compileJava {
+  options.compilerArgs << '-Xlint:unchecked'
+  options.compilerArgs << '-Xlint:rawtypes'
+  options.release = 21
+}
+
+compileTestJava {
+  options.compilerArgs << '-Xlint:unchecked'
+  options.compilerArgs << '-Xlint:rawtypes'
+  options.release = 21
+}
+
+jacocoTestReport {
+  reports {
+    xml.required = true
+    html.required = true
+    xml.outputLocation = file("${buildDir}/reports/jacoco/report.xml")
+  }
+}
+
+java {
+  withJavadocJar()
+  withSourcesJar()
+}
+
+test {
+  useJUnitPlatform() {
+    excludeTags "performance"
   }
 
-  ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
-
-  repositories {
-    mavenLocal()
-    mavenCentral()
-    maven {
-      url = 'https://oss.sonatype.org/content/repositories/snapshots'
-    }
-  }
+  jvmArgs([
+    '--add-opens=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED',
+    '--add-opens=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED',
+    '--add-opens=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED'])
 
   jacoco {
-    toolVersion = '0.8.11'
+    destinationFile = file("${buildDir}/jacoco/test.exec")
   }
 
-  compileJava {
-    options.compilerArgs << '-Xlint:unchecked'
-    options.compilerArgs << '-Xlint:rawtypes'
-    options.release = 21
-  }
+  reports.html.required = true
+}
 
-  compileTestJava {
-    options.compilerArgs << '-Xlint:unchecked'
-    options.compilerArgs << '-Xlint:rawtypes'
-    options.release = 21
+tasks.withType(JavaCompile) {
+  if (!name.toLowerCase().contains("test")) {
+    options.errorprone {
+      check("NullAway", net.ltgt.gradle.errorprone.CheckSeverity.ERROR)
+      option("NullAway:AnnotatedPackages", "com.github.tonivade.purejson")
+      option("NullAway:SuggestSuppressions", "true")
+    }
+  } else {
+    options.errorprone.enabled = false
   }
+}
 
-  jacocoTestReport {
-    reports {
-      xml.required = true
-      html.required = true
-      xml.outputLocation = file("${buildDir}/reports/jacoco/report.xml")
+dependencies {
+  errorprone libs.nullaway
+  errorprone libs.errorprone
+
+  api libs.purefunCore
+  api libs.minimalJson
+  api libs.javapoet
+  
+  testImplementation libs.compileTesting
+  testImplementation libs.junitJupiter
+  testImplementation libs.junitRunner
+  testImplementation libs.purecheck
+  testImplementation libs.purefunMonad
+  testImplementation libs.purefunInstances
+  testImplementation libs.gson
+}
+
+publishing {
+  publications {
+    mavenJava(MavenPublication) {
+
+      if (project.name == 'purejson-lib') {
+        artifactId = 'purejson'
+      }
+
+      from components.java
+
+      pom {
+        name = 'PureJson'
+        description = 'Pure Functional Json Parser Library'
+        url = 'https://github.com/tonivade/purejson'
+        inceptionYear = '2020'
+
+        scm {
+          url = 'https://github.com/tonivade/purejson'
+          connection = 'scm:https://github.com/tonivade/purejson.git'
+          developerConnection = 'scm:git://github.com/tonivade/purejson.git'
+        }
+
+        licenses {
+          license {
+            name = 'The MIT License (MIT)'
+            url = 'https://github.com/tonivade/purejson/blob/master/LICENSE'
+            distribution = 'repo'
+          }
+        }
+
+        developers {
+          developer {
+            id = 'tonivade'
+            name = 'Antonio Muñoz'
+            email = 'antoniogmc@gmail.com'
+          }
+        }
+      }
     }
   }
 }
 
-subprojects {
+signing {
+  def signingKey = findProperty("signingKey")
+  def signingPassword = findProperty("signingPassword")
+  useInMemoryPgpKeys(signingKey, signingPassword)
+  sign publishing.publications.mavenJava
+}
 
-  java {
-    withJavadocJar()
-    withSourcesJar()
-  }
-
-  test {
-    useJUnitPlatform()
-
-    jacoco {
-      destinationFile = file("${buildDir}/jacoco/test.exec")
-    }
-
-    reports.html.required = true
-  }
-  
-  tasks.withType(JavaCompile) {
-    if (!name.toLowerCase().contains("test")) {
-      options.errorprone {
-        check("NullAway", net.ltgt.gradle.errorprone.CheckSeverity.ERROR)
-        option("NullAway:AnnotatedPackages", "com.github.tonivade.purejson")
-        option("NullAway:SuggestSuppressions", "true")
-      }
-    } else {
-      options.errorprone.enabled = false
-    }
-  }
-
-  dependencies {
-    errorprone libs.nullaway
-    errorprone libs.errorprone
-  }
-
-  publishing {
-    publications {
-      mavenJava(MavenPublication) {
-
-        if (project.name == 'purejson-lib') {
-          artifactId = 'purejson'
-        }
-
-        from components.java
-
-        pom {
-          name = 'PureJson'
-          description = 'Pure Functional Json Parser Library'
-          url = 'https://github.com/tonivade/purejson'
-          inceptionYear = '2020'
-
-          scm {
-            url = 'https://github.com/tonivade/purejson'
-            connection = 'scm:https://github.com/tonivade/purejson.git'
-            developerConnection = 'scm:git://github.com/tonivade/purejson.git'
-          }
-
-          licenses {
-            license {
-              name = 'The MIT License (MIT)'
-              url = 'https://github.com/tonivade/purejson/blob/master/LICENSE'
-              distribution = 'repo'
-            }
-          }
-
-          developers {
-            developer {
-              id = 'tonivade'
-              name = 'Antonio Muñoz'
-              email = 'antoniogmc@gmail.com'
-            }
-          }
-        }
-      }
-    }
-  }
-
-  signing {
-    def signingKey = findProperty("signingKey")
-    def signingPassword = findProperty("signingPassword")
-    useInMemoryPgpKeys(signingKey, signingPassword)
-    sign publishing.publications.mavenJava
-  }
-
-  tasks.withType(Sign) {
-    onlyIf { isReleaseVersion }
-  }
+tasks.withType(Sign) {
+  onlyIf { isReleaseVersion }
 }
 
 nexusPublishing {

@@ -1,7 +1,7 @@
 [versions]
 purefunVersion = "5.0"
 minimalJsonVersion = "0.11.0"
-javapoetVersion = "1.13.0"
+javapoetVersion = "0.6.0"
 junitEngineVersion = "5.11.4"
 junitPlatformVersion = "1.11.4"
 equalsVerifierVersion = "3.15.1"
@@ -20,7 +20,7 @@ purefunMonad = { group = "com.github.tonivade", name = "purefun-monad", version.
 purefunInstances = { group = "com.github.tonivade", name = "purefun-instances", version.ref = "purefunVersion" }
 purecheck = { group = "com.github.tonivade", name = "purecheck", version.ref = "purecheckVersion" }
 minimalJson = { group = "com.github.tonivade", name = "minimal-json", version.ref = "minimalJsonVersion" }
-javapoet = { group = "com.squareup", name = "javapoet", version.ref = "javapoetVersion" }
+javapoet = { group = "com.palantir.javapoet", name = "javapoet", version.ref = "javapoetVersion" }
 junitJupiter = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junitEngineVersion" }
 junitRunner = { group = "org.junit.platform", name = "junit-platform-runner", version.ref = "junitPlatformVersion" }
 compileTesting = { group = "com.google.testing.compile", name = "compile-testing", version.ref = "compileTestingVersion" }

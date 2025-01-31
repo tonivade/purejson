@@ -92,9 +92,10 @@ dependencies {
   api libs.minimalJson
   api libs.javapoet
   
+  testImplementation platform(libs.junitBom)
   testImplementation libs.compileTesting
   testImplementation libs.junitJupiter
-  testImplementation libs.junitRunner
+  testRuntimeOnly libs.junitLauncher
   testImplementation libs.purecheck
   testImplementation libs.purefunMonad
   testImplementation libs.purefunInstances

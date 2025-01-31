@@ -2,8 +2,7 @@
 purefunVersion = "5.0"
 minimalJsonVersion = "0.11.0"
 javapoetVersion = "0.6.0"
-junitEngineVersion = "5.11.4"
-junitPlatformVersion = "1.11.4"
+junitVersion = "5.11.4"
 equalsVerifierVersion = "3.15.1"
 compileTestingVersion = "0.21.0"
 gsonVersion = "2.12.1"
@@ -21,8 +20,9 @@ purefunInstances = { group = "com.github.tonivade", name = "purefun-instances", 
 purecheck = { group = "com.github.tonivade", name = "purecheck", version.ref = "purecheckVersion" }
 minimalJson = { group = "com.github.tonivade", name = "minimal-json", version.ref = "minimalJsonVersion" }
 javapoet = { group = "com.palantir.javapoet", name = "javapoet", version.ref = "javapoetVersion" }
-junitJupiter = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junitEngineVersion" }
-junitRunner = { group = "org.junit.platform", name = "junit-platform-runner", version.ref = "junitPlatformVersion" }
+junitBom = { group = "org.junit", name = "junit-bom", version.ref = "junitVersion" }
+junitJupiter = { module = "org.junit.jupiter:junit-jupiter-engine" }
+junitLauncher = { module = "org.junit.platform:junit-platform-launcher" }
 compileTesting = { group = "com.google.testing.compile", name = "compile-testing", version.ref = "compileTestingVersion" }
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gsonVersion" }
 nullaway = { group = "com.uber.nullaway", name = "nullaway", version.ref = "nullawayVersion" }

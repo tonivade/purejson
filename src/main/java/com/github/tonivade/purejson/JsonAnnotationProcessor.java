@@ -87,10 +87,10 @@ public class JsonAnnotationProcessor extends AbstractProcessor {
   }
 
   private void generateAdapter(Element element) {
-    if (element.getKind().name().equals("RECORD")) {
+    if (element.getKind() == ElementKind.RECORD) {
       printNote(element.getSimpleName() + " record found");
       saveFile(modelForRecord((TypeElement) element));
-    } else if (element.getKind().name().equals("CLASS")) {
+    } else if (element.getKind() == ElementKind.CLASS) {
       printNote(element.getSimpleName() + " pojo found");
       saveFile(modelForPojo((TypeElement) element));
     } else {

@@ -13,5 +13,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface Json {
 
-  Class<?> value() default Void.class;
+  @SuppressWarnings("rawtypes")
+  Class<? extends JsonAdapter> value() default JsonAdapter.class;
 }

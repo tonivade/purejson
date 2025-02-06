@@ -77,12 +77,23 @@ class JsonAnnotationProcessorTest {
             package test;
 
             import com.github.tonivade.purejson.Json;
+            import com.github.tonivade.purejson.JsonAdapter;
+            import com.github.tonivade.purejson.JsonNode;
             import java.util.List;
 
             @Json(UserAdapter.class)
             public record User(int id, String name, List<String> roles) {}
 
-            class UserAdapter {}""");
+            class UserAdapter implements JsonAdapter<User> {
+
+              public JsonNode encode(User value) {
+                return null;
+              }
+
+              public User decode(JsonNode json) {
+                return null;
+              }
+            }""");
 
     assert_().about(javaSource()).that(file)
         .processedWith(new JsonAnnotationProcessor())

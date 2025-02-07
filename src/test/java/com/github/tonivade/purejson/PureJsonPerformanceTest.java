@@ -80,75 +80,75 @@ class PureJsonPerformanceTest {
   @Test
   void parsePerformanceRecord() {
     var listOfValues = new TypeToken<List<Value>>() { }.getType();
-    var json1 = new PureJson<>(listOfValues);
-    var json2 = new PureJson<>(builderValueAdapter());
-    var json3 = new PureJson<>(adhocValueAdapter());
+    var reflection = new PureJson<>(listOfValues);
+    var builder = new PureJson<>(builderValueAdapter());
+    var adhoc = new PureJson<>(adhocValueAdapter());
     var gson = new GsonBuilder().create();
 
     int times = 5000;
     int warmup = 50;
-    var stats1 = ioPerfCase("reflection", parseTask(string -> json1.fromJson(string))).warmup(warmup).run(times);
-    var stats2 = ioPerfCase("builder", parseTask(string -> json2.fromJson(string))).warmup(warmup).run(times);
-    var stats3 = ioPerfCase("adhoc", parseTask(string -> json3.fromJson(string))).warmup(warmup).run(times);
-    var stats4 = ioPerfCase("gson", parseTask(string -> gson.fromJson(string, listOfValues))).warmup(warmup).run(times);
+    var reflectionStats = ioPerfCase("reflection", parseTask(string -> reflection.fromJson(string))).warmup(warmup).run(times);
+    var builderStats = ioPerfCase("builder", parseTask(string -> builder.fromJson(string))).warmup(warmup).run(times);
+    var adhocStats = ioPerfCase("adhoc", parseTask(string -> adhoc.fromJson(string))).warmup(warmup).run(times);
+    var gsonStats = ioPerfCase("gson", parseTask(string -> gson.fromJson(string, listOfValues))).warmup(warmup).run(times);
 
-    runPerf("parse record", listOf(stats1, stats2, stats3, stats4));
+    runPerf("parse record", listOf(reflectionStats, builderStats, adhocStats, gsonStats));
   }
 
   @Test
   void parsePerformancePojo() {
     var listOfPojos = new TypeToken<List<Pojo>>() { }.getType();
-    var json1 = new PureJson<>(listOfPojos);
-    var json2 = new PureJson<>(builderPojoAdapter());
-    var json3 = new PureJson<>(adhocPojoAdapter());
+    var reflection = new PureJson<>(listOfPojos);
+    var builder = new PureJson<>(builderPojoAdapter());
+    var adhoc = new PureJson<>(adhocPojoAdapter());
     var gson = new GsonBuilder().create();
 
     int times = 5000;
     int warmup = 50;
-    var stats1 = ioPerfCase("reflection", parseTask(string -> json1.fromJson(string))).warmup(warmup).run(times);
-    var stats2 = ioPerfCase("builder", parseTask(string -> json2.fromJson(string))).warmup(warmup).run(times);
-    var stats3 = ioPerfCase("adhoc", parseTask(string -> json3.fromJson(string))).warmup(warmup).run(times);
-    var stats4 = ioPerfCase("gson", parseTask(string -> gson.fromJson(string, listOfPojos))).warmup(warmup).run(times);
+    var reflectionStats = ioPerfCase("reflection", parseTask(string -> reflection.fromJson(string))).warmup(warmup).run(times);
+    var builderStats = ioPerfCase("builder", parseTask(string -> builder.fromJson(string))).warmup(warmup).run(times);
+    var adhocStats = ioPerfCase("adhoc", parseTask(string -> adhoc.fromJson(string))).warmup(warmup).run(times);
+    var gsonStats = ioPerfCase("gson", parseTask(string -> gson.fromJson(string, listOfPojos))).warmup(warmup).run(times);
 
-    runPerf("parse pojo", listOf(stats1, stats2, stats3, stats4));
+    runPerf("parse pojo", listOf(reflectionStats, builderStats, adhocStats, gsonStats));
   }
 
   @Test
   void serializePerformanceRecord() {
     var listOfValues = new TypeToken<List<Value>>() { }.getType();
-    var json1 = new PureJson<>(listOfValues);
-    var json2 = new PureJson<>(builderValueAdapter());
-    var json3 = new PureJson<>(adhocValueAdapter());
+    var reflection = new PureJson<>(listOfValues);
+    var builder = new PureJson<>(builderValueAdapter());
+    var adhoc = new PureJson<>(adhocValueAdapter());
     var gson = new GsonBuilder().create();
 
     int times = 5000;
     int warmup = 50;
     Producer<Value> supplier = () -> new Value(1, "name");
-    var stats1 = ioPerfCase("reflection", serializeTask(supplier, value -> json1.toString(value))).warmup(warmup).run(times);
-    var stats2 = ioPerfCase("builder", serializeTask(supplier, value -> json2.toString(value))).warmup(warmup).run(times);
-    var stats3 = ioPerfCase("adhoc", serializeTask(supplier, value -> json3.toString(value))).warmup(warmup).run(times);
-    var stats4 = ioPerfCase("gson", serializeTask(supplier, value -> gson.toJson(value, listOfValues))).warmup(warmup).run(times);
+    var reflectionStats = ioPerfCase("reflection", serializeTask(supplier, value -> reflection.toString(value))).warmup(warmup).run(times);
+    var builderStats = ioPerfCase("builder", serializeTask(supplier, value -> builder.toString(value))).warmup(warmup).run(times);
+    var adhocStats = ioPerfCase("adhoc", serializeTask(supplier, value -> adhoc.toString(value))).warmup(warmup).run(times);
+    var gsonStats = ioPerfCase("gson", serializeTask(supplier, value -> gson.toJson(value, listOfValues))).warmup(warmup).run(times);
 
-    runPerf("serialize record", listOf(stats1, stats2, stats3, stats4));
+    runPerf("serialize record", listOf(reflectionStats, builderStats, adhocStats, gsonStats));
   }
 
   @Test
   void serializePerformancePojo() {
     var listOfPojos = new TypeToken<List<Pojo>>() { }.getType();
-    var json1 = new PureJson<>(listOfPojos);
-    var json2 = new PureJson<>(builderPojoAdapter());
-    var json3 = new PureJson<>(adhocPojoAdapter());
+    var reflection = new PureJson<>(listOfPojos);
+    var builder = new PureJson<>(builderPojoAdapter());
+    var adhoc = new PureJson<>(adhocPojoAdapter());
     var gson = new GsonBuilder().create();
 
     int times = 5000;
     int warmup = 50;
     Producer<Pojo> supplier = () -> new Pojo(1, "name");
-    var stats1 = ioPerfCase("reflection", serializeTask(supplier, value -> json1.toString(value))).warmup(warmup).run(times);
-    var stats2 = ioPerfCase("builder", serializeTask(supplier, value -> json2.toString(value))).warmup(warmup).run(times);
-    var stats3 = ioPerfCase("adhoc", serializeTask(supplier, value -> json3.toString(value))).warmup(warmup).run(times);
-    var stats4 = ioPerfCase("gson", serializeTask(supplier, value -> gson.toJson(value, listOfPojos))).warmup(warmup).run(times);
+    var reflectionStats = ioPerfCase("reflection", serializeTask(supplier, value -> reflection.toString(value))).warmup(warmup).run(times);
+    var builderStats = ioPerfCase("builder", serializeTask(supplier, value -> builder.toString(value))).warmup(warmup).run(times);
+    var adhocStats = ioPerfCase("adhoc", serializeTask(supplier, value -> adhoc.toString(value))).warmup(warmup).run(times);
+    var gsonStats = ioPerfCase("gson", serializeTask(supplier, value -> gson.toJson(value, listOfPojos))).warmup(warmup).run(times);
 
-    runPerf("serialize pojo", listOf(stats1, stats2, stats3, stats4));
+    runPerf("serialize pojo", listOf(reflectionStats, builderStats, adhocStats, gsonStats));
   }
 
   private void runPerf(String name, Sequence<IO<Stats>> stats) {

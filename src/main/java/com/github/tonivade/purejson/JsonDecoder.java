@@ -16,6 +16,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
 import java.math.BigDecimal;
@@ -95,98 +96,117 @@ public interface JsonDecoder<T> {
     var fields = Arrays.stream(clazz.getRecordComponents())
         .map(f -> Tuple2.of(f, decoder(f.getGenericType())))
         .toList();
+    var types = fields.stream()
+        .map(Tuple2::get1)
+        .map(RecordComponent::getType)
+        .toList();
+    var constructor = findCanonicalConstructor(clazz, types);
+    var recordCreator = recordCreator(constructor, fields);
     return json -> {
       if (json instanceof JsonNode.JsonObject object) {
-        var types = new ArrayList<Class<?>>();
-        var values = new ArrayList<>();
-        for (var pair : fields) {
-          types.add(pair.get1().getType());
-          JsonNode jsonElement = object.get(pair.get1().getName());
-          values.add(pair.get2().decode(jsonElement));
-        }
-        try {
-          var constructor = clazz.getDeclaredConstructor(types.toArray(Class[]::new));
-          return constructor.newInstance(values.toArray(Object[]::new));
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-          throw new IllegalStateException("cannot create instance of record: " + clazz.getName(), e);
-        }
+        return recordCreator.apply(object);
       }
       throw new IllegalArgumentException(json.toString());
     };
   }
 
-  static <T> JsonDecoder<T> pojoDecoder(Class<T> clazz) {
+  private static <T> JsonDecoder<T> pojoDecoder(Class<T> clazz) {
     var fields = Arrays.stream(clazz.getDeclaredFields())
         .filter(f -> !isStatic(f.getModifiers()))
         .filter(f -> !f.isSynthetic())
         .filter(Field::trySetAccessible)
         .map(f -> Tuple2.of(f, decoder(f.getGenericType())))
         .toList();
+    var constructor = findConstructor(clazz);
+    var pojoCreator = pojoCreator(constructor, fields);
     return json -> {
       if (json instanceof JsonNode.JsonObject object) {
-        return createPojo(clazz, fields, object);
+        return pojoCreator.apply(object);
       }
       throw new IllegalArgumentException(json.toString());
     };
   }
 
-  static <T> T createPojo(Class<T> clazz, List<Tuple2<Field, JsonDecoder<Object>>> fields, JsonNode.JsonObject object) {
-    try {
-      var constructor = findConstructor(clazz);
-      if (constructor.trySetAccessible()) {
-        if (constructor.getParameterCount() > 0 && constructor.isAnnotationPresent(JsonCreator.class)) {
-          return createPojoFromAnnotatedConstructor(constructor, fields, object);
-        } else if (constructor.getParameterCount() == 0) {
-          return createPojoFromDefaultConstructor(constructor, fields, object);
-        } else {
-          throw new IllegalStateException("no suitable constructor for type " + clazz.getName());
-        }
-      } else {
-        throw new IllegalStateException("cannot access to constructor: " + constructor);
-      }
-    } catch (NoSuchMethodException e) {
-      throw new IllegalStateException("no suitable constructor found for type: " + clazz.getName(), e);
+  private static <T> Function1<JsonNode.JsonObject, T>
+      pojoCreator(Constructor<T> constructor, List<Tuple2<Field, JsonDecoder<Object>>> fields) {
+    if (!constructor.trySetAccessible()) {
+      throw new IllegalStateException("cannot access to constructor: " + constructor);
     }
+    if (constructor.getParameterCount() > 0 && constructor.isAnnotationPresent(JsonCreator.class)) {
+      return pojoCreatorFromAnnotatedConstructor(constructor, fields);
+    }
+    if (constructor.getParameterCount() == 0) {
+      return pojoCreatorFromDefaultConstructor(constructor, fields);
+    }
+    throw new IllegalStateException("no suitable constructor for type " + constructor.getDeclaringClass().getName());
   }
 
-  static <T> T createPojoFromDefaultConstructor(Constructor<T> constructor, List<Tuple2<Field, JsonDecoder<Object>>> fields,
-      JsonNode.JsonObject object) {
-    try {
-      T value = constructor.newInstance();
+  private static <T> Function1<JsonNode.JsonObject, T> recordCreator(
+      Constructor<T> constructor, List<Tuple2<RecordComponent, JsonDecoder<Object>>> fields) {
+    return object -> {
+      var values = new ArrayList<>();
       for (var pair : fields) {
-        var node = object.get(pair.get1().getName());
-        pair.get1().set(value, pair.get2().decode(node));
+        JsonNode jsonElement = object.get(pair.get1().getName());
+        values.add(pair.get2().decode(jsonElement));
       }
-      return value;
-    } catch (IllegalArgumentException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
-      throw new IllegalArgumentException(e);
-    }
+      try {
+        return constructor.newInstance(values.toArray(Object[]::new));
+      } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+        throw new IllegalStateException("cannot create instance of record: " + constructor.getDeclaringClass().getName(), e);
+      }
+    };
   }
 
-  static <T> T createPojoFromAnnotatedConstructor(Constructor<T> constructor,
-      List<Tuple2<Field, JsonDecoder<Object>>> fields, JsonNode.JsonObject object) {
+  private static <T> Function1<JsonNode.JsonObject, T> pojoCreatorFromDefaultConstructor(
+      Constructor<T> constructor, List<Tuple2<Field, JsonDecoder<Object>>> fields) {
+    return object -> {
+      try {
+        T value = constructor.newInstance();
+        for (var pair : fields) {
+          var node = object.get(pair.get1().getName());
+          pair.get1().set(value, pair.get2().decode(node));
+        }
+        return value;
+      } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+        throw new IllegalStateException("cannot create pojo using constructor " + constructor, e);
+      }
+    };
+  }
+
+  private static <T> Function1<JsonNode.JsonObject, T> pojoCreatorFromAnnotatedConstructor(
+      Constructor<T> constructor, List<Tuple2<Field, JsonDecoder<Object>>> fields) {
+    return object -> {
+      try {
+        var fieldsToDecode =
+            fields.stream().collect(toUnmodifiableMap(t -> t.get1().getName(), Tuple2::get2));
+
+        var values = Arrays.stream(constructor.getParameters())
+            .map(p -> p.getAnnotation(JsonProperty.class))
+            .map(JsonProperty::value)
+            .map(name -> fieldsToDecode.getOrDefault(name, JsonDecoderModule.NULL).decode(object.get(name)))
+            .toArray();
+
+        return constructor.newInstance(values);
+      } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+        throw new IllegalStateException("cannot create pojo using constructor " + constructor, e);
+      }
+    };
+  }
+
+  private static <T> Constructor<T> findCanonicalConstructor(Class<T> clazz, List<? extends Class<?>> types) {
     try {
-      var fieldsToDecode =
-          fields.stream().collect(toUnmodifiableMap(t -> t.get1().getName(), Tuple2::get2));
-
-      var values = Arrays.stream(constructor.getParameters())
-        .map(p -> p.getAnnotation(JsonProperty.class))
-        .map(JsonProperty::value)
-        .map(name -> fieldsToDecode.getOrDefault(name, JsonDecoderModule.NULL).decode(object.get(name)))
-        .toArray();
-
-      return constructor.newInstance(values);
-    } catch (IllegalArgumentException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
-      throw new IllegalStateException(e);
+      return clazz.getDeclaredConstructor(types.toArray(Class[]::new));
+    } catch (NoSuchMethodException e) {
+      throw new IllegalStateException("cannot create instance of record: " + clazz.getName(), e);
     }
   }
 
   @SuppressWarnings("unchecked")
-  private static <T> Constructor<T> findConstructor(Class<T> type) throws NoSuchMethodException {
+  private static <T> Constructor<T> findConstructor(Class<T> type) {
     return (Constructor<T>) findUniqueConstructor(type)
         .or(() -> findDefaultConstructor(type))
         .or(() -> findAnnotatedConstructor(type))
-        .getOrElseThrow(NoSuchMethodException::new);
+        .getOrElseThrow(() -> new IllegalStateException("no suitable constructor found for type: " + type.getName()));
   }
 
   static <T> Option<Constructor<?>> findUniqueConstructor(Class<T> type) {

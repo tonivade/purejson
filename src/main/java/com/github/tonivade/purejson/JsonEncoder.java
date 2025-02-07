@@ -60,7 +60,7 @@ public interface JsonEncoder<T> {
     };
   }
 
-  static <T> JsonEncoder<T> pojoEncoder(Class<T> type) {
+  private static <T> JsonEncoder<T> pojoEncoder(Class<T> type) {
     var fields = Arrays.stream(type.getDeclaredFields())
         .filter(f -> !isStatic(f.getModifiers()))
         .filter(f -> !f.isSynthetic())
@@ -80,7 +80,7 @@ public interface JsonEncoder<T> {
     };
   }
 
-  static <T> JsonEncoder<T> recordEncoder(Class<T> record) {
+  private static <T> JsonEncoder<T> recordEncoder(Class<T> record) {
     var fields = Arrays.stream(record.getRecordComponents())
         .map(f -> Tuple2.of(f, encoder(f.getGenericType())))
         .toList();

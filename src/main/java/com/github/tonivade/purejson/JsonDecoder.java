@@ -92,7 +92,7 @@ public interface JsonDecoder<T> {
     return create(String.class).andThen(string -> Enum.valueOf(type, string));
   }
 
-  static <T> JsonDecoder<T> recordDecoder(Class<T> clazz) {
+  private static <T> JsonDecoder<T> recordDecoder(Class<T> clazz) {
     var fields = Arrays.stream(clazz.getRecordComponents())
         .map(f -> Tuple2.of(f, decoder(f.getGenericType())))
         .toList();
@@ -127,20 +127,6 @@ public interface JsonDecoder<T> {
     };
   }
 
-  private static <T> Function1<JsonNode.JsonObject, T>
-      pojoCreator(Constructor<T> constructor, List<Tuple2<Field, JsonDecoder<Object>>> fields) {
-    if (!constructor.trySetAccessible()) {
-      throw new IllegalStateException("cannot access to constructor: " + constructor);
-    }
-    if (constructor.getParameterCount() > 0 && constructor.isAnnotationPresent(JsonCreator.class)) {
-      return pojoCreatorFromAnnotatedConstructor(constructor, fields);
-    }
-    if (constructor.getParameterCount() == 0) {
-      return pojoCreatorFromDefaultConstructor(constructor, fields);
-    }
-    throw new IllegalStateException("no suitable constructor for type " + constructor.getDeclaringClass().getName());
-  }
-
   private static <T> Function1<JsonNode.JsonObject, T> recordCreator(
       Constructor<T> constructor, List<Tuple2<RecordComponent, JsonDecoder<Object>>> fields) {
     return object -> {
@@ -155,6 +141,20 @@ public interface JsonDecoder<T> {
         throw new IllegalStateException("cannot create instance of record: " + constructor.getDeclaringClass().getName(), e);
       }
     };
+  }
+
+  private static <T> Function1<JsonNode.JsonObject, T>
+      pojoCreator(Constructor<T> constructor, List<Tuple2<Field, JsonDecoder<Object>>> fields) {
+    if (!constructor.trySetAccessible()) {
+      throw new IllegalStateException("cannot access to constructor: " + constructor);
+    }
+    if (constructor.getParameterCount() > 0 && constructor.isAnnotationPresent(JsonCreator.class)) {
+      return pojoCreatorFromAnnotatedConstructor(constructor, fields);
+    }
+    if (constructor.getParameterCount() == 0) {
+      return pojoCreatorFromDefaultConstructor(constructor, fields);
+    }
+    throw new IllegalStateException("no suitable constructor for type " + constructor.getDeclaringClass().getName());
   }
 
   private static <T> Function1<JsonNode.JsonObject, T> pojoCreatorFromDefaultConstructor(

@@ -28,10 +28,6 @@ public interface JsonEncoder<T> {
 
   JsonNode encode(T value);
 
-  default <R> JsonEncoder<R> contramap(Function1<? super R, ? extends T> contramap) {
-    return value -> encode(contramap.apply(value));
-  }
-
   default Try<JsonNode> tryEncode(T value) {
     return Try.of(() -> encode(value));
   }

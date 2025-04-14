@@ -52,10 +52,6 @@ public interface JsonDecoder<T> {
   @Nullable
   T decode(JsonNode json);
 
-  default <R> JsonDecoder<R> map(Function1<? super T, ? extends R> map) {
-    return json -> map.apply(decode(json));
-  }
-
   default Try<T> tryDecode(JsonNode json) {
     return Try.of(() -> decode(json));
   }

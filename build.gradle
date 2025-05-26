@@ -72,6 +72,14 @@ test {
   reports.html.required = true
 }
 
+jacocoTestReport {
+  reports {
+    xml.required = true
+    html.required = true
+    xml.outputLocation = file("${buildDir}/reports/jacoco/report.xml")
+  }
+}
+
 tasks.withType(JavaCompile) {
   if (!name.toLowerCase().contains("test")) {
     options.errorprone {

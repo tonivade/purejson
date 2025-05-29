@@ -27,7 +27,7 @@ public sealed interface JsonNode extends Serializable {
 
   JsonNode NULL = JsonNull.NULL;
   JsonNode TRUE = JsonBoolean.TRUE;
-  JsonNode FALSE = JsonBoolean.TRUE;
+  JsonNode FALSE = JsonBoolean.FALSE;
 
   default Try<Unit> writeTo(Writer writer) {
     return Try.of(() -> {

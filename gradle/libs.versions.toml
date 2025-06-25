@@ -9,7 +9,7 @@ gsonVersion = "2.13.1"
 purecheckVersion = "1.1"
 versionsVersion = "0.52.0"
 nexusVersion = "2.0.0"
-errorproneVersion = "2.38.0"
+errorproneVersion = "2.39.0"
 errorpronePluginVersion = "4.2.0"
 nullawayVersion = "0.12.7"
 

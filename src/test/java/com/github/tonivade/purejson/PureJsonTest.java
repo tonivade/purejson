@@ -954,7 +954,7 @@ class PureJsonTest extends IOTestSpec<String> {
 
   private static <T> void assertSuccessSome(T valueOf, Try<Option<T>> fromJson) {
     if (fromJson.isFailure()) {
-      fromJson.getCause().printStackTrace();
+      fromJson.getOrElseThrow();
     }
     assertEquals(success(some(valueOf)), fromJson);
   }

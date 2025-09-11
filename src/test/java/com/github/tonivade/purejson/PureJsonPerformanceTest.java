@@ -89,10 +89,10 @@ class PureJsonPerformanceTest {
     int warmup = 50;
     var reflectionStats = ioPerfCase("reflection", parseTask(string -> reflection.fromJson(string))).warmup(warmup).run(times);
     var builderStats = ioPerfCase("builder", parseTask(string -> builder.fromJson(string))).warmup(warmup).run(times);
-    var adhocStats = ioPerfCase("adhoc", parseTask(string -> adhoc.fromJson(string))).warmup(warmup).run(times);
+    var annotationStats = ioPerfCase("annontation", parseTask(string -> adhoc.fromJson(string))).warmup(warmup).run(times);
     var gsonStats = ioPerfCase("gson", parseTask(string -> gson.fromJson(string, listOfValues))).warmup(warmup).run(times);
 
-    runPerf("parse record", listOf(reflectionStats, builderStats, adhocStats, gsonStats));
+    runPerf("parse record", listOf(reflectionStats, builderStats, annotationStats, gsonStats));
   }
 
   @Test
@@ -107,10 +107,10 @@ class PureJsonPerformanceTest {
     int warmup = 50;
     var reflectionStats = ioPerfCase("reflection", parseTask(string -> reflection.fromJson(string))).warmup(warmup).run(times);
     var builderStats = ioPerfCase("builder", parseTask(string -> builder.fromJson(string))).warmup(warmup).run(times);
-    var adhocStats = ioPerfCase("adhoc", parseTask(string -> adhoc.fromJson(string))).warmup(warmup).run(times);
+    var annotationStats = ioPerfCase("annontation", parseTask(string -> adhoc.fromJson(string))).warmup(warmup).run(times);
     var gsonStats = ioPerfCase("gson", parseTask(string -> gson.fromJson(string, listOfPojos))).warmup(warmup).run(times);
 
-    runPerf("parse pojo", listOf(reflectionStats, builderStats, adhocStats, gsonStats));
+    runPerf("parse pojo", listOf(reflectionStats, builderStats, annotationStats, gsonStats));
   }
 
   @Test
@@ -126,10 +126,10 @@ class PureJsonPerformanceTest {
     Producer<Value> supplier = () -> new Value(1, "name");
     var reflectionStats = ioPerfCase("reflection", serializeTask(supplier, value -> reflection.toString(value))).warmup(warmup).run(times);
     var builderStats = ioPerfCase("builder", serializeTask(supplier, value -> builder.toString(value))).warmup(warmup).run(times);
-    var adhocStats = ioPerfCase("adhoc", serializeTask(supplier, value -> adhoc.toString(value))).warmup(warmup).run(times);
+    var annotationStats = ioPerfCase("annontation", serializeTask(supplier, value -> adhoc.toString(value))).warmup(warmup).run(times);
     var gsonStats = ioPerfCase("gson", serializeTask(supplier, value -> gson.toJson(value, listOfValues))).warmup(warmup).run(times);
 
-    runPerf("serialize record", listOf(reflectionStats, builderStats, adhocStats, gsonStats));
+    runPerf("serialize record", listOf(reflectionStats, builderStats, annotationStats, gsonStats));
   }
 
   @Test
@@ -145,10 +145,10 @@ class PureJsonPerformanceTest {
     Producer<Pojo> supplier = () -> new Pojo(1, "name");
     var reflectionStats = ioPerfCase("reflection", serializeTask(supplier, value -> reflection.toString(value))).warmup(warmup).run(times);
     var builderStats = ioPerfCase("builder", serializeTask(supplier, value -> builder.toString(value))).warmup(warmup).run(times);
-    var adhocStats = ioPerfCase("adhoc", serializeTask(supplier, value -> adhoc.toString(value))).warmup(warmup).run(times);
+    var annotationStats = ioPerfCase("annontation", serializeTask(supplier, value -> adhoc.toString(value))).warmup(warmup).run(times);
     var gsonStats = ioPerfCase("gson", serializeTask(supplier, value -> gson.toJson(value, listOfPojos))).warmup(warmup).run(times);
 
-    runPerf("serialize pojo", listOf(reflectionStats, builderStats, adhocStats, gsonStats));
+    runPerf("serialize pojo", listOf(reflectionStats, builderStats, annotationStats, gsonStats));
   }
 
   private void runPerf(String name, Sequence<IO<Stats>> stats) {
@@ -226,14 +226,14 @@ class PureJsonPerformanceTest {
     for (var s : stats) {
       System.out.printf("%s\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d%n",
         s.name().substring(0, 4),
-        s.total().toMillis(),
-        s.min().toMillis(),
-        s.max().toMillis(),
-        s.mean().toMillis(),
-        s.getPercentile(50).toMillis(),
-        s.getPercentile(90).toMillis(),
-        s.getPercentile(95).toMillis(),
-        s.getPercentile(99).toMillis(),
+        s.total().toNanos(),
+        s.min().toNanos(),
+        s.max().toNanos(),
+        s.mean().toNanos(),
+        s.getPercentile(50).toNanos(),
+        s.getPercentile(90).toNanos(),
+        s.getPercentile(95).toNanos(),
+        s.getPercentile(99).toNanos(),
         s.getRequestsPerSeconds());
     }
   }

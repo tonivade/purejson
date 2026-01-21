@@ -11,7 +11,7 @@ versionsVersion = "0.53.0"
 nexusVersion = "2.0.0"
 errorproneVersion = "2.46.0"
 errorpronePluginVersion = "4.4.0"
-nullawayVersion = "0.12.15"
+nullawayVersion = "0.13.0"
 
 [libraries]
 purefunCore = { group = "com.github.tonivade", name = "purefun-core", version.ref = "purefunVersion" }

@@ -10,7 +10,7 @@ purecheckVersion = "1.1"
 versionsVersion = "0.53.0"
 nexusVersion = "2.0.0"
 errorproneVersion = "2.46.0"
-errorpronePluginVersion = "4.4.0"
+errorpronePluginVersion = "5.0.0"
 nullawayVersion = "0.13.1"
 
 [libraries]

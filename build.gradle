@@ -97,6 +97,8 @@ tasks.withType(JavaCompile) {
 dependencies {
   errorprone libs.nullaway
   errorprone libs.errorprone
+  
+  compileOnly libs.jspecify
 
   api libs.purefunCore
   api libs.minimalJson

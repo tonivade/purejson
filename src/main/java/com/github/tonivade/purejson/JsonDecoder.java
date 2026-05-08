@@ -32,7 +32,8 @@ import java.util.NavigableSet;
 import java.util.Queue;
 import java.util.Set;
 
-import com.github.tonivade.purefun.Nullable;
+import org.jspecify.annotations.Nullable;
+
 import com.github.tonivade.purefun.core.Function1;
 import com.github.tonivade.purefun.core.Tuple2;
 import com.github.tonivade.purefun.data.ImmutableArray;

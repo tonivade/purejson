@@ -1,5 +1,5 @@
 [versions]
-purefunVersion = "5.2"
+purefunVersion = "6.0-SNAPSHOT"
 minimalJsonVersion = "0.11.0"
 javapoetVersion = "0.15.0"
 junitVersion = "6.0.3"
@@ -12,6 +12,7 @@ nexusVersion = "2.0.0"
 errorproneVersion = "2.49.0"
 errorpronePluginVersion = "5.1.0"
 nullawayVersion = "0.13.4"
+jspecifyVersion = "1.0.0"
 
 [libraries]
 purefunCore = { group = "com.github.tonivade", name = "purefun-core", version.ref = "purefunVersion" }
@@ -27,6 +28,7 @@ compileTesting = { group = "com.google.testing.compile", name = "compile-testing
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gsonVersion" }
 nullaway = { group = "com.uber.nullaway", name = "nullaway", version.ref = "nullawayVersion" }
 errorprone = { group = "com.google.errorprone", name = "error_prone_core", version.ref = "errorproneVersion" }
+jspecify = { group = "org.jspecify", name = "jspecify", version.ref = "jspecifyVersion" }
 
 [plugins]
 versions = { id = "com.github.ben-manes.versions", version.ref = "versionsVersion" }

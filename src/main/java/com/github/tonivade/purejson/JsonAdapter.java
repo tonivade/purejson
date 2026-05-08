@@ -13,7 +13,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Map;
 
-import com.github.tonivade.purefun.Nullable;
+import org.jspecify.annotations.Nullable;
+
 import com.github.tonivade.purefun.type.Option;
 
 public interface JsonAdapter<T> extends JsonEncoder<T>, JsonDecoder<T> {

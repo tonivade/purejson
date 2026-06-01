@@ -1,7 +1,7 @@
 [versions]
 purefunVersion = "6.0-SNAPSHOT"
 minimalJsonVersion = "0.11.0"
-javapoetVersion = "0.15.0"
+javapoetVersion = "0.16.0"
 junitVersion = "6.1.0"
 equalsVerifierVersion = "3.15.1"
 compileTestingVersion = "0.23.0"
